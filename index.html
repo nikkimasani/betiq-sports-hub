@@ -1294,7 +1294,7 @@ function gameCard(sport, event, withOdds = false) {
   const status = event.status.type;
   const isLive = status.state === 'in';
   const isFinal = status.state === 'post';
-  const statusLabel = isLive ? `🔴 LIVE — ${event.status.displayClock || ''}` : isFinal ? 'FINAL' : event.date ? new Date(event.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'TBD';
+  const statusLabel = isLive ? `🔴 LIVE — ${event.status.displayClock || ''}` : isFinal ? 'FINAL' : (status.shortDetail || status.detail || (event.date ? new Date(event.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'TBD'));
   const statusClass = isLive ? '' : isFinal ? 'final' : 'scheduled';
   const homeScore = home ? parseInt(home.score || 0) : 0;
   const awayScore = away ? parseInt(away.score || 0) : 0;
@@ -2372,9 +2372,11 @@ function renderPlayByPlay(data) {
   const scoringPlays = data?.scoringPlays || [];
   const source = plays.length ? plays : scoringPlays;
   if (!source.length) {
-    const gameState = data?.header?.competitions?.[0]?.status?.type?.state;
+    const comp0 = data?.header?.competitions?.[0];
+    const gameState = comp0?.status?.type?.state;
+    const detail = comp0?.status?.type?.detail || comp0?.status?.type?.shortDetail || '';
     const msg = gameState === 'pre'
-      ? 'Game hasn\'t started yet — play-by-play will appear once it begins.'
+      ? `Game scheduled for ${detail || 'a future time'} — play-by-play will appear once it begins.`
       : 'No play-by-play data available for this game.';
     el.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:8px">${msg}</div>`;
     return;
