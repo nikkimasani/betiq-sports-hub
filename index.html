@@ -1579,7 +1579,7 @@ function gameCard(sport, event, withOdds = false) {
   const status = event.status.type;
   const isLive = status.state === 'in';
   const isFinal = status.state === 'post';
-  const statusLabel = isLive ? `🔴 LIVE — ${event.status.displayClock || ''}` : isFinal ? 'FINAL' : (status.shortDetail || status.detail || (event.date ? new Date(event.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'TBD'));
+  const statusLabel = isLive ? `🔴 ${status.shortDetail || event.status.displayClock || 'LIVE'}` : isFinal ? 'FINAL' : (status.shortDetail || status.detail || (event.date ? new Date(event.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'TBD'));
   const statusClass = isLive ? '' : isFinal ? 'final' : 'scheduled';
   const homeScore = home ? parseInt(home.score || 0) : 0;
   const awayScore = away ? parseInt(away.score || 0) : 0;
@@ -3655,7 +3655,7 @@ async function loadSportsDBPlayer(id, name, sport) {
     const data = await res.json();
     const p = data.players?.[0] || {};
     const img = p.strThumb || p.strCutout || '';
-    const bio = p.strDescriptionEN ? p.strDescriptionEN.slice(0, 800) + (p.strDescriptionEN.length > 800 ? '…' : '') : '';
+    const bio = p.strDescriptionEN || '';
 
     // Try to find ESPN season stats via team roster lookup
     let statsHTML = '';
