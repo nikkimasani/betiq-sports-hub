@@ -554,6 +554,87 @@ nav::-webkit-scrollbar { display: none; }
 .btn-sm-primary { background:var(--green); color:#000; }
 .btn-sm-secondary { background:var(--bg4); border:1px solid var(--border); color:var(--text2); }
 .btn-sm-danger { background:rgba(228,77,77,.15); border:1px solid var(--red); color:var(--red); }
+
+/* SPORTS DATA AGENT */
+.agent-subnav { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.agent-tab-btn {
+  background:var(--bg3); border:1px solid var(--border); border-radius:6px;
+  color:var(--text2); padding:9px 16px; font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .2s;
+}
+.agent-tab-btn:hover { color:var(--text); border-color:var(--text3); }
+.agent-tab-btn.active { background:var(--green); border-color:var(--green); color:#000; }
+.agent-view { display:none; }
+.agent-view.active { display:block; }
+.agent-empty { text-align:center; color:var(--text3); padding:32px 16px; font-size:14px; }
+.agent-search-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.agent-search-bar select {
+  background:var(--bg4); border:1px solid var(--border); border-radius:6px;
+  color:var(--text); padding:9px 12px; font-size:13px; cursor:pointer;
+}
+.agent-search-bar input {
+  flex:1; min-width:200px; background:var(--bg4); border:1px solid var(--border); border-radius:6px;
+  color:var(--text); padding:9px 12px; font-size:13px;
+}
+.agent-search-bar input:focus { outline:none; border-color:var(--green); }
+.player-card {
+  display:flex; align-items:center; gap:14px;
+  background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius);
+  padding:14px 16px; margin-bottom:8px; cursor:pointer; transition:border-color .2s;
+}
+.player-card:hover { border-color:var(--green); }
+.player-avatar { width:48px; height:48px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+.player-avatar-placeholder {
+  width:48px; height:48px; border-radius:50%; background:var(--bg4);
+  display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;
+}
+.player-info { flex:1; }
+.player-name { font-size:15px; font-weight:700; margin-bottom:3px; }
+.player-meta { font-size:12px; color:var(--text2); }
+.player-action { color:var(--text3); font-size:18px; }
+.player-stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:10px; margin-top:14px; }
+.player-stat-item { background:var(--bg4); border-radius:6px; padding:12px; text-align:center; }
+.player-stat-num { font-size:20px; font-weight:800; color:var(--green); }
+.player-stat-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; margin-top:3px; }
+.compare-controls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.compare-controls select {
+  background:var(--bg4); border:1px solid var(--border); border-radius:6px;
+  color:var(--text); padding:9px 12px; font-size:13px; cursor:pointer; flex:1; min-width:140px;
+}
+.compare-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:0; margin-bottom:12px; }
+.compare-header { text-align:center; padding:16px 8px; }
+.compare-team-name { font-size:17px; font-weight:800; }
+.compare-record { font-size:13px; color:var(--text2); margin-top:4px; }
+.stat-bar-row {
+  display:grid; grid-template-columns:72px 1fr 52px 1fr 72px;
+  gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);
+}
+.stat-bar-val-a { text-align:right; font-weight:700; font-size:14px; color:var(--blue); }
+.stat-bar-val-b { text-align:left; font-weight:700; font-size:14px; color:var(--gold); }
+.stat-bar-label { text-align:center; font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.5px; }
+.stat-bar-track { height:6px; background:var(--bg4); border-radius:3px; overflow:hidden; }
+.stat-bar-fill-a { height:100%; background:var(--blue); border-radius:3px; transition:width .4s; }
+.stat-bar-fill-b { height:100%; background:var(--gold); border-radius:3px; transition:width .4s; }
+.live-sport-block { margin-bottom:20px; }
+.live-sport-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.live-sport-title { font-size:15px; font-weight:700; }
+.live-count-badge { background:var(--red); color:#fff; border-radius:10px; padding:2px 8px; font-size:11px; font-weight:700; }
+.upcoming-count-badge { background:var(--bg4); color:var(--text2); border:1px solid var(--border); border-radius:10px; padding:2px 8px; font-size:11px; }
+.live-game-row {
+  display:flex; align-items:center; gap:12px;
+  background:var(--bg3); border:1px solid var(--border); border-radius:6px;
+  padding:10px 14px; margin-bottom:6px;
+}
+.live-game-row.in-progress { border-color:rgba(228,77,77,.4); }
+.live-teams { flex:1; font-size:13px; }
+.live-team-line { display:flex; justify-content:space-between; padding:2px 0; }
+.live-team-name { font-weight:600; }
+.live-team-score { font-weight:800; }
+.live-status-pill { font-size:11px; padding:3px 8px; border-radius:10px; font-weight:700; white-space:nowrap; }
+.pill-live { background:rgba(228,77,77,.2); color:var(--red); border:1px solid rgba(228,77,77,.4); }
+.pill-pre { background:var(--bg4); color:var(--text2); border:1px solid var(--border); }
+.pill-final { background:rgba(83,210,44,.1); color:var(--green); border:1px solid rgba(83,210,44,.3); }
+.live-no-games { color:var(--text3); font-size:13px; padding:8px 0; }
 </style>
 </head>
 <body>
@@ -576,6 +657,7 @@ nav::-webkit-scrollbar { display: none; }
   <button class="nav-btn" onclick="switchTab('calculator')">🧮 Calculators</button>
   <button class="nav-btn" onclick="switchTab('guide')">📖 Guide</button>
   <button class="nav-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+  <button class="nav-btn" onclick="switchTab('agent')">🤖 Data Agent</button>
 </nav>
 
 <div class="app">
@@ -966,6 +1048,69 @@ create table betiq_bankroll (user_id text primary key, balance numeric default 1
       </div>
     </div>
 
+    <!-- SPORTS DATA AGENT -->
+    <div id="tab-agent" class="tab">
+      <div class="agent-subnav">
+        <button class="agent-tab-btn active" onclick="switchAgentView('search')">🔍 Player Search</button>
+        <button class="agent-tab-btn" onclick="switchAgentView('compare')">⚖️ Team Compare</button>
+        <button class="agent-tab-btn" onclick="switchAgentView('live')">📡 Live Poll</button>
+      </div>
+
+      <!-- PLAYER SEARCH -->
+      <div id="agent-search" class="agent-view active">
+        <div class="card">
+          <div class="card-title">Search any player across NBA, NFL, or MLB</div>
+          <div class="agent-search-bar">
+            <select id="player-search-sport">
+              <option value="nba">🏀 NBA</option>
+              <option value="nfl">🏈 NFL</option>
+              <option value="mlb">⚾ MLB</option>
+            </select>
+            <input id="player-search-input" type="text" placeholder="e.g. LeBron James, Patrick Mahomes..." onkeydown="if(event.key==='Enter')searchPlayer()">
+            <button class="btn btn-primary" onclick="searchPlayer()">Search</button>
+          </div>
+        </div>
+        <div id="player-search-results"></div>
+        <div id="player-detail-panel"></div>
+      </div>
+
+      <!-- TEAM COMPARE -->
+      <div id="agent-compare" class="agent-view">
+        <div class="card">
+          <div class="card-title">Compare two teams head-to-head</div>
+          <div class="compare-controls">
+            <select id="compare-sport" onchange="loadTeamsForCompare()">
+              <option value="nba">🏀 NBA</option>
+              <option value="nfl">🏈 NFL</option>
+              <option value="mlb">⚾ MLB</option>
+            </select>
+            <select id="compare-team-a"><option value="">Loading...</option></select>
+            <span style="color:var(--text3);font-weight:700;padding:0 4px">VS</span>
+            <select id="compare-team-b"><option value="">Loading...</option></select>
+            <button class="btn btn-primary" onclick="runTeamCompare()">Compare</button>
+          </div>
+        </div>
+        <div id="compare-results"></div>
+      </div>
+
+      <!-- LIVE POLL -->
+      <div id="agent-live" class="agent-view">
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px">
+          <div>
+            <div class="card-title" style="margin:0">📡 Multi-Sport Live Scoreboard</div>
+            <div id="live-poll-status" style="font-size:12px;color:var(--text3);margin-top:4px">Auto-refreshes every 30 seconds</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="live-poll-time" style="font-size:11px;color:var(--text3)"></span>
+            <button class="btn btn-secondary btn-sm" onclick="loadLivePoll()">↺ Refresh Now</button>
+          </div>
+        </div>
+        <div id="live-poll-container">
+          <div class="agent-empty">Loading scores across all sports...</div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 
   <!-- BET SLIP SIDEBAR -->
@@ -1061,7 +1206,7 @@ async function fetchESPN(sport, endpoint = 'scoreboard') {
 }
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
-const TAB_ORDER = ['dashboard','scores','news','parlay','tracker','myteams','knowledge','calculator','guide','settings'];
+const TAB_ORDER = ['dashboard','scores','news','parlay','tracker','myteams','knowledge','calculator','guide','settings','agent'];
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1079,6 +1224,8 @@ function switchTab(name) {
   if (name === 'myteams') initMyTeams();
   if (name === 'guide') initGuide();
   if (name === 'settings') initSettings();
+  if (name === 'agent') initAgent();
+  if (name !== 'agent') stopLivePoll();
 }
 
 // wire nav buttons to tabs by position
@@ -2747,6 +2894,388 @@ function resetAllData() {
   updateBankrollDisplay();
   renderSlip();
   toast('All data cleared', 'success');
+}
+
+// ─── SPORTS DATA AGENT ───────────────────────────────────────────────────────
+let agentPollInterval = null;
+const AGENT_VIEWS = ['search', 'compare', 'live'];
+
+function initAgent() {
+  switchAgentView('search');
+}
+
+function switchAgentView(view) {
+  document.querySelectorAll('.agent-view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.agent-tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', AGENT_VIEWS[i] === view);
+  });
+  const viewEl = document.getElementById('agent-' + view);
+  if (viewEl) viewEl.classList.add('active');
+  if (view === 'live') startLivePoll();
+  else stopLivePoll();
+  if (view === 'compare') loadTeamsForCompare();
+}
+
+// ── Player Search ─────────────────────────────────────────────────────────────
+async function searchPlayer() {
+  const q = document.getElementById('player-search-input').value.trim();
+  const sport = document.getElementById('player-search-sport').value;
+  if (!q) { toast('Enter a player name to search', 'error'); return; }
+  document.getElementById('player-detail-panel').innerHTML = '';
+  const container = document.getElementById('player-search-results');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Searching...</span></div>';
+  try {
+    if (sport === 'mlb') {
+      await searchMLBPlayer(q, container);
+    } else {
+      await searchESPNPlayer(q, sport, container);
+    }
+  } catch (e) {
+    container.innerHTML = '<div class="agent-empty">Search failed. Check your connection and try again.</div>';
+  }
+}
+
+async function searchESPNPlayer(q, sport, container) {
+  const url = `https://site.api.espn.com/apis/common/v3/search?query=${encodeURIComponent(q)}&limit=8&type=athlete`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const athletes = (data.results || []).filter(r => r.type === 'athlete' || r.type === 'player');
+  if (!athletes.length) {
+    container.innerHTML = '<div class="agent-empty">No players found. Try a full name like "LeBron James".</div>';
+    return;
+  }
+  container.innerHTML = athletes.map(a => {
+    const name = esc(a.displayName || a.name || 'Unknown');
+    const team = esc(a.description || a.team?.displayName || '');
+    const pos = esc(a.position || '');
+    const img = a.images?.[0]?.href || '';
+    const id = a.id || '';
+    return `
+      <div class="player-card" onclick="loadPlayerStats('${id}','${name}','${sport}')">
+        ${img
+          ? `<img src="${img}" class="player-avatar" onerror="this.outerHTML='<div class=player-avatar-placeholder>👤</div>'">`
+          : '<div class="player-avatar-placeholder">👤</div>'}
+        <div class="player-info">
+          <div class="player-name">${name}</div>
+          <div class="player-meta">${pos}${pos && team ? ' · ' : ''}${team}</div>
+        </div>
+        <div class="player-action">→</div>
+      </div>`;
+  }).join('');
+}
+
+async function searchMLBPlayer(q, container) {
+  const url = `https://statsapi.mlb.com/api/v1/people/search?names=${encodeURIComponent(q)}&sportIds=1&active=true`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const people = data.people || [];
+  if (!people.length) {
+    container.innerHTML = '<div class="agent-empty">No MLB players found. Try spelling out the full name.</div>';
+    return;
+  }
+  container.innerHTML = people.slice(0, 8).map(p => `
+    <div class="player-card" onclick="loadMLBPlayerStats(${p.id},'${esc(p.fullName)}')">
+      <div class="player-avatar-placeholder">⚾</div>
+      <div class="player-info">
+        <div class="player-name">${esc(p.fullName)}</div>
+        <div class="player-meta">${esc(p.primaryPosition?.abbreviation || p.primaryPosition?.name || '')} · MLB</div>
+      </div>
+      <div class="player-action">→</div>
+    </div>`).join('');
+}
+
+async function loadPlayerStats(id, name, sport) {
+  const panel = document.getElementById('player-detail-panel');
+  panel.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading stats...</span></div>';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  try {
+    const cfg = SPORTS[sport];
+    const url = `https://site.api.espn.com/apis/site/v2/sports/${cfg.espn}/athletes/${id}/bio`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const athlete = data.athlete || {};
+    const stats = (data.stats || []).slice(0, 8);
+    const statsHTML = stats.length
+      ? `<div class="player-stat-grid">${stats.map(s => `
+          <div class="player-stat-item">
+            <div class="player-stat-num">${esc(String(s.displayValue || s.value || '—'))}</div>
+            <div class="player-stat-label">${esc(s.label || s.name || '')}</div>
+          </div>`).join('')}</div>`
+      : '<div class="agent-empty" style="padding:16px">No season stats available.</div>';
+    panel.innerHTML = `
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          ${athlete.headshot?.href
+            ? `<img src="${esc(athlete.headshot.href)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--bg4)">`
+            : '<div style="width:64px;height:64px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>'}
+          <div>
+            <div style="font-size:18px;font-weight:800">${esc(athlete.displayName || name)}</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px">
+              ${esc(athlete.position?.displayName || '')}${athlete.team?.displayName ? ' · ' + esc(athlete.team.displayName) : ''}${athlete.jersey ? ' · #' + esc(athlete.jersey) : ''}
+            </div>
+          </div>
+        </div>
+        <div class="card-title">Season Stats</div>
+        ${statsHTML}
+      </div>`;
+  } catch (e) {
+    panel.innerHTML = '<div class="card"><div class="agent-empty">Could not load stats for this player.</div></div>';
+  }
+}
+
+async function loadMLBPlayerStats(id, name) {
+  const panel = document.getElementById('player-detail-panel');
+  panel.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading MLB stats...</span></div>';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  try {
+    const season = new Date().getFullYear();
+    const url = `https://statsapi.mlb.com/api/v1/people/${id}?hydrate=stats(group=[hitting,pitching],type=season,season=${season}),currentTeam`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const person = data.people?.[0] || {};
+    const allStats = person.stats || [];
+    const hitting = allStats.find(s => s.group?.displayName === 'hitting')?.splits?.[0]?.stat;
+    const pitching = allStats.find(s => s.group?.displayName === 'pitching')?.splits?.[0]?.stat;
+    const hitItems = hitting ? [
+      { label: 'AVG', val: hitting.avg || '—' },
+      { label: 'HR', val: hitting.homeRuns ?? '—' },
+      { label: 'RBI', val: hitting.rbi ?? '—' },
+      { label: 'OBP', val: hitting.obp || '—' },
+      { label: 'SLG', val: hitting.slg || '—' },
+      { label: 'OPS', val: hitting.ops || '—' },
+      { label: 'H', val: hitting.hits ?? '—' },
+      { label: 'SB', val: hitting.stolenBases ?? '—' },
+    ] : [];
+    const pitchItems = pitching ? [
+      { label: 'ERA', val: pitching.era || '—' },
+      { label: 'W', val: pitching.wins ?? '—' },
+      { label: 'L', val: pitching.losses ?? '—' },
+      { label: 'SO', val: pitching.strikeOuts ?? '—' },
+      { label: 'WHIP', val: pitching.whip || '—' },
+      { label: 'IP', val: pitching.inningsPitched || '—' },
+    ] : [];
+    const statGrid = items => `<div class="player-stat-grid">${items.map(s => `
+      <div class="player-stat-item">
+        <div class="player-stat-num">${esc(String(s.val))}</div>
+        <div class="player-stat-label">${s.label}</div>
+      </div>`).join('')}</div>`;
+    panel.innerHTML = `
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:64px;height:64px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:28px">⚾</div>
+          <div>
+            <div style="font-size:18px;font-weight:800">${esc(person.fullName || name)}</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px">
+              ${esc(person.primaryPosition?.name || '')}${person.currentTeam?.name ? ' · ' + esc(person.currentTeam.name) : ''}${person.primaryNumber ? ' · #' + esc(String(person.primaryNumber)) : ''}
+            </div>
+          </div>
+        </div>
+        ${hitItems.length ? `<div class="card-title">${season} Hitting</div>${statGrid(hitItems)}` : ''}
+        ${pitchItems.length ? `<div class="card-title" style="margin-top:14px">${season} Pitching</div>${statGrid(pitchItems)}` : ''}
+        ${!hitItems.length && !pitchItems.length ? '<div class="agent-empty" style="padding:16px">No stats found for this season.</div>' : ''}
+      </div>`;
+  } catch (e) {
+    panel.innerHTML = '<div class="card"><div class="agent-empty">Could not load MLB stats.</div></div>';
+  }
+}
+
+// ── Team Compare ──────────────────────────────────────────────────────────────
+let agentTeamCache = {};
+
+async function loadTeamsForCompare() {
+  const sport = document.getElementById('compare-sport').value;
+  const selA = document.getElementById('compare-team-a');
+  const selB = document.getElementById('compare-team-b');
+  selA.innerHTML = '<option value="">Loading...</option>';
+  selB.innerHTML = '<option value="">Loading...</option>';
+  document.getElementById('compare-results').innerHTML = '';
+  if (agentTeamCache[sport]) { populateTeamSelects(agentTeamCache[sport], selA, selB); return; }
+  const data = await fetchESPN(sport, 'teams');
+  const teams = (data?.sports?.[0]?.leagues?.[0]?.teams || [])
+    .map(t => t.team)
+    .filter(Boolean)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  agentTeamCache[sport] = teams;
+  populateTeamSelects(teams, selA, selB);
+}
+
+function populateTeamSelects(teams, selA, selB) {
+  const opts = teams.map(t => `<option value="${esc(t.id)}">${esc(t.displayName)}</option>`).join('');
+  selA.innerHTML = opts;
+  selB.innerHTML = opts;
+  if (selB.options.length > 1) selB.selectedIndex = 1;
+}
+
+async function runTeamCompare() {
+  const sport = document.getElementById('compare-sport').value;
+  const idA = document.getElementById('compare-team-a').value;
+  const idB = document.getElementById('compare-team-b').value;
+  const container = document.getElementById('compare-results');
+  if (!idA || !idB) { toast('Select two teams to compare', 'error'); return; }
+  if (idA === idB) { toast('Select two different teams', 'error'); return; }
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading team stats...</span></div>';
+  const [dataA, dataB] = await Promise.all([
+    fetchESPN(sport, `teams/${idA}`).catch(() => null),
+    fetchESPN(sport, `teams/${idB}`).catch(() => null),
+  ]);
+  if (!dataA || !dataB) { container.innerHTML = '<div class="agent-empty">Could not load team data.</div>'; return; }
+  const teamA = dataA.team || {};
+  const teamB = dataB.team || {};
+  const getRecord = team => {
+    const items = team.record?.items || [];
+    const overall = items.find(r => r.type === 'total' || r.description?.includes('Overall')) || items[0];
+    if (!overall) return { summary: '?-?', stats: {} };
+    const s = {};
+    (overall.stats || []).forEach(x => { s[x.name] = x.value; });
+    return { summary: overall.summary || '?-?', stats: s };
+  };
+  const recA = getRecord(teamA);
+  const recB = getRecord(teamB);
+  const STAT_DEFS = {
+    nba: [
+      { key: 'winPercent', label: 'Win %', fmt: v => (v * 100).toFixed(1) + '%' },
+      { key: 'pointsFor', label: 'PPG', fmt: v => (+v).toFixed(1) },
+      { key: 'pointsAgainst', label: 'Opp PPG', fmt: v => (+v).toFixed(1), low: true },
+      { key: 'homeWins', label: 'Home W', fmt: v => +v || 0 },
+      { key: 'awayWins', label: 'Away W', fmt: v => +v || 0 },
+    ],
+    nfl: [
+      { key: 'winPercent', label: 'Win %', fmt: v => (v * 100).toFixed(1) + '%' },
+      { key: 'pointsFor', label: 'PF', fmt: v => +v || 0 },
+      { key: 'pointsAgainst', label: 'PA', fmt: v => +v || 0, low: true },
+      { key: 'homeWins', label: 'Home W', fmt: v => +v || 0 },
+      { key: 'awayWins', label: 'Away W', fmt: v => +v || 0 },
+    ],
+    mlb: [
+      { key: 'winPercent', label: 'Win %', fmt: v => (v * 100).toFixed(1) + '%' },
+      { key: 'pointsFor', label: 'R/G', fmt: v => (+v).toFixed(2) },
+      { key: 'pointsAgainst', label: 'RA/G', fmt: v => (+v).toFixed(2), low: true },
+      { key: 'homeWins', label: 'Home W', fmt: v => +v || 0 },
+      { key: 'awayWins', label: 'Away W', fmt: v => +v || 0 },
+    ],
+  };
+  const rows = (STAT_DEFS[sport] || STAT_DEFS.nba).map(def => {
+    const vA = recA.stats[def.key], vB = recB.stats[def.key];
+    if (vA == null && vB == null) return '';
+    const nA = parseFloat(vA) || 0, nB = parseFloat(vB) || 0;
+    const max = Math.max(nA, nB) || 1;
+    const pA = Math.round((nA / max) * 100), pB = Math.round((nB / max) * 100);
+    const fA = def.fmt ? def.fmt(vA) : (vA ?? '—');
+    const fB = def.fmt ? def.fmt(vB) : (vB ?? '—');
+    const winA = def.low ? nA < nB : nA > nB;
+    const winB = def.low ? nB < nA : nB > nA;
+    return `
+      <div class="stat-bar-row">
+        <div class="stat-bar-val-a" style="${winA ? 'color:var(--green)' : ''}">${fA}</div>
+        <div><div class="stat-bar-track"><div class="stat-bar-fill-a" style="width:${pA}%"></div></div></div>
+        <div class="stat-bar-label">${def.label}</div>
+        <div><div class="stat-bar-track"><div class="stat-bar-fill-b" style="width:${pB}%"></div></div></div>
+        <div class="stat-bar-val-b" style="${winB ? 'color:var(--green)' : ''}">${fB}</div>
+      </div>`;
+  }).join('');
+  const logoA = teamA.logos?.[0]?.href || '';
+  const logoB = teamB.logos?.[0]?.href || '';
+  container.innerHTML = `
+    <div class="card">
+      <div class="compare-grid">
+        <div class="compare-header">
+          ${logoA ? `<img src="${esc(logoA)}" style="width:52px;height:52px;object-fit:contain;margin-bottom:8px">` : ''}
+          <div class="compare-team-name" style="color:var(--blue)">${esc(teamA.displayName || 'Team A')}</div>
+          <div class="compare-record">${recA.summary}</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:20px;font-weight:800;color:var(--text3)">VS</div>
+        <div class="compare-header">
+          ${logoB ? `<img src="${esc(logoB)}" style="width:52px;height:52px;object-fit:contain;margin-bottom:8px">` : ''}
+          <div class="compare-team-name" style="color:var(--gold)">${esc(teamB.displayName || 'Team B')}</div>
+          <div class="compare-record">${recB.summary}</div>
+        </div>
+      </div>
+      <div style="padding:0 4px">${rows || '<div class="agent-empty">No stat data available — records may not be populated yet this season.</div>'}</div>
+    </div>`;
+}
+
+// ── Live Multi-Sport Poll ─────────────────────────────────────────────────────
+function startLivePoll() {
+  loadLivePoll();
+  if (!agentPollInterval) agentPollInterval = setInterval(loadLivePoll, 30000);
+}
+
+function stopLivePoll() {
+  clearInterval(agentPollInterval);
+  agentPollInterval = null;
+}
+
+async function loadLivePoll() {
+  const container = document.getElementById('live-poll-container');
+  if (!container) return;
+  const statusEl = document.getElementById('live-poll-status');
+  if (statusEl) statusEl.textContent = 'Fetching scores...';
+  const [nba, nfl, mlb] = await Promise.all([
+    fetchESPN('nba', 'scoreboard').catch(() => null),
+    fetchESPN('nfl', 'scoreboard').catch(() => null),
+    fetchESPN('mlb', 'scoreboard').catch(() => null),
+  ]);
+  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const timeEl = document.getElementById('live-poll-time');
+  if (timeEl) timeEl.textContent = `Updated ${now}`;
+  let liveTotal = 0;
+  const sections = [
+    { key: 'nba', emoji: '🏀', label: 'NBA', data: nba },
+    { key: 'nfl', emoji: '🏈', label: 'NFL', data: nfl },
+    { key: 'mlb', emoji: '⚾', label: 'MLB', data: mlb },
+  ];
+  const html = sections.map(({ emoji, label, data }) => {
+    const events = data?.events || [];
+    const live = events.filter(e => e.status?.type?.state === 'in');
+    liveTotal += live.length;
+    const sorted = [
+      ...events.filter(e => e.status?.type?.state === 'in'),
+      ...events.filter(e => e.status?.type?.state === 'pre'),
+      ...events.filter(e => e.status?.type?.state === 'post'),
+    ];
+    const gamesHTML = sorted.length ? sorted.map(ev => {
+      const comp = ev.competitions?.[0];
+      const home = comp?.competitors?.find(c => c.homeAway === 'home');
+      const away = comp?.competitors?.find(c => c.homeAway === 'away');
+      if (!home || !away) return '';
+      const state = ev.status?.type?.state;
+      const homeScore = home.score || '0', awayScore = away.score || '0';
+      const homeWin = state === 'post' && parseFloat(homeScore) > parseFloat(awayScore);
+      const awayWin = state === 'post' && parseFloat(awayScore) > parseFloat(homeScore);
+      let pillClass = 'pill-pre', pillText = esc(ev.status?.type?.shortDetail || 'Scheduled');
+      if (state === 'in') {
+        pillClass = 'pill-live';
+        pillText = ev.status.displayClock ? `${esc(ev.status.displayClock)} Q${ev.status.period}` : 'LIVE';
+      } else if (state === 'post') {
+        pillClass = 'pill-final';
+        pillText = 'Final';
+      }
+      return `
+        <div class="live-game-row ${state === 'in' ? 'in-progress' : ''}">
+          <div class="live-teams">
+            <div class="live-team-line">
+              <span class="live-team-name" style="${awayWin ? 'color:var(--green)' : ''}">${esc(away.team?.abbreviation || away.team?.displayName || 'Away')}</span>
+              ${state !== 'pre' ? `<span class="live-team-score">${esc(awayScore)}</span>` : ''}
+            </div>
+            <div class="live-team-line">
+              <span class="live-team-name" style="${homeWin ? 'color:var(--green)' : ''}">${esc(home.team?.abbreviation || home.team?.displayName || 'Home')}</span>
+              ${state !== 'pre' ? `<span class="live-team-score">${esc(homeScore)}</span>` : ''}
+            </div>
+          </div>
+          <div class="live-status-pill ${pillClass}">${pillText}</div>
+        </div>`;
+    }).join('') : `<div class="live-no-games">No ${label} games today</div>`;
+    const badge = live.length
+      ? `<span class="live-count-badge">⚡ ${live.length} LIVE</span>`
+      : events.length ? `<span class="upcoming-count-badge">${events.length} games</span>` : '';
+    return `
+      <div class="live-sport-block">
+        <div class="live-sport-header"><span class="live-sport-title">${emoji} ${label}</span>${badge}</div>
+        ${gamesHTML}
+      </div>`;
+  }).join('');
+  container.innerHTML = html || '<div class="agent-empty">No game data available.</div>';
+  if (statusEl) statusEl.textContent = `Auto-refreshes every 30s${liveTotal > 0 ? ` · ${liveTotal} game(s) live` : ' · No games in progress'}`;
 }
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
