@@ -2513,7 +2513,10 @@ const ALL_TEAMS = {
   ]
 };
 
-let favTeams = JSON.parse(localStorage.getItem('betiq_favteams') || '[]');
+let favTeams = JSON.parse(localStorage.getItem('betiq_favteams') || '[]').map(t => {
+  const canonical = ALL_TEAMS[t.sport]?.find(x => x.id === t.id);
+  return canonical ? { ...t, sub: canonical.sub } : t;
+});
 let teamSelectorSport = 'nba';
 
 function initMyTeams() {
@@ -2551,6 +2554,10 @@ function toggleTeam(sport, id, name, sub) {
 }
 
 function saveTeams() {
+  favTeams = favTeams.map(t => {
+    const canonical = ALL_TEAMS[t.sport]?.find(x => x.id === t.id);
+    return canonical ? { ...t, sub: canonical.sub } : t;
+  });
   localStorage.setItem('betiq_favteams', JSON.stringify(favTeams));
   toast(`Saved ${favTeams.length} favorite team${favTeams.length!==1?'s':''}`, 'success');
   renderFavDashboard();
