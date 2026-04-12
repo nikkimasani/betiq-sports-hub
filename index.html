@@ -500,6 +500,66 @@ nav::-webkit-scrollbar { display: none; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
 .news-item.breaking { border-left: 3px solid var(--red); padding-left: 10px; background: rgba(228,77,77,.04); border-radius: 4px; }
 .news-item.impact { border-left: 3px solid var(--gold); padding-left: 10px; background: rgba(255,201,64,.04); border-radius: 4px; }
+
+/* NAV GROUPS */
+nav { align-items: center; }
+.nav-divider {
+  width: 1px; background: var(--border); margin: 8px 6px; align-self: stretch; flex-shrink: 0;
+}
+.nav-spacer { flex: 1; }
+.nav-btn { padding: 13px 14px; font-size: 12.5px; }
+
+/* SIDEBAR TOGGLE */
+.slip-toggle-btn {
+  background: none; border: none; color: var(--text3);
+  cursor: pointer; font-size: 20px; padding: 0 4px; line-height: 1;
+  transition: color .15s; flex-shrink: 0;
+}
+.slip-toggle-btn:hover { color: var(--text); }
+.bet-sidebar {
+  transition: width .2s ease, min-width .2s ease;
+}
+.bet-sidebar.collapsed {
+  width: 0 !important; min-width: 0 !important; overflow: hidden; border-left: none;
+}
+.sidebar-open-btn {
+  position: fixed; right: 0; top: 50%; transform: translateY(-50%);
+  background: var(--bg2); border: 1px solid var(--border); border-right: none;
+  border-radius: 8px 0 0 8px; padding: 14px 8px;
+  cursor: pointer; z-index: 99; display: none;
+  flex-direction: column; align-items: center; gap: 6px;
+  writing-mode: horizontal-tb; transition: background .15s;
+}
+.sidebar-open-btn:hover { background: var(--bg3); }
+.sidebar-open-btn.visible { display: flex; }
+.sidebar-open-btn .sob-arrow { color: var(--text2); font-size: 16px; }
+.sidebar-open-btn .sob-label {
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.sidebar-open-btn .sob-count {
+  background: var(--green); color: #000; border-radius: 10px;
+  padding: 2px 6px; font-size: 10px; font-weight: 800; display: none;
+}
+.sidebar-open-btn .sob-count.has-picks { display: block; }
+
+/* DASHBOARD COMPACT PLATFORM LINKS */
+.platform-links-bar {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+.platform-link-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 14px; border-radius: 8px; text-decoration: none;
+  font-size: 13px; font-weight: 700; transition: opacity .15s;
+}
+.platform-link-btn:hover { opacity: .85; }
+.platform-link-btn .pl-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.pl-dk { background: rgba(26,124,62,.25); border: 1px solid rgba(26,124,62,.5); color: #4dcf82; }
+.pl-fd { background: rgba(20,147,255,.2); border: 1px solid rgba(20,147,255,.4); color: var(--blue); }
+.pl-pp { background: rgba(123,47,247,.2); border: 1px solid rgba(123,47,247,.4); color: #a87cf7; }
 .news-filter-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
 .news-filter-btn {
   background: var(--bg3); border: 1px solid var(--border); border-radius:16px;
@@ -678,18 +738,27 @@ nav::-webkit-scrollbar { display: none; }
 </header>
 
 <nav>
-  <button class="nav-btn active" onclick="switchTab('dashboard')">🏠 Dashboard</button>
-  <button class="nav-btn" onclick="switchTab('agent')">🤖 Data Agent</button>
-  <button class="nav-btn" onclick="switchTab('scores')">📊 Scores & Stats</button>
-  <button class="nav-btn" onclick="switchTab('news')">📰 News</button>
-  <button class="nav-btn" onclick="switchTab('parlay')">🎯 Parlay Builder</button>
-  <button class="nav-btn" onclick="switchTab('tracker')">📈 My Parlays</button>
-  <button class="nav-btn" onclick="switchTab('myteams')">⭐ My Teams</button>
-  <button class="nav-btn" onclick="switchTab('social')">🐦 Social</button>
-  <button class="nav-btn" onclick="switchTab('knowledge')">📚 Knowledge Center</button>
-  <button class="nav-btn" onclick="switchTab('calculator')">🧮 Calculators</button>
-  <button class="nav-btn" onclick="switchTab('guide')">📖 Guide</button>
-  <button class="nav-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+  <!-- Live -->
+  <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+  <button class="nav-btn" data-tab="scores" onclick="switchTab('scores')">Scores</button>
+  <button class="nav-btn" data-tab="news" onclick="switchTab('news')">News</button>
+  <div class="nav-divider"></div>
+  <!-- Betting -->
+  <button class="nav-btn" data-tab="parlay" onclick="switchTab('parlay')">Parlay Builder</button>
+  <button class="nav-btn" data-tab="tracker" onclick="switchTab('tracker')">My Parlays</button>
+  <div class="nav-divider"></div>
+  <!-- Explore -->
+  <button class="nav-btn" data-tab="myteams" onclick="switchTab('myteams')">My Teams</button>
+  <button class="nav-btn" data-tab="social" onclick="switchTab('social')">Social</button>
+  <button class="nav-btn" data-tab="agent" onclick="switchTab('agent')">Data Agent</button>
+  <div class="nav-divider"></div>
+  <!-- Learn -->
+  <button class="nav-btn" data-tab="knowledge" onclick="switchTab('knowledge')">Knowledge</button>
+  <button class="nav-btn" data-tab="calculator" onclick="switchTab('calculator')">Calculators</button>
+  <button class="nav-btn" data-tab="guide" onclick="switchTab('guide')">Guide</button>
+  <!-- Settings pushed right -->
+  <div class="nav-spacer"></div>
+  <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">⚙️</button>
 </nav>
 
 <div class="app">
@@ -720,24 +789,15 @@ nav::-webkit-scrollbar { display: none; }
         </div>
       </div>
 
-      <div class="section-header">
-        <div class="section-title">Connect to Platforms</div>
-      </div>
-      <div class="platform-grid" style="margin-bottom:20px">
-        <a href="https://www.draftkings.com/lobby#/NFL" target="_blank" class="platform-card platform-dk">
-          <div style="font-size:28px">🏈</div>
-          <div class="p-name">DraftKings</div>
-          <div class="p-desc">Sportsbook + DFS</div>
+      <div class="platform-links-bar">
+        <a href="https://www.draftkings.com/lobby#/NFL" target="_blank" class="platform-link-btn pl-dk">
+          <span class="pl-dot" style="background:#4dcf82"></span>DraftKings
         </a>
-        <a href="https://www.fanduel.com/sportsbook" target="_blank" class="platform-card platform-fd">
-          <div style="font-size:28px">⚡</div>
-          <div class="p-name">FanDuel</div>
-          <div class="p-desc">Sportsbook + DFS</div>
+        <a href="https://www.fanduel.com/sportsbook" target="_blank" class="platform-link-btn pl-fd">
+          <span class="pl-dot" style="background:var(--blue)"></span>FanDuel
         </a>
-        <a href="https://app.prizepicks.com/" target="_blank" class="platform-card platform-pp">
-          <div style="font-size:28px">🎮</div>
-          <div class="p-name">PrizePicks</div>
-          <div class="p-desc">Player Props</div>
+        <a href="https://app.prizepicks.com/" target="_blank" class="platform-link-btn pl-pp">
+          <span class="pl-dot" style="background:#a87cf7"></span>PrizePicks
         </a>
       </div>
 
@@ -1192,7 +1252,10 @@ create table betiq_bankroll (user_id text primary key, balance numeric default 1
   <div class="bet-sidebar">
     <div class="slip-header">
       <span class="slip-title">Bet Slip</span>
-      <span class="slip-count" id="slip-count">0</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="slip-count" id="slip-count">0</span>
+        <button class="slip-toggle-btn" onclick="toggleSidebar()" title="Collapse sidebar">›</button>
+      </div>
     </div>
     <div class="slip-legs" id="slip-legs">
       <div class="slip-empty">
@@ -1229,6 +1292,13 @@ create table betiq_bankroll (user_id text primary key, balance numeric default 1
     </div>
   </div>
 </div><!-- /app -->
+
+<!-- Floating sidebar open button (shown when sidebar is collapsed) -->
+<button class="sidebar-open-btn" id="sidebar-open-btn" onclick="toggleSidebar()">
+  <span class="sob-arrow">‹</span>
+  <span class="sob-label">Bet Slip</span>
+  <span class="sob-count" id="sob-count">0</span>
+</button>
 
 <!-- Bankroll Modal -->
 <div class="modal-overlay" id="bankroll-modal">
@@ -1281,12 +1351,10 @@ async function fetchESPN(sport, endpoint = 'scoreboard') {
 }
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
-const TAB_ORDER = ['dashboard','agent','scores','news','parlay','tracker','myteams','social','knowledge','calculator','guide','settings'];
-
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach((b, i) => {
-    b.classList.toggle('active', TAB_ORDER[i] === name);
+  document.querySelectorAll('.nav-btn[data-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === name);
   });
   const tabEl = document.getElementById('tab-' + name);
   if (tabEl) tabEl.classList.add('active');
@@ -1304,10 +1372,30 @@ function switchTab(name) {
   if (name !== 'agent') stopLivePoll();
 }
 
-// wire nav buttons to tabs by position
-document.querySelectorAll('.nav-btn').forEach((b, i) => {
-  if (TAB_ORDER[i]) b.onclick = () => switchTab(TAB_ORDER[i]);
-});
+// ─── SIDEBAR TOGGLE ──────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.querySelector('.bet-sidebar');
+  const openBtn = document.getElementById('sidebar-open-btn');
+  const collapsed = sidebar.classList.toggle('collapsed');
+  openBtn.classList.toggle('visible', collapsed);
+  localStorage.setItem('betiq_sidebar_collapsed', collapsed);
+}
+
+function updateSidebarCount(n) {
+  const el = document.getElementById('sob-count');
+  if (!el) return;
+  el.textContent = n;
+  el.classList.toggle('has-picks', n > 0);
+}
+
+// Restore sidebar state from localStorage
+(function initSidebarState() {
+  if (localStorage.getItem('betiq_sidebar_collapsed') === 'true') {
+    document.querySelector('.bet-sidebar').classList.add('collapsed');
+    const openBtn = document.getElementById('sidebar-open-btn');
+    if (openBtn) openBtn.classList.add('visible');
+  }
+})();
 
 // ─── SCORES ───────────────────────────────────────────────────────────────────
 async function loadScores(sport, silent = false) {
@@ -1634,6 +1722,7 @@ function renderSlip() {
   const placeBtn = document.getElementById('place-btn');
 
   countEl.textContent = state.slip.length;
+  updateSidebarCount(state.slip.length);
 
   if (state.slip.length === 0) {
     legsEl.innerHTML = '<div class="slip-empty"><div class="icon">🎯</div><div>Add picks from any game to build your parlay</div></div>';
