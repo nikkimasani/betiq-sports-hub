@@ -636,6 +636,7 @@ nav::-webkit-scrollbar { display: none; }
 .pill-final { background:rgba(83,210,44,.1); color:var(--green); border:1px solid rgba(83,210,44,.3); }
 .live-no-games { color:var(--text3); font-size:13px; padding:8px 0; }
 </style>
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </head>
 <body>
 
@@ -654,6 +655,7 @@ nav::-webkit-scrollbar { display: none; }
   <button class="nav-btn" onclick="switchTab('parlay')">🎯 Parlay Builder</button>
   <button class="nav-btn" onclick="switchTab('tracker')">📈 My Parlays</button>
   <button class="nav-btn" onclick="switchTab('myteams')">⭐ My Teams</button>
+  <button class="nav-btn" onclick="switchTab('social')">🐦 Social</button>
   <button class="nav-btn" onclick="switchTab('knowledge')">📚 Knowledge Center</button>
   <button class="nav-btn" onclick="switchTab('calculator')">🧮 Calculators</button>
   <button class="nav-btn" onclick="switchTab('guide')">📖 Guide</button>
@@ -745,7 +747,10 @@ nav::-webkit-scrollbar { display: none; }
       <div id="scores-view-scores">
         <div class="section-header">
           <div class="section-title" id="scores-title">NBA — Today's Games</div>
-          <div class="section-action" onclick="refreshScores()">↻ Refresh</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span id="scores-auto-badge" style="font-size:10px;color:var(--text3)"></span>
+            <div class="section-action" onclick="state.gameCache={};refreshScores()">↻ Refresh</div>
+          </div>
         </div>
         <div id="scores-container"><div class="loading"><div class="spinner"></div><span>Loading scores...</span></div></div>
         <!-- Game detail panel -->
@@ -815,6 +820,13 @@ nav::-webkit-scrollbar { display: none; }
 
     <!-- NEWS -->
     <div id="tab-news" class="tab">
+      <div class="section-header" style="margin-bottom:10px">
+        <div class="section-title">📰 Sports News</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="news-last-updated" style="font-size:11px;color:var(--text3)"></span>
+          <div class="section-action" onclick="refreshNews()">↻ Refresh</div>
+        </div>
+      </div>
       <div class="sport-tabs">
         <button class="sport-tab active" onclick="selectNewsSport('nba')">🏀 NBA</button>
         <button class="sport-tab" onclick="selectNewsSport('nfl')">🏈 NFL</button>
@@ -822,6 +834,18 @@ nav::-webkit-scrollbar { display: none; }
       </div>
       <div class="card" id="news-container">
         <div class="loading"><div class="spinner"></div><span>Loading news...</span></div>
+      </div>
+    </div>
+
+    <!-- SOCIAL / X FEED -->
+    <div id="tab-social" class="tab">
+      <div class="section-header" style="margin-bottom:14px">
+        <div class="section-title">🐦 Sports on X / Twitter</div>
+        <div style="font-size:11px;color:var(--text3)">Top insiders & official accounts</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="social-account-btns"></div>
+      <div id="social-feed-container" style="min-height:400px;display:flex;justify-content:center">
+        <div style="color:var(--text3);padding:40px;text-align:center">Select an account above to load their feed.</div>
       </div>
     </div>
 
@@ -1206,7 +1230,7 @@ async function fetchESPN(sport, endpoint = 'scoreboard') {
 }
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
-const TAB_ORDER = ['dashboard','agent','scores','news','parlay','tracker','myteams','knowledge','calculator','guide','settings'];
+const TAB_ORDER = ['dashboard','agent','scores','news','parlay','tracker','myteams','social','knowledge','calculator','guide','settings'];
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1216,7 +1240,7 @@ function switchTab(name) {
   const tabEl = document.getElementById('tab-' + name);
   if (tabEl) tabEl.classList.add('active');
   state.currentTab = name;
-  if (name === 'scores') loadScoresAutoDetect();
+  if (name === 'scores') { loadScoresAutoDetect(); startScoresAutoRefresh(); } else { stopScoresAutoRefresh(); }
   if (name === 'news') loadNews(state.currentNewsSport);
   if (name === 'parlay') loadParlayGames(state.currentParlayTab);
   if (name === 'tracker') renderTracker();
@@ -1225,6 +1249,7 @@ function switchTab(name) {
   if (name === 'guide') initGuide();
   if (name === 'settings') initSettings();
   if (name === 'agent') initAgent();
+  if (name === 'social') initSocial();
   if (name !== 'agent') stopLivePoll();
 }
 
@@ -1234,9 +1259,9 @@ document.querySelectorAll('.nav-btn').forEach((b, i) => {
 });
 
 // ─── SCORES ───────────────────────────────────────────────────────────────────
-async function loadScores(sport) {
+async function loadScores(sport, silent = false) {
   const container = document.getElementById('scores-container');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
+  if (!silent) container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
   document.getElementById('scores-title').textContent = `${SPORTS[sport].emoji} ${SPORTS[sport].label} — Today's Games`;
 
   const data = await fetchESPN(sport, 'scoreboard');
@@ -3611,6 +3636,125 @@ updateBankrollDisplay();
 renderSlip();
 showArticle('odds-basics');
 loadDashboard();
+
+// ─── NEWS REFRESH ─────────────────────────────────────────────────────────────
+function refreshNews() {
+  delete state.newsCache[state.currentNewsSport];
+  loadNews(state.currentNewsSport);
+}
+
+// Patch loadNews to stamp last-updated time
+const _origLoadNews = loadNews;
+loadNews = async function(sport) {
+  await _origLoadNews(sport);
+  const el = document.getElementById('news-last-updated');
+  if (el) el.textContent = 'Updated ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+};
+
+// ─── SCORES AUTO-REFRESH ──────────────────────────────────────────────────────
+let scoresRefreshInterval = null;
+let scoresCountdownInterval = null;
+let scoresNextRefresh = 0;
+const SCORES_REFRESH_SEC = 45; // refresh every 45 seconds
+
+function startScoresAutoRefresh() {
+  stopScoresAutoRefresh();
+  scoresNextRefresh = SCORES_REFRESH_SEC;
+  updateScoresRefreshBadge();
+  scoresCountdownInterval = setInterval(() => {
+    scoresNextRefresh--;
+    if (scoresNextRefresh <= 0) {
+      scoresNextRefresh = SCORES_REFRESH_SEC;
+      state.gameCache = {};
+      loadScores(state.currentSport, true);
+    }
+    updateScoresRefreshBadge();
+  }, 1000);
+}
+
+function stopScoresAutoRefresh() {
+  clearInterval(scoresRefreshInterval);
+  clearInterval(scoresCountdownInterval);
+  scoresRefreshInterval = null;
+  scoresCountdownInterval = null;
+  const badge = document.getElementById('scores-auto-badge');
+  if (badge) badge.textContent = '';
+}
+
+function updateScoresRefreshBadge() {
+  const badge = document.getElementById('scores-auto-badge');
+  if (badge) badge.textContent = `🔄 auto in ${scoresNextRefresh}s`;
+}
+
+// ─── SOCIAL / X FEED ──────────────────────────────────────────────────────────
+const SOCIAL_ACCOUNTS = [
+  { label: 'ESPN',         handle: 'ESPN',          sport: 'all' },
+  { label: 'SportsCenter', handle: 'SportsCenter',  sport: 'all' },
+  { label: 'NBA',          handle: 'NBA',            sport: 'nba' },
+  { label: 'NFL',          handle: 'NFL',            sport: 'nfl' },
+  { label: 'MLB',          handle: 'MLB',            sport: 'mlb' },
+  { label: 'Shams (NBA)',  handle: 'ShamsCharania',  sport: 'nba' },
+  { label: 'Woj (NBA)',    handle: 'wojespn',        sport: 'nba' },
+  { label: 'Schefter (NFL)', handle: 'AdamSchefter', sport: 'nfl' },
+  { label: 'Rapoport (NFL)', handle: 'RapSheet',     sport: 'nfl' },
+  { label: 'Ken Rosenthal', handle: 'Ken_Rosenthal', sport: 'mlb' },
+  { label: 'ESPN MLB',     handle: 'espnmlb',        sport: 'mlb' },
+  { label: 'ESPN NBA',     handle: 'espnnba',        sport: 'nba' },
+  { label: 'ESPN NFL',     handle: 'espnnfl',        sport: 'nfl' },
+  { label: 'FantasyPros',  handle: 'FantasyPros',    sport: 'all' },
+];
+
+let activeSocialHandle = null;
+
+function initSocial() {
+  const btnContainer = document.getElementById('social-account-btns');
+  if (btnContainer.children.length) return; // already built
+  btnContainer.innerHTML = SOCIAL_ACCOUNTS.map(a =>
+    `<button onclick="loadSocialFeed('${a.handle}')" id="sbtn-${a.handle}"
+      style="padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">
+      ${a.label}
+    </button>`
+  ).join('');
+  // Auto-load ESPN on first open
+  loadSocialFeed('ESPN');
+}
+
+function loadSocialFeed(handle) {
+  activeSocialHandle = handle;
+  // Highlight active button
+  document.querySelectorAll('#social-account-btns button').forEach(b => {
+    b.style.background = 'var(--bg2)';
+    b.style.color = 'var(--text2)';
+    b.style.borderColor = 'var(--border)';
+  });
+  const activeBtn = document.getElementById('sbtn-' + handle);
+  if (activeBtn) {
+    activeBtn.style.background = 'var(--green)';
+    activeBtn.style.color = '#000';
+    activeBtn.style.borderColor = 'var(--green)';
+  }
+
+  const container = document.getElementById('social-feed-container');
+  container.innerHTML = `<div class="loading"><div class="spinner"></div><span>Loading @${handle}...</span></div>`;
+
+  // Inject Twitter Timeline embed
+  setTimeout(() => {
+    container.innerHTML = `
+      <div style="max-width:550px;width:100%">
+        <a class="twitter-timeline"
+           data-theme="dark"
+           data-height="600"
+           data-tweet-limit="8"
+           data-chrome="noheader nofooter noborders"
+           href="https://twitter.com/${handle}">
+          Tweets by @${handle}
+        </a>
+      </div>`;
+    if (window.twttr && window.twttr.widgets) {
+      window.twttr.widgets.load(container);
+    }
+  }, 50);
+}
 
 // Auto-connect Supabase if credentials saved
 (async () => {
