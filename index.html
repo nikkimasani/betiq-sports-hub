@@ -1489,6 +1489,7 @@ function switchTab(name) {
   if (name === 'agent') initAgent();
   if (name === 'social') initSocial();
   if (name === 'kalshi') initKalshi();
+  if (name === 'calculator') initCalculators();
   if (name !== 'agent') stopLivePoll();
 }
 
@@ -3027,7 +3028,7 @@ async function loadLeaders(sport) {
     const res = await fetch(url);
     const data = await res.json();
     const categories = data?.leaders || [];
-    if (!categories.length) { el.innerHTML = '<div style="color:var(--text3);padding:16px">No leaders data available.</div>'; return; }
+    if (!categories.length) { el.innerHTML = '<div style="color:var(--text3);padding:16px">No leaders data available right now — ESPN may not have current season stats for this sport. Try NBA or NFL.</div>'; return; }
     el.innerHTML = `<div class="leaders-grid">${categories.slice(0,12).map(cat => {
       const leaders = cat.leaders || [];
       return `<div class="leaders-card">
@@ -3554,10 +3555,10 @@ async function searchPlayer() {
 }
 
 async function searchESPNPlayer(q, sport, container) {
-  const url = `https://site.api.espn.com/apis/common/v3/search?query=${encodeURIComponent(q)}&limit=8&type=athlete`;
+  const url = `https://site.web.api.espn.com/apis/common/v3/search?query=${encodeURIComponent(q)}&limit=10&type=athlete&sport=${SPORTS[sport].espn}`;
   const res = await fetch(url);
   const data = await res.json();
-  const athletes = (data.results || []).filter(r => r.type === 'athlete' || r.type === 'player');
+  const athletes = (data.results || []).filter(r => r.displayName || r.name);
   if (!athletes.length) {
     container.innerHTML = '<div class="agent-empty">No players found. Try a full name like "LeBron James".</div>';
     return;
@@ -4185,6 +4186,17 @@ function redditTimeAgo(utc) {
   return `${Math.floor(diff/86400)}d ago`;
 }
 
+// ─── CALCULATOR INIT ─────────────────────────────────────────────────────────
+function initCalculators() {
+  // Pre-fill default values so results show immediately on tab open
+  const set = (id, val) => { const el = document.getElementById(id); if (el && !el.value) el.value = val; };
+  set('conv-american', '-110');  set('pay-stake', '100'); set('pay-odds', '-110');
+  set('parlay-calc-input', '-110, +150, -130'); set('parlay-calc-stake', '25');
+  set('kelly-prob', '55'); set('kelly-odds', '-110'); set('kelly-bank', '1000');
+  set('be-odds', '-110');
+  convertOdds(); calcPayout(); calcParlayOdds(); calcKelly(); calcBreakEven();
+}
+
 // ─── EV ENGINE ───────────────────────────────────────────────────────────────
 const eloMap = {};  // { sport: { teamId: winRate } }
 
@@ -4266,9 +4278,9 @@ async function initKalshi(force = false) {
 
   try {
     // Kalshi public API — no auth required for market reads
-    const res = await fetch('https://trading-api.kalshi.com/trade-api/v2/markets?limit=200&status=open', {
-      headers: { 'Accept': 'application/json' }
-    });
+    const kalshiUrl = 'https://trading-api.kalshi.com/trade-api/v2/markets?limit=200&status=open';
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(kalshiUrl)}`;
+    const res = await fetch(proxyUrl);
     if (!res.ok) throw new Error(`Kalshi API ${res.status}`);
     const data = await res.json();
     const markets = (data.markets || []).filter(m => {
