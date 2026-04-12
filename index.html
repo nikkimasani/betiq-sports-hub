@@ -3026,8 +3026,21 @@ const ESPN_CORE_LEADERS = {
 
 async function fetchAthleteRef(ref) {
   if (!ref) return {};
-  try { return await (await fetch(ref)).json(); } catch { return {}; }
+  try { return await (await fetch(ref.replace('http://', 'https://'))).json(); } catch { return {}; }
 }
+
+// ESPN numeric team IDs per sport
+const ESPN_TEAM_IDS = {
+  nba:{ATL:1,BOS:2,BKN:17,CHA:30,CHI:4,CLE:5,DAL:6,DEN:7,DET:8,GS:9,HOU:10,IND:11,LAC:12,LAL:13,MEM:29,MIA:14,MIL:15,MIN:16,NO:3,NY:18,OKC:25,ORL:19,PHI:20,PHX:21,POR:22,SAC:23,SA:24,TOR:28,UTAH:26,WSH:27},
+  nfl:{ARI:22,ATL:1,BAL:33,BUF:2,CAR:29,CHI:3,CIN:4,CLE:5,DAL:6,DEN:7,DET:8,GB:9,HOU:34,IND:11,JAX:30,KC:12,LV:13,LAC:24,LAR:14,MIA:15,MIN:16,NE:17,NO:18,NYG:19,NYJ:20,PHI:21,PIT:23,SF:25,SEA:26,TB:27,TEN:10,WSH:28},
+  mlb:{ARI:29,ATH:11,ATL:15,BAL:1,BOS:2,CHC:16,CHW:4,CIN:17,CLE:5,COL:27,DET:6,HOU:18,KC:7,LAA:3,LAD:19,MIA:28,MIL:8,MIN:9,NYM:21,NYY:10,PHI:22,PIT:23,SD:25,SF:26,SEA:12,STL:24,TB:30,TEX:13,TOR:14,WSH:20}
+};
+// Map TheSportsDB team names → ESPN abbreviation (substring match)
+const SPORTSDB_TEAM_MAP = {
+  nba:{'Hawks':'ATL','Celtics':'BOS','Nets':'BKN','Hornets':'CHA','Bulls':'CHI','Cavaliers':'CLE','Mavericks':'DAL','Nuggets':'DEN','Pistons':'DET','Warriors':'GS','Rockets':'HOU','Pacers':'IND','Clippers':'LAC','Lakers':'LAL','Grizzlies':'MEM','Heat':'MIA','Bucks':'MIL','Timberwolves':'MIN','Pelicans':'NO','Knicks':'NY','Thunder':'OKC','Magic':'ORL','76ers':'PHI','Suns':'PHX','Trail Blazers':'POR','Kings':'SAC','Spurs':'SA','Raptors':'TOR','Jazz':'UTAH','Wizards':'WSH'},
+  nfl:{'Cardinals':'ARI','Falcons':'ATL','Ravens':'BAL','Bills':'BUF','Panthers':'CAR','Bears':'CHI','Bengals':'CIN','Browns':'CLE','Cowboys':'DAL','Broncos':'DEN','Lions':'DET','Packers':'GB','Texans':'HOU','Colts':'IND','Jaguars':'JAX','Chiefs':'KC','Raiders':'LV','Chargers':'LAC','Rams':'LAR','Dolphins':'MIA','Vikings':'MIN','Patriots':'NE','Saints':'NO','Giants':'NYG','Jets':'NYJ','Eagles':'PHI','Steelers':'PIT','49ers':'SF','Seahawks':'SEA','Buccaneers':'TB','Titans':'TEN','Commanders':'WSH'},
+  mlb:{'Diamondbacks':'ARI','Athletics':'ATH','Braves':'ATL','Orioles':'BAL','Red Sox':'BOS','Cubs':'CHC','White Sox':'CHW','Reds':'CIN','Guardians':'CLE','Rockies':'COL','Tigers':'DET','Astros':'HOU','Royals':'KC','Angels':'LAA','Dodgers':'LAD','Marlins':'MIA','Brewers':'MIL','Twins':'MIN','Mets':'NYM','Yankees':'NYY','Phillies':'PHI','Pirates':'PIT','Padres':'SD','Giants':'SF','Mariners':'SEA','Cardinals':'STL','Rays':'TB','Rangers':'TEX','Blue Jays':'TOR','Nationals':'WSH'}
+};
 
 async function loadLeaders(sport) {
   const el = document.getElementById('leaders-container');
@@ -3039,26 +3052,36 @@ async function loadLeaders(sport) {
     const categories = (data?.categories || []).slice(0, 10);
     if (!categories.length) { el.innerHTML = '<div style="color:var(--text3);padding:16px">No leaders data available.</div>'; return; }
 
-    // Collect all athlete refs needed (top 5 per category)
+    // Collect all athlete + team refs (top 5 per category)
     const refs = [];
     categories.forEach((cat, ci) => (cat.leaders || []).slice(0, 5).forEach((l, li) =>
-      refs.push({ ci, li, aRef: l.athlete?.['$ref'], val: l.displayValue || l.value })));
+      refs.push({ ci, li, aRef: l.athlete?.['$ref'], tRef: l.team?.['$ref'], val: l.displayValue || l.value })));
 
-    // Fetch all athlete names in parallel
-    const nameMap = {};
-    await Promise.all(refs.map(async ({ ci, li, aRef }) => {
-      const a = await fetchAthleteRef(aRef);
-      nameMap[`${ci}-${li}`] = { name: a.displayName || a.fullName || '—', jersey: a.jersey || '' };
+    // Fetch athlete + team in parallel, fixing http→https
+    const playerMap = {};
+    await Promise.all(refs.map(async ({ ci, li, aRef, tRef }) => {
+      const [a, t] = await Promise.all([fetchAthleteRef(aRef), fetchAthleteRef(tRef)]);
+      playerMap[`${ci}-${li}`] = {
+        name: a.displayName || a.fullName || '—',
+        team: t.abbreviation || '',
+        img: a.headshot?.href || ''
+      };
     }));
 
+    const medals = ['🥇','🥈','🥉','4.','5.'];
     el.innerHTML = `<div class="leaders-grid">${categories.map((cat, ci) => `
       <div class="leaders-card">
         <div class="leaders-card-title">${esc(cat.displayName || cat.name)}</div>
         ${(cat.leaders || []).slice(0, 5).map((l, li) => {
-          const { name } = nameMap[`${ci}-${li}`] || { name: '—' };
-          return `<div class="leader-row">
-            <div><div class="leader-name">${li===0?'👑 ':''}${esc(name)}</div></div>
-            <div class="leader-val">${esc(l.displayValue || String(l.value) || '—')}</div>
+          const { name, team, img } = playerMap[`${ci}-${li}`] || { name: '—', team: '', img: '' };
+          return `<div class="leader-row" style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:11px;width:20px;text-align:center;flex-shrink:0">${medals[li]}</span>
+            ${img ? `<img src="${esc(img)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : ''}
+            <div style="flex:1;min-width:0">
+              <div class="leader-name" style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
+              ${team ? `<div style="font-size:10px;color:var(--text3)">${esc(team)}</div>` : ''}
+            </div>
+            <div class="leader-val" style="font-size:14px;font-weight:800;color:var(--green);flex-shrink:0">${esc(l.displayValue || String(l.value) || '—')}</div>
           </div>`;
         }).join('')}
       </div>`).join('')}</div>`;
@@ -3095,16 +3118,25 @@ async function runStatsBuilder() {
     const rawLeaders = (cat.leaders || []).filter(l => !minVal || parseFloat(l.value || l.displayValue) >= minVal);
     if (!rawLeaders.length) { el.innerHTML = '<div style="color:var(--text3)">No players match that filter.</div>'; return; }
 
-    // Fetch athlete names in parallel
-    const names = await Promise.all(rawLeaders.map(l => fetchAthleteRef(l.athlete?.['$ref'])));
+    // Fetch athlete + team in parallel
+    const players = await Promise.all(rawLeaders.map(async l => {
+      const [a, t] = await Promise.all([fetchAthleteRef(l.athlete?.['$ref']), fetchAthleteRef(l.team?.['$ref'])]);
+      return { name: a.displayName || a.fullName || '—', team: t.abbreviation || '', img: a.headshot?.href || '' };
+    }));
 
     el.innerHTML = `<div style="margin-bottom:10px;font-size:13px;color:var(--text2)">Showing <strong style="color:var(--text)">${rawLeaders.length} players</strong> — ${esc(cat.displayName || cat.name)}${minVal ? ` ≥ ${minVal}` : ''}</div>
     <table class="boxscore-table" style="font-size:13px">
-      <thead><tr><th style="text-align:left">Rank</th><th style="text-align:left">Player</th><th>${esc(cat.displayName||cat.name)}</th></tr></thead>
+      <thead><tr><th style="text-align:left">#</th><th style="text-align:left">Player</th><th style="text-align:left">Team</th><th>${esc(cat.displayName||cat.name)}</th></tr></thead>
       <tbody>${rawLeaders.map((l, i) => `
         <tr>
-          <td style="text-align:left;color:var(--text3)">${i+1}</td>
-          <td style="text-align:left;color:var(--text);font-weight:600">${esc(names[i]?.displayName || names[i]?.fullName || '—')}</td>
+          <td style="color:var(--text3)">${i+1}</td>
+          <td style="text-align:left">
+            <div style="display:flex;align-items:center;gap:8px">
+              ${players[i].img ? `<img src="${esc(players[i].img)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">` : ''}
+              <span style="font-weight:700;color:var(--text)">${esc(players[i].name)}</span>
+            </div>
+          </td>
+          <td style="color:var(--text3);font-size:11px">${esc(players[i].team)}</td>
           <td style="color:var(--green);font-weight:800">${l.displayValue||l.value||'—'}</td>
         </tr>`).join('')}
       </tbody>
@@ -3622,20 +3654,69 @@ async function loadSportsDBPlayer(id, name, sport) {
     const data = await res.json();
     const p = data.players?.[0] || {};
     const img = p.strThumb || p.strCutout || '';
-    const bio = p.strDescriptionEN ? p.strDescriptionEN.slice(0, 300) + (p.strDescriptionEN.length > 300 ? '…' : '') : '';
+    const bio = p.strDescriptionEN ? p.strDescriptionEN.slice(0, 400) + (p.strDescriptionEN.length > 400 ? '…' : '') : '';
+
+    // Try to find ESPN season stats via team roster lookup
+    let statsHTML = '';
+    if (sport !== 'mlb') {
+      try {
+        const teamKey = Object.keys(SPORTSDB_TEAM_MAP[sport] || {}).find(k => (p.strTeam||'').includes(k));
+        const abbrev = teamKey ? SPORTSDB_TEAM_MAP[sport][teamKey] : null;
+        const teamId = abbrev ? ESPN_TEAM_IDS[sport]?.[abbrev] : null;
+        if (teamId) {
+          const espnSport = SPORTS[sport].espn;
+          const rosterRes = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${espnSport}/teams/${teamId}/roster`);
+          const rosterData = await rosterRes.json();
+          const allAthletes = (rosterData.athletes || []).flatMap(g => g.items || [g]);
+          const pName = (p.strPlayer || name).toLowerCase();
+          const match = allAthletes.find(a => {
+            const full = ((a.firstName||'') + ' ' + (a.lastName||'')).trim().toLowerCase();
+            return full === pName || pName.includes(a.lastName?.toLowerCase());
+          });
+          if (match) {
+            const coreSport = ESPN_CORE_LEADERS[sport].replace('/seasons/2025/types/2','').replace('/seasons/2024/types/2','');
+            const statsRes = await fetch(`https://sports.core.api.espn.com/v2/sports/${coreSport}/seasons/2025/types/2/athletes/${match.id}/statistics`);
+            if (statsRes.ok) {
+              const sd = await statsRes.json();
+              const cats = sd.splits?.categories || [];
+              const off = cats.find(c=>c.name==='offensive');
+              const def = cats.find(c=>c.name==='defensive');
+              const gen = cats.find(c=>c.name==='general');
+              const statItems = [
+                ...(off?.stats||[]).filter(s=>['avgPoints','fieldGoalPct','threePointPct','freeThrowPct','avgAssists','avgRebounds','completionPct','passingYards','rushingYards','receivingYards','battingAverage','homeRuns','rbi'].includes(s.name)),
+                ...(def?.stats||[]).filter(s=>['avgBlocks','avgSteals','avgDefensiveRebounds','sacks','interceptions'].includes(s.name)),
+                ...(gen?.stats||[]).filter(s=>['avgRebounds','gamesPlayed'].includes(s.name)),
+              ].slice(0,12);
+              if (statItems.length) {
+                statsHTML = `<div class="card-title" style="margin:14px 0 8px">2024-25 Season Stats</div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px">
+                    ${statItems.map(s=>`<div style="background:var(--bg4);border-radius:8px;padding:8px;text-align:center">
+                      <div style="font-size:16px;font-weight:800;color:var(--green)">${esc(s.displayValue||String(s.value)||'—')}</div>
+                      <div style="font-size:10px;color:var(--text3);margin-top:2px">${esc(s.shortDisplayName||s.name)}</div>
+                    </div>`).join('')}
+                  </div>`;
+              }
+            }
+            // Also get ESPN headshot
+            if (match.headshot?.href) img || (p.strThumb = match.headshot.href);
+          }
+        }
+      } catch(e2) { /* ESPN stats unavailable, show TheSportsDB info only */ }
+    }
+
     panel.innerHTML = `
       <div class="card" style="margin-top:12px">
         <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
-          ${img ? `<img src="${esc(img)}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--bg4)" onerror="this.style.display='none'">` : '<div style="width:64px;height:64px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:28px">👤</div>'}
+          ${img ? `<img src="${esc(img)}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--bg4)" onerror="this.style.display='none'">` : '<div style="width:72px;height:72px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:32px">👤</div>'}
           <div>
             <div style="font-size:18px;font-weight:800">${esc(p.strPlayer || name)}</div>
-            <div style="font-size:12px;color:var(--text2);margin-top:3px">
-              ${esc(p.strPosition || '')}${p.strTeam ? ' · ' + esc(p.strTeam) : ''}${p.strNationality ? ' · ' + esc(p.strNationality) : ''}
-            </div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px">${esc(p.strPosition||'')}${p.strTeam?' · '+esc(p.strTeam):''}${p.strNationality?' · '+esc(p.strNationality):''}</div>
+            ${p.strHeight||p.strWeight ? `<div style="font-size:11px;color:var(--text3);margin-top:2px">${[p.strHeight,p.strWeight].filter(Boolean).map(esc).join(' · ')}</div>` : ''}
           </div>
         </div>
-        ${p.dateBorn ? `<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Born: ${esc(p.dateBorn)}${p.strBirthLocation ? ' · ' + esc(p.strBirthLocation) : ''}</div>` : ''}
-        ${bio ? `<div style="font-size:12px;color:var(--text2);line-height:1.6">${esc(bio)}</div>` : '<div class="agent-empty" style="padding:16px">No bio available.</div>'}
+        ${p.dateBorn ? `<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Born: ${esc(p.dateBorn)}${p.strBirthLocation?' · '+esc(p.strBirthLocation):''}</div>` : ''}
+        ${statsHTML}
+        ${bio ? `<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-top:12px">${esc(bio)}</div>` : ''}
       </div>`;
   } catch(e) {
     panel.innerHTML = '<div class="card"><div class="agent-empty">Could not load player info.</div></div>';
@@ -4328,28 +4409,134 @@ const KALSHI_SPORT_KEYWORDS = {
   nhl: ['nhl','hockey','stanley cup','rangers','bruins','maple leafs','blackhawks'],
 };
 
+function mlToProb(ml) {
+  if (!ml) return 0.5;
+  return ml < 0 ? Math.abs(ml) / (Math.abs(ml) + 100) : 100 / (ml + 100);
+}
+function lfgRecord(events) {
+  if (!events?.length) return '';
+  const w = events.filter(e => e.gameResult === 'W').length;
+  return `${w}-${events.length - w} L5`;
+}
+
 async function initKalshi(force = false) {
   if (state.currentTab !== 'kalshi') return;
   const container = document.getElementById('kalshi-container');
-  if (kalshiCache && !force) { renderKalshi(kalshiCache); return; }
+  if (!force && container.dataset.loaded) return;
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Generating predictions...</span></div>';
 
-  container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading Kalshi markets...</span></div>';
+  try {
+    // Fetch today's games for NBA + MLB (NFL offseason)
+    const [nbaSB, mlbSB] = await Promise.all([
+      fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard').then(r=>r.json()).catch(()=>({events:[]})),
+      fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard').then(r=>r.json()).catch(()=>({events:[]})),
+    ]);
 
-  // Kalshi now requires authentication for all API calls (HTTP 401).
-  // Show direct links so users can view markets on Kalshi's site.
-  container.innerHTML = `<div class="kalshi-empty">
-    <div style="font-size:32px;margin-bottom:12px">🔐</div>
-    <div style="font-weight:700;margin-bottom:8px;font-size:16px">Kalshi Requires Login</div>
-    <div style="font-size:13px;color:var(--text3);max-width:380px;margin:0 auto 20px;line-height:1.6">
-      Kalshi's API now requires authentication. Browse their sports prediction markets directly on their site.
-    </div>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <a href="https://kalshi.com/markets/sports" target="_blank" style="background:#00d2a0;color:#000;border:none;border-radius:8px;padding:10px 20px;font-weight:700;text-decoration:none;font-size:13px">View Sports Markets →</a>
-      <a href="https://kalshi.com/markets/sports/nba" target="_blank" style="background:rgba(0,210,160,.15);border:1px solid rgba(0,210,160,.3);color:#00d2a0;border-radius:8px;padding:10px 20px;font-weight:700;text-decoration:none;font-size:13px">🏀 NBA</a>
-      <a href="https://kalshi.com/markets/sports/mlb" target="_blank" style="background:rgba(0,210,160,.15);border:1px solid rgba(0,210,160,.3);color:#00d2a0;border-radius:8px;padding:10px 20px;font-weight:700;text-decoration:none;font-size:13px">⚾ MLB</a>
-      <a href="https://kalshi.com/markets/sports/nfl" target="_blank" style="background:rgba(0,210,160,.15);border:1px solid rgba(0,210,160,.3);color:#00d2a0;border-radius:8px;padding:10px 20px;font-weight:700;text-decoration:none;font-size:13px">🏈 NFL</a>
-    </div>
-  </div>`;
+    const allEvents = [
+      ...(nbaSB.events||[]).map(e=>({...e,sport:'nba',espn:'basketball/nba'})),
+      ...(mlbSB.events||[]).map(e=>({...e,sport:'mlb',espn:'baseball/mlb'})),
+    ];
+
+    if (!allEvents.length) {
+      container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text3)">No games scheduled today.<br><br>
+        <a href="https://kalshi.com/markets/sports" target="_blank" style="color:#00d2a0;font-weight:700">Browse Kalshi Markets →</a></div>`;
+      return;
+    }
+
+    // Fetch summaries in parallel (for pickcenter + lastFiveGames)
+    const summaries = await Promise.all(allEvents.map(e =>
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/${e.espn}/summary?event=${e.id}`)
+        .then(r=>r.json()).catch(()=>({}))
+    ));
+
+    const cards = allEvents.map((event, i) => {
+      const sum = summaries[i] || {};
+      const comp = event.competitions?.[0];
+      const [home, away] = [
+        comp?.competitors?.find(c=>c.homeAway==='home'),
+        comp?.competitors?.find(c=>c.homeAway==='away'),
+      ];
+      if (!home || !away) return '';
+
+      const homeRec = home.records?.[0]?.summary || '';
+      const awayRec = away.records?.[0]?.summary || '';
+      const pc = sum.pickcenter?.[0];
+      const lfg = sum.lastFiveGames || [];
+      const homeLFG = lfg.find(l=>l.team?.id===home.team?.id);
+      const awayLFG = lfg.find(l=>l.team?.id===away.team?.id);
+
+      // Win probability — use pickcenter moneyline if available, else win%
+      let homeProb, awayProb;
+      if (pc?.homeTeamOdds?.moneyLine && pc?.awayTeamOdds?.moneyLine) {
+        const rH = mlToProb(pc.homeTeamOdds.moneyLine);
+        const rA = mlToProb(pc.awayTeamOdds.moneyLine);
+        homeProb = Math.round(rH / (rH + rA) * 100);
+        awayProb = 100 - homeProb;
+      } else {
+        const [hw,hl] = (homeRec||'0-0').split('-').map(Number);
+        const [aw,al] = (awayRec||'0-0').split('-').map(Number);
+        const hRate = hw/(hw+hl||1) + 0.04; // home advantage
+        const aRate = aw/(aw+al||1);
+        homeProb = Math.round(hRate/(hRate+aRate)*100);
+        awayProb = 100 - homeProb;
+      }
+
+      const favored = homeProb >= awayProb ? home : away;
+      const favProb = Math.max(homeProb, awayProb);
+      const confidence = favProb >= 70 ? 'High' : favProb >= 58 ? 'Medium' : 'Even';
+      const confColor = favProb >= 70 ? 'var(--green)' : favProb >= 58 ? 'var(--gold)' : 'var(--text3)';
+      const gameTime = comp?.date ? new Date(comp.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZoneName:'short'}) : '';
+      const spread = pc?.spread ? (pc.spread > 0 ? '+' : '') + pc.spread : null;
+      const ou = pc?.overUnder ? pc.overUnder : null;
+      const sportEmoji = event.sport === 'nba' ? '🏀' : '⚾';
+
+      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:11px;color:var(--text3)">${sportEmoji} ${esc(gameTime)}</span>
+          <span style="font-size:11px;font-weight:700;color:${confColor}">${confidence} Confidence</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:12px">
+          <div style="text-align:center">
+            <div style="font-weight:800;font-size:15px">${esc(away.team?.abbreviation||'')}</div>
+            <div style="font-size:11px;color:var(--text3)">${esc(awayRec)}</div>
+            <div style="font-size:10px;color:var(--text3)">${lfgRecord(awayLFG?.events)}</div>
+            <div style="margin-top:6px;font-size:18px;font-weight:900;color:${awayProb>homeProb?'var(--green)':'var(--text2)'}">${awayProb}%</div>
+          </div>
+          <div style="text-align:center;color:var(--text3);font-size:12px;font-weight:700">@</div>
+          <div style="text-align:center">
+            <div style="font-weight:800;font-size:15px">${esc(home.team?.abbreviation||'')}</div>
+            <div style="font-size:11px;color:var(--text3)">${esc(homeRec)}</div>
+            <div style="font-size:10px;color:var(--text3)">${lfgRecord(homeLFG?.events)}</div>
+            <div style="margin-top:6px;font-size:18px;font-weight:900;color:${homeProb>awayProb?'var(--green)':'var(--text2)'}">${homeProb}%</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:var(--bg4);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700">Pick: ${esc(favored.team?.abbreviation||'')} ${favProb}%</span>
+          ${spread ? `<span style="background:var(--bg4);border-radius:6px;padding:4px 10px;font-size:11px">Spread: ${esc(String(spread))}</span>` : ''}
+          ${ou ? `<span style="background:var(--bg4);border-radius:6px;padding:4px 10px;font-size:11px">O/U: ${esc(String(ou))}</span>` : ''}
+        </div>
+      </div>`;
+    }).filter(Boolean);
+
+    container.dataset.loaded = '1';
+    container.innerHTML = `
+      <div style="margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Today's Predictions</div>
+        <div style="font-size:11px;color:var(--text3)">Win probability from Vegas moneylines + team records. Not financial advice.</div>
+      </div>
+      ${cards.join('')}
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Real-money prediction markets</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <a href="https://kalshi.com/markets/sports" target="_blank" style="background:#00d2a0;color:#000;border-radius:8px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">Kalshi Sports →</a>
+          <a href="https://kalshi.com/markets/sports/nba" target="_blank" style="background:var(--bg4);color:var(--text);border-radius:8px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">🏀 NBA</a>
+          <a href="https://kalshi.com/markets/sports/mlb" target="_blank" style="background:var(--bg4);color:var(--text);border-radius:8px;padding:8px 16px;font-weight:700;text-decoration:none;font-size:12px">⚾ MLB</a>
+        </div>
+      </div>`;
+  } catch(e) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text3)">Failed to load predictions.<br>
+      <button onclick="initKalshi(true)" style="margin-top:12px;background:var(--bg4);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 16px;cursor:pointer">Retry</button></div>`;
+  }
 }
 
 function filterKalshi(filter) {
