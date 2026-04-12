@@ -960,12 +960,15 @@ async function fetchESPN(sport, endpoint = 'scoreboard') {
 }
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
+const TAB_ORDER = ['dashboard','scores','news','parlay','tracker','myteams','knowledge','calculator','guide','settings'];
+
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  const btns = document.querySelectorAll('.nav-btn');
-  btns.forEach(b => { if (b.textContent.toLowerCase().includes(name.split('-')[0].slice(0,4))) b.classList.add('active'); });
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    b.classList.toggle('active', TAB_ORDER[i] === name);
+  });
+  const tabEl = document.getElementById('tab-' + name);
+  if (tabEl) tabEl.classList.add('active');
   state.currentTab = name;
   if (name === 'scores') loadScores(state.currentSport);
   if (name === 'news') loadNews(state.currentNewsSport);
@@ -977,10 +980,9 @@ function switchTab(name) {
   if (name === 'settings') initSettings();
 }
 
-// fix nav button matching
+// wire nav buttons to tabs by position
 document.querySelectorAll('.nav-btn').forEach((b, i) => {
-  const tabs = ['dashboard','scores','news','parlay','tracker','knowledge','calculator'];
-  b.onclick = () => switchTab(tabs[i]);
+  if (TAB_ORDER[i]) b.onclick = () => switchTab(TAB_ORDER[i]);
 });
 
 // ─── SCORES ───────────────────────────────────────────────────────────────────
