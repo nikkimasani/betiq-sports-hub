@@ -449,6 +449,26 @@ nav::-webkit-scrollbar { display: none; }
 .leaders-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
 .leaders-card { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:14px; }
 .leaders-card-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text3); margin-bottom:10px; }
+/* Social tab */
+.social-layout { display:grid; grid-template-columns:220px 1fr; gap:16px; align-items:start; }
+@media(max-width:700px){ .social-layout { grid-template-columns:1fr; } }
+.social-sidebar { background:var(--bg2); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.social-sport-filter { display:flex; border-bottom:1px solid var(--border); }
+.social-sport-btn { flex:1; padding:9px 4px; font-size:11px; font-weight:700; background:none; border:none; color:var(--text3); cursor:pointer; transition:all .15s; letter-spacing:.4px; }
+.social-sport-btn.active { color:var(--green); border-bottom:2px solid var(--green); background:rgba(83,210,44,.06); }
+.social-account-item { display:flex; align-items:center; gap:10px; padding:11px 14px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .15s; }
+.social-account-item:last-child { border-bottom:none; }
+.social-account-item:hover { background:var(--bg3); }
+.social-account-item.active { background:rgba(83,210,44,.1); border-left:3px solid var(--green); }
+.social-account-avatar { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; }
+.social-account-info { flex:1; min-width:0; }
+.social-account-name { font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.social-account-handle { font-size:11px; color:var(--text3); }
+.social-account-badge { font-size:9px; font-weight:700; padding:2px 5px; border-radius:3px; margin-top:2px; display:inline-block; }
+.social-feed-panel { background:var(--bg2); border:1px solid var(--border); border-radius:10px; overflow:hidden; min-height:500px; }
+.social-feed-header { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.social-feed-body { padding:8px; }
+.social-feed-body iframe { border-radius:8px; }
 .leader-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
 .leader-row:last-child { border-bottom:none; }
 .leader-name { font-size:13px; font-weight:600; }
@@ -636,7 +656,6 @@ nav::-webkit-scrollbar { display: none; }
 .pill-final { background:rgba(83,210,44,.1); color:var(--green); border:1px solid rgba(83,210,44,.3); }
 .live-no-games { color:var(--text3); font-size:13px; padding:8px 0; }
 </style>
-  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 </head>
 <body>
 
@@ -839,13 +858,34 @@ nav::-webkit-scrollbar { display: none; }
 
     <!-- SOCIAL / X FEED -->
     <div id="tab-social" class="tab">
-      <div class="section-header" style="margin-bottom:14px">
-        <div class="section-title">🐦 Sports on X / Twitter</div>
-        <div style="font-size:11px;color:var(--text3)">Top insiders & official accounts</div>
+      <div class="section-header" style="margin-bottom:16px">
+        <div>
+          <div class="section-title">𝕏 Sports Feed</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Live tweets from top insiders & official accounts</div>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="social-account-btns"></div>
-      <div id="social-feed-container" style="min-height:400px;display:flex;justify-content:center">
-        <div style="color:var(--text3);padding:40px;text-align:center">Select an account above to load their feed.</div>
+      <div class="social-layout">
+        <!-- Sidebar: account list -->
+        <div class="social-sidebar">
+          <div class="social-sport-filter" id="social-filter-bar"></div>
+          <div id="social-account-list"></div>
+        </div>
+        <!-- Feed panel -->
+        <div class="social-feed-panel">
+          <div class="social-feed-header" id="social-feed-header">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border)"></div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--text)">Select an account</div>
+              <div style="font-size:11px;color:var(--text3)">Choose from the list on the left</div>
+            </div>
+          </div>
+          <div class="social-feed-body" id="social-feed-container">
+            <div style="padding:60px 20px;text-align:center;color:var(--text3)">
+              <div style="font-size:32px;margin-bottom:12px">𝕏</div>
+              <div style="font-size:14px">Pick an account to load their live feed</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3688,72 +3728,131 @@ function updateScoresRefreshBadge() {
 
 // ─── SOCIAL / X FEED ──────────────────────────────────────────────────────────
 const SOCIAL_ACCOUNTS = [
-  { label: 'ESPN',         handle: 'ESPN',          sport: 'all' },
-  { label: 'SportsCenter', handle: 'SportsCenter',  sport: 'all' },
-  { label: 'NBA',          handle: 'NBA',            sport: 'nba' },
-  { label: 'NFL',          handle: 'NFL',            sport: 'nfl' },
-  { label: 'MLB',          handle: 'MLB',            sport: 'mlb' },
-  { label: 'Shams (NBA)',  handle: 'ShamsCharania',  sport: 'nba' },
-  { label: 'Woj (NBA)',    handle: 'wojespn',        sport: 'nba' },
-  { label: 'Schefter (NFL)', handle: 'AdamSchefter', sport: 'nfl' },
-  { label: 'Rapoport (NFL)', handle: 'RapSheet',     sport: 'nfl' },
-  { label: 'Ken Rosenthal', handle: 'Ken_Rosenthal', sport: 'mlb' },
-  { label: 'ESPN MLB',     handle: 'espnmlb',        sport: 'mlb' },
-  { label: 'ESPN NBA',     handle: 'espnnba',        sport: 'nba' },
-  { label: 'ESPN NFL',     handle: 'espnnfl',        sport: 'nfl' },
-  { label: 'FantasyPros',  handle: 'FantasyPros',    sport: 'all' },
+  { label: 'ESPN',           handle: 'ESPN',           sport: 'all', desc: 'The worldwide leader', color: '#cc0000', initials: 'ES' },
+  { label: 'SportsCenter',   handle: 'SportsCenter',   sport: 'all', desc: 'Top plays & highlights', color: '#c8a400', initials: 'SC' },
+  { label: 'FantasyPros',    handle: 'FantasyPros',    sport: 'all', desc: 'Fantasy & betting intel', color: '#7c4dff', initials: 'FP' },
+  { label: 'NBA',            handle: 'NBA',             sport: 'nba', desc: 'Official NBA account', color: '#1d428a', initials: 'NBA' },
+  { label: 'Shams Charania', handle: 'ShamsCharania',  sport: 'nba', desc: 'The Athletic — NBA insider', color: '#1d428a', initials: 'SC' },
+  { label: 'Adrian Woj',    handle: 'wojespn',         sport: 'nba', desc: 'ESPN — NBA insider', color: '#1d428a', initials: 'WJ' },
+  { label: 'ESPN NBA',       handle: 'espnnba',         sport: 'nba', desc: 'ESPN NBA coverage', color: '#1d428a', initials: 'EN' },
+  { label: 'NFL',            handle: 'NFL',             sport: 'nfl', desc: 'Official NFL account', color: '#013369', initials: 'NFL' },
+  { label: 'Adam Schefter',  handle: 'AdamSchefter',   sport: 'nfl', desc: 'ESPN — NFL insider', color: '#013369', initials: 'AS' },
+  { label: 'Ian Rapoport',   handle: 'RapSheet',        sport: 'nfl', desc: 'NFL Network insider', color: '#013369', initials: 'IR' },
+  { label: 'ESPN NFL',       handle: 'espnnfl',         sport: 'nfl', desc: 'ESPN NFL coverage', color: '#013369', initials: 'EN' },
+  { label: 'MLB',            handle: 'MLB',             sport: 'mlb', desc: 'Official MLB account', color: '#002d72', initials: 'MLB' },
+  { label: 'Ken Rosenthal',  handle: 'Ken_Rosenthal',  sport: 'mlb', desc: 'The Athletic — MLB insider', color: '#002d72', initials: 'KR' },
+  { label: 'ESPN MLB',       handle: 'espnmlb',         sport: 'mlb', desc: 'ESPN MLB coverage', color: '#002d72', initials: 'EM' },
+];
+
+const SPORT_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'nba', label: '🏀' },
+  { key: 'nfl', label: '🏈' },
+  { key: 'mlb', label: '⚾' },
 ];
 
 let activeSocialHandle = null;
+let activeSocialSport = 'all';
+let twitterScriptLoaded = false;
+let twitterReadyQueue = [];
+
+function loadTwitterScript() {
+  if (document.getElementById('twitter-wjs')) return;
+  const s = document.createElement('script');
+  s.id = 'twitter-wjs';
+  s.src = 'https://platform.twitter.com/widgets.js';
+  s.charset = 'utf-8';
+  s.async = true;
+  s.onload = () => {
+    twitterScriptLoaded = true;
+    twitterReadyQueue.forEach(fn => window.twttr.ready(fn));
+    twitterReadyQueue = [];
+  };
+  document.head.appendChild(s);
+}
+
+function onTwitterReady(fn) {
+  if (twitterScriptLoaded && window.twttr && window.twttr.widgets) {
+    window.twttr.ready(fn);
+  } else {
+    twitterReadyQueue.push(fn);
+    if (!document.getElementById('twitter-wjs')) loadTwitterScript();
+  }
+}
 
 function initSocial() {
-  const btnContainer = document.getElementById('social-account-btns');
-  if (btnContainer.children.length) return; // already built
-  btnContainer.innerHTML = SOCIAL_ACCOUNTS.map(a =>
-    `<button onclick="loadSocialFeed('${a.handle}')" id="sbtn-${a.handle}"
-      style="padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">
-      ${a.label}
-    </button>`
-  ).join('');
-  // Auto-load ESPN on first open
-  loadSocialFeed('ESPN');
+  // Build sport filter bar
+  const filterBar = document.getElementById('social-filter-bar');
+  if (!filterBar.children.length) {
+    filterBar.innerHTML = SPORT_FILTERS.map(f =>
+      `<button class="social-sport-btn ${f.key === activeSocialSport ? 'active' : ''}"
+        onclick="setSocialSportFilter('${f.key}')">${f.label}</button>`
+    ).join('');
+  }
+  renderSocialAccountList();
+  if (!activeSocialHandle) loadSocialFeed('ESPN');
+}
+
+function setSocialSportFilter(sport) {
+  activeSocialSport = sport;
+  document.querySelectorAll('.social-sport-btn').forEach((b, i) => {
+    b.classList.toggle('active', SPORT_FILTERS[i].key === sport);
+  });
+  renderSocialAccountList();
+}
+
+function renderSocialAccountList() {
+  const list = document.getElementById('social-account-list');
+  const visible = activeSocialSport === 'all'
+    ? SOCIAL_ACCOUNTS
+    : SOCIAL_ACCOUNTS.filter(a => a.sport === activeSocialSport || a.sport === 'all');
+  list.innerHTML = visible.map(a => `
+    <div class="social-account-item ${activeSocialHandle === a.handle ? 'active' : ''}"
+         onclick="loadSocialFeed('${a.handle}')">
+      <div class="social-account-avatar" style="background:${a.color}22;color:${a.color};border:1px solid ${a.color}44">
+        ${a.initials}
+      </div>
+      <div class="social-account-info">
+        <div class="social-account-name">${a.label}</div>
+        <div class="social-account-handle">@${a.handle}</div>
+      </div>
+    </div>`).join('');
 }
 
 function loadSocialFeed(handle) {
   activeSocialHandle = handle;
-  // Highlight active button
-  document.querySelectorAll('#social-account-btns button').forEach(b => {
-    b.style.background = 'var(--bg2)';
-    b.style.color = 'var(--text2)';
-    b.style.borderColor = 'var(--border)';
-  });
-  const activeBtn = document.getElementById('sbtn-' + handle);
-  if (activeBtn) {
-    activeBtn.style.background = 'var(--green)';
-    activeBtn.style.color = '#000';
-    activeBtn.style.borderColor = 'var(--green)';
-  }
+  renderSocialAccountList();
+
+  const acct = SOCIAL_ACCOUNTS.find(a => a.handle === handle);
+  const header = document.getElementById('social-feed-header');
+  header.innerHTML = `
+    <div class="social-account-avatar" style="width:36px;height:36px;background:${acct?.color}22;color:${acct?.color};border:1px solid ${acct?.color}44;font-size:11px;font-weight:800;border-radius:50%;display:flex;align-items:center;justify-content:center">
+      ${acct?.initials || handle[0]}
+    </div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700;color:var(--text)">${acct?.label || handle}</div>
+      <div style="font-size:11px;color:var(--text3)">@${handle} · ${acct?.desc || ''}</div>
+    </div>
+    <a href="https://twitter.com/${handle}" target="_blank"
+       style="font-size:11px;color:var(--green);font-weight:600;text-decoration:none;white-space:nowrap">
+      Open on 𝕏 ↗
+    </a>`;
 
   const container = document.getElementById('social-feed-container');
-  container.innerHTML = `<div class="loading"><div class="spinner"></div><span>Loading @${handle}...</span></div>`;
+  container.innerHTML = `<div class="loading" style="padding:40px"><div class="spinner"></div><span>Loading @${handle}…</span></div>`;
 
-  // Inject Twitter Timeline embed
-  setTimeout(() => {
+  onTwitterReady(() => {
     container.innerHTML = `
-      <div style="max-width:550px;width:100%">
-        <a class="twitter-timeline"
-           data-theme="dark"
-           data-height="600"
-           data-tweet-limit="8"
-           data-chrome="noheader nofooter noborders"
-           href="https://twitter.com/${handle}">
-          Tweets by @${handle}
-        </a>
-      </div>`;
-    if (window.twttr && window.twttr.widgets) {
-      window.twttr.widgets.load(container);
-    }
-  }, 50);
+      <a class="twitter-timeline"
+         data-theme="dark"
+         data-height="560"
+         data-chrome="noheader nofooter noborders transparent"
+         data-tweet-limit="10"
+         href="https://twitter.com/${handle}">
+        Tweets by @${handle}
+      </a>`;
+    window.twttr.widgets.load(container);
+  });
 }
 
 // Auto-connect Supabase if credentials saved
