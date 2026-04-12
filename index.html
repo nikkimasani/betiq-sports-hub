@@ -1097,6 +1097,7 @@ nav { align-items: center; }
           <div class="guide-nav-item" onclick="showGuide('dataagent')">🔍 Data Agent</div>
           <div class="guide-nav-item" onclick="showGuide('predictions')">🎯 Predictions</div>
           <div class="guide-nav-item" onclick="showGuide('supabase')">☁️ Supabase Sync</div>
+          <div class="guide-nav-item" onclick="showGuide('kalshi')">📈 Kalshi</div>
           <div class="guide-nav-item" onclick="showGuide('settings')">⚙️ Settings</div>
         </div>
         <div id="guide-content"></div>
@@ -3562,6 +3563,52 @@ create table betiq_favorites (id text primary key, user_id text, sport text, tea
       <li>Favorite teams</li>
     </ul>
     <p>Each device gets a unique auto-generated user ID stored in localStorage. Data is tied to that ID, so you see the same data on any device that has the same credentials entered.</p>`
+  },
+  kalshi: {
+    title: 'Kalshi',
+    sub: 'Real-money prediction markets for sports outcomes',
+    body: `
+    <h3>What Is Kalshi?</h3>
+    <p>Kalshi is a federally regulated prediction market exchange where you buy and sell contracts on real-world outcomes — including sports. Unlike sportsbooks, Kalshi is legal in all 50 US states because it operates as a financial exchange, not a gambling platform.</p>
+
+    <h3>How It Works</h3>
+    <p>Each contract is a Yes/No question — for example: <em>"Will the Lakers win tonight?"</em> Contracts trade between $0.01 and $1.00. If you buy Yes at $0.70 and the Lakers win, the contract pays out $1.00 — a $0.30 profit per contract. If they lose, you get nothing.</p>
+    <div style="background:var(--bg4);border-radius:8px;padding:12px;margin:12px 0;font-size:13px;line-height:1.7">
+      <strong>Example:</strong><br>
+      Contract: "Lakers win vs Celtics" — Yes at $0.65<br>
+      Buy 100 contracts → costs $65<br>
+      Lakers win → receive $100 → <span style="color:var(--green)">+$35 profit</span><br>
+      Lakers lose → receive $0 → <span style="color:var(--red)">-$65 loss</span>
+    </div>
+
+    <h3>Reading the BetIQ Predictions Tab</h3>
+    <p>The Kalshi tab in BetIQ shows today's NBA and MLB games with model-generated win probabilities. These are calculated from Vegas moneylines (via ESPN PickCenter) or season win records when lines aren't available.</p>
+    <ul>
+      <li><strong>Pick %</strong> — the model's estimated win probability for each team</li>
+      <li><strong>Spread / O/U</strong> — Vegas lines from ESPN when available</li>
+      <li><strong>Confidence</strong> — High (70%+), Medium (58–70%), Even (below 58%)</li>
+      <li><strong>L5</strong> — each team's record over their last 5 games</li>
+    </ul>
+
+    <h3>Comparing BetIQ vs Kalshi Prices</h3>
+    <p>The most powerful use case: compare BetIQ's win probability against the live Kalshi contract price. If BetIQ says a team has a 72% chance of winning but the Kalshi Yes contract is trading at $0.60 (60%), that's a potential edge — the market is underpricing the favorite.</p>
+    <div style="background:var(--bg4);border-radius:8px;padding:12px;margin:12px 0;font-size:13px;line-height:1.7">
+      <strong>Spot the edge:</strong><br>
+      BetIQ model: Team A wins at <span style="color:var(--green)">72%</span><br>
+      Kalshi Yes price: <span style="color:var(--gold)">$0.60</span> (implied 60%)<br>
+      Gap = +12% — potential value on the Yes side
+    </div>
+
+    <h3>Sport Filters</h3>
+    <p>Use the All Sports / NBA / MLB / NHL buttons at the top of the Kalshi tab to filter predictions by league. BetIQ currently generates predictions for NBA and MLB games only (NFL is offseason).</p>
+
+    <h3>Important Notes</h3>
+    <ul>
+      <li>Kalshi requires an account and login to trade — BetIQ links you directly to their site</li>
+      <li>Predictions are model-generated estimates, not financial advice</li>
+      <li>Kalshi contract prices reflect real market consensus — they often differ from Vegas lines</li>
+      <li>Start small while learning how contract pricing works</li>
+    </ul>`
   },
 }
 
