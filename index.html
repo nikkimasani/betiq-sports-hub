@@ -472,6 +472,14 @@ nav::-webkit-scrollbar { display: none; }
 .social-post-item { display:flex; gap:12px; padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; align-items:flex-start; }
 .social-post-item:hover { background:var(--bg3); }
 .social-post-item:last-child { border-bottom:none; }
+.social-post-item.expanded { background:rgba(83,210,44,.06); border-left:3px solid var(--green); }
+.social-embed-frame { background:var(--bg3); border-top:1px solid var(--border); padding:12px; }
+.social-sort-bar { display:flex; gap:6px; padding:10px 14px; border-bottom:1px solid var(--border); align-items:center; flex-wrap:wrap; }
+.social-sort-btn { padding:4px 10px; border-radius:12px; border:1px solid var(--border); background:none; color:var(--text3); font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; }
+.social-sort-btn.active { background:var(--green); color:#000; border-color:var(--green); }
+.social-flair-bar { display:flex; gap:4px; padding:6px 14px 8px; flex-wrap:wrap; border-bottom:1px solid var(--border); min-height:0; }
+.social-flair-tag { padding:2px 8px; border-radius:10px; border:1px solid var(--border); background:var(--bg3); color:var(--text3); font-size:10px; font-weight:600; cursor:pointer; transition:all .15s; }
+.social-flair-tag.active { background:rgba(200,164,0,.2); color:var(--gold); border-color:var(--gold); }
 .leader-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
 .leader-row:last-child { border-bottom:none; }
 .leader-name { font-size:13px; font-weight:600; }
@@ -3747,78 +3755,87 @@ const SOCIAL_ACCOUNTS = [
   { label: 'ESPN MLB',       handle: 'espnmlb',         sport: 'mlb', desc: 'ESPN MLB coverage', color: '#002d72', initials: 'EM' },
 ];
 
-// Reddit communities mapped to each sport filter
+// Reddit communities by sport category
 const SOCIAL_SUBREDDITS = {
-  all:  [{ sub: 'sports',         label: 'r/sports' },
-         { sub: 'sportsbetting',  label: 'r/sportsbetting' },
-         { sub: 'fantasyfootball',label: 'r/fantasyfootball' }],
-  nba:  [{ sub: 'nba',            label: 'r/nba' },
-         { sub: 'nbadiscussion',  label: 'r/nbadiscussion' }],
-  nfl:  [{ sub: 'nfl',            label: 'r/nfl' },
-         { sub: 'fantasyfootball',label: 'r/fantasyfootball' }],
-  mlb:  [{ sub: 'baseball',       label: 'r/baseball' },
-         { sub: 'fantasybaseball',label: 'r/fantasybaseball' }],
+  all: [
+    { sub: 'sports',          label: 'r/sports',           desc: 'General sports news' },
+    { sub: 'sportsnews',      label: 'r/sportsnews',        desc: 'Breaking sports news' },
+    { sub: 'sportsbook',      label: 'r/sportsbook',        desc: 'Betting picks & discussion' },
+    { sub: 'sportsbetting',   label: 'r/sportsbetting',     desc: 'Odds & strategy' },
+    { sub: 'dfs',             label: 'r/dfs',               desc: 'Daily fantasy sports' },
+    { sub: 'fantasyfootball', label: 'r/fantasyfootball',   desc: 'Fantasy picks & waiver wire' },
+  ],
+  nba: [
+    { sub: 'nba',             label: 'r/nba',               desc: 'NBA news & game threads' },
+    { sub: 'nbadiscussion',   label: 'r/nbadiscussion',     desc: 'In-depth NBA analysis' },
+    { sub: 'nbaanalysis',     label: 'r/nbaanalysis',       desc: 'Stats & breakdowns' },
+    { sub: 'fantasybball',    label: 'r/fantasybball',      desc: 'Fantasy basketball' },
+    { sub: 'sportsbook',      label: 'r/sportsbook',        desc: 'NBA betting picks' },
+  ],
+  nfl: [
+    { sub: 'nfl',             label: 'r/nfl',               desc: 'NFL news & game threads' },
+    { sub: 'nflstreams',      label: 'r/NFLNoobs',          desc: 'NFL Q&A & breakdowns' },
+    { sub: 'fantasyfootball', label: 'r/fantasyfootball',   desc: 'Fantasy picks & waiver wire' },
+    { sub: 'dfs',             label: 'r/dfs',               desc: 'NFL DFS lineups' },
+    { sub: 'sportsbook',      label: 'r/sportsbook',        desc: 'NFL betting picks' },
+  ],
+  mlb: [
+    { sub: 'baseball',        label: 'r/baseball',          desc: 'MLB news & game threads' },
+    { sub: 'fantasybaseball', label: 'r/fantasybaseball',   desc: 'Fantasy baseball' },
+    { sub: 'mlbdraft',        label: 'r/MLBDraft',          desc: 'Prospects & draft talk' },
+    { sub: 'sportsbook',      label: 'r/sportsbook',        desc: 'MLB betting picks' },
+  ],
 };
 
-let activeSocialHandle = null;
 let activeSocialSport = 'all';
 let activeSocialSubreddit = 'sports';
+let activeSocialSort = 'hot';
+let activeSocialFlair = null;
+let expandedPostId = null;
+let socialPostCache = [];
 
 function initSocial() {
   const filterBar = document.getElementById('social-filter-bar');
   if (!filterBar.children.length) {
-    const filters = [
-      { key: 'all', label: 'All Sports' },
+    filterBar.innerHTML = [
+      { key: 'all', label: 'All' },
       { key: 'nba', label: '🏀 NBA' },
       { key: 'nfl', label: '🏈 NFL' },
       { key: 'mlb', label: '⚾ MLB' },
-    ];
-    filterBar.innerHTML = filters.map(f =>
-      `<button class="social-sport-btn ${f.key === activeSocialSport ? 'active' : ''}"
-        onclick="setSocialSportFilter('${f.key}')">${f.label}</button>`
-    ).join('');
+    ].map(f => `<button class="social-sport-btn ${f.key === activeSocialSport ? 'active' : ''}"
+      onclick="setSocialSportFilter('${f.key}')">${f.label}</button>`).join('');
   }
   renderSocialAccountList();
-  if (!activeSocialHandle) {
-    // Auto-load first subreddit on open
-    loadSocialReddit(SOCIAL_SUBREDDITS[activeSocialSport][0].sub);
-  }
+  loadSocialReddit(SOCIAL_SUBREDDITS[activeSocialSport][0].sub);
 }
 
 function setSocialSportFilter(sport) {
   activeSocialSport = sport;
+  activeSocialFlair = null;
   document.querySelectorAll('.social-sport-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   renderSocialAccountList();
-  // Auto-load first subreddit for this sport
   loadSocialReddit(SOCIAL_SUBREDDITS[sport][0].sub);
 }
 
 function renderSocialAccountList() {
   const list = document.getElementById('social-account-list');
-  const visible = activeSocialSport === 'all'
-    ? SOCIAL_ACCOUNTS
-    : SOCIAL_ACCOUNTS.filter(a => a.sport === activeSocialSport || a.sport === 'all');
-
   const subs = SOCIAL_SUBREDDITS[activeSocialSport] || SOCIAL_SUBREDDITS.all;
-
+  const visible = activeSocialSport === 'all' ? SOCIAL_ACCOUNTS : SOCIAL_ACCOUNTS.filter(a => a.sport === activeSocialSport || a.sport === 'all');
   list.innerHTML = `
-    <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--text3);text-transform:uppercase">Live Communities</div>
+    <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--text3);text-transform:uppercase">Communities</div>
     ${subs.map(s => `
-      <div class="social-account-item ${activeSocialSubreddit === s.sub ? 'active' : ''}"
-           onclick="loadSocialReddit('${s.sub}')">
-        <div class="social-account-avatar" style="background:rgba(255,69,0,.15);color:#ff4500;border:1px solid rgba(255,69,0,.3);font-size:10px">r/</div>
+      <div class="social-account-item ${activeSocialSubreddit === s.sub ? 'active' : ''}" onclick="loadSocialReddit('${s.sub}')">
+        <div class="social-account-avatar" style="background:rgba(255,69,0,.12);color:#ff4500;border:1px solid rgba(255,69,0,.25);font-size:9px;font-weight:900">r/</div>
         <div class="social-account-info">
           <div class="social-account-name">${s.label}</div>
-          <div class="social-account-handle">Hot posts · live</div>
+          <div class="social-account-handle">${s.desc}</div>
         </div>
       </div>`).join('')}
     <div style="padding:10px 14px 6px;margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--text3);text-transform:uppercase;border-top:1px solid var(--border)">Follow on 𝕏</div>
     ${visible.map(a => `
       <a href="https://twitter.com/${a.handle}" target="_blank" class="social-account-item" style="text-decoration:none">
-        <div class="social-account-avatar" style="background:${a.color}22;color:${a.color};border:1px solid ${a.color}44">
-          ${a.initials}
-        </div>
+        <div class="social-account-avatar" style="background:${a.color}22;color:${a.color};border:1px solid ${a.color}44">${a.initials}</div>
         <div class="social-account-info">
           <div class="social-account-name">${a.label}</div>
           <div class="social-account-handle">@${a.handle}</div>
@@ -3827,53 +3844,109 @@ function renderSocialAccountList() {
       </a>`).join('')}`;
 }
 
-async function loadSocialReddit(subreddit) {
+async function loadSocialReddit(subreddit, sort) {
   activeSocialSubreddit = subreddit;
+  if (sort) activeSocialSort = sort;
+  activeSocialFlair = null;
+  expandedPostId = null;
   renderSocialAccountList();
 
-  const header = document.getElementById('social-feed-header');
-  header.innerHTML = `
-    <div class="social-account-avatar" style="background:rgba(255,69,0,.15);color:#ff4500;border:1px solid rgba(255,69,0,.3);font-size:13px;font-weight:900">r/</div>
+  document.getElementById('social-feed-header').innerHTML = `
+    <div class="social-account-avatar" style="background:rgba(255,69,0,.12);color:#ff4500;border:1px solid rgba(255,69,0,.25);font-size:13px;font-weight:900">r/</div>
     <div style="flex:1">
       <div style="font-size:14px;font-weight:700;color:var(--text)">r/${subreddit}</div>
-      <div style="font-size:11px;color:var(--text3)">Hot posts right now</div>
+      <div style="font-size:11px;color:var(--text3)">Click any post to read it inline</div>
     </div>
-    <a href="https://reddit.com/r/${subreddit}" target="_blank"
-       style="font-size:11px;color:var(--green);font-weight:600;text-decoration:none;white-space:nowrap">
-      Open on Reddit ↗
-    </a>`;
+    <a href="https://reddit.com/r/${subreddit}" target="_blank" style="font-size:11px;color:var(--green);font-weight:600;text-decoration:none;white-space:nowrap">Open ↗</a>`;
 
   const container = document.getElementById('social-feed-container');
-  container.innerHTML = '<div class="loading" style="padding:40px"><div class="spinner"></div><span>Loading posts…</span></div>';
+  container.innerHTML = '<div class="loading" style="padding:40px"><div class="spinner"></div><span>Loading…</span></div>';
 
   try {
-    const res = await fetch(`https://www.reddit.com/r/${subreddit}/hot.json?limit=20&raw_json=1`);
+    const url = `https://www.reddit.com/r/${subreddit}/${activeSocialSort}.json?limit=25&raw_json=1${activeSocialSort==='top'?'&t=day':''}`;
+    const res = await fetch(url);
     const data = await res.json();
-    const posts = data?.data?.children?.map(c => c.data).filter(p => !p.stickied) || [];
-    if (!posts.length) { container.innerHTML = '<div style="padding:24px;color:var(--text3)">No posts found.</div>'; return; }
+    socialPostCache = (data?.data?.children?.map(c => c.data) || []).filter(p => !p.stickied);
+    if (!socialPostCache.length) { container.innerHTML = '<div style="padding:24px;color:var(--text3)">No posts found.</div>'; return; }
 
-    container.innerHTML = posts.map(p => {
-      const ago = redditTimeAgo(p.created_utc);
-      const flair = p.link_flair_text ? `<span style="background:var(--bg3);border:1px solid var(--border);border-radius:3px;font-size:10px;padding:1px 5px;margin-right:6px;color:var(--text2)">${esc(p.link_flair_text)}</span>` : '';
-      const thumb = p.thumbnail && p.thumbnail.startsWith('http') ? p.thumbnail : null;
-      const isVideo = p.is_video || p.url?.includes('youtube') || p.url?.includes('youtu.be');
-      const score = p.score >= 1000 ? (p.score/1000).toFixed(1)+'k' : p.score;
-      return `<div class="social-post-item" onclick="window.open('https://reddit.com${esc(p.permalink)}','_blank')">
-        ${thumb ? `<img src="${thumb}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display='none'">` : ''}
+    // Collect unique flairs
+    const flairs = [...new Set(socialPostCache.map(p => p.link_flair_text).filter(Boolean))].slice(0, 8);
+
+    renderSocialPosts(container, socialPostCache, flairs, subreddit);
+  } catch(e) {
+    container.innerHTML = '<div style="padding:24px;color:var(--text3)">Could not load posts.</div>';
+  }
+}
+
+function renderSocialPosts(container, posts, flairs, subreddit) {
+  const filtered = activeSocialFlair ? posts.filter(p => p.link_flair_text === activeSocialFlair) : posts;
+
+  const sortBar = `<div class="social-sort-bar">
+    <span style="font-size:10px;color:var(--text3);font-weight:700;margin-right:4px">SORT:</span>
+    ${['hot','new','top'].map(s => `<button class="social-sort-btn ${activeSocialSort===s?'active':''}" onclick="loadSocialReddit('${subreddit}','${s}')">${s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('')}
+    ${flairs.length ? `<span style="margin-left:8px;font-size:10px;color:var(--text3);font-weight:700">FLAIR:</span>
+    <button class="social-flair-tag ${!activeSocialFlair?'active':''}" onclick="setSocialFlair(null,'${subreddit}')">All</button>
+    ${flairs.map(f => `<button class="social-flair-tag ${activeSocialFlair===f?'active':''}" onclick="setSocialFlair('${f.replace(/'/g,"\\'")}','${subreddit}')">${esc(f)}</button>`).join('')}` : ''}
+  </div>`;
+
+  const postItems = filtered.map(p => {
+    const ago = redditTimeAgo(p.created_utc);
+    const flair = p.link_flair_text ? `<span style="background:rgba(200,164,0,.15);color:var(--gold);border-radius:3px;font-size:9px;font-weight:700;padding:1px 5px;margin-right:5px">${esc(p.link_flair_text)}</span>` : '';
+    const thumb = p.thumbnail?.startsWith('http') ? p.thumbnail : null;
+    const score = p.score >= 1000 ? (p.score/1000).toFixed(1)+'k' : p.score;
+    const comments = p.num_comments >= 1000 ? (p.num_comments/1000).toFixed(1)+'k' : p.num_comments;
+    const isExpanded = expandedPostId === p.id;
+    const postId = p.id;
+    const permalink = p.permalink;
+    const selftext = p.selftext ? p.selftext.slice(0, 300) + (p.selftext.length > 300 ? '…' : '') : '';
+
+    return `<div id="post-${postId}">
+      <div class="social-post-item ${isExpanded ? 'expanded' : ''}" onclick="toggleSocialPost('${postId}','${subreddit}','${encodeURIComponent(permalink)}')">
+        ${thumb ? `<img src="${thumb}" style="width:56px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display='none'">` : ''}
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:5px">${flair}${esc(p.title)}</div>
-          <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);align-items:center;flex-wrap:wrap">
+          <div style="font-size:12px;line-height:1.4;margin-bottom:5px;color:var(--text);font-weight:600">${flair}${esc(p.title)}</div>
+          ${selftext && !isExpanded ? `<div style="font-size:11px;color:var(--text3);margin-bottom:5px;line-height:1.4">${esc(selftext)}</div>` : ''}
+          <div style="display:flex;gap:10px;font-size:11px;color:var(--text3);flex-wrap:wrap">
             <span style="color:var(--green);font-weight:700">▲ ${score}</span>
-            <span>💬 ${p.num_comments >= 1000 ? (p.num_comments/1000).toFixed(1)+'k' : p.num_comments}</span>
+            <span>💬 ${comments}</span>
             <span>${ago}</span>
-            ${isVideo ? '<span style="color:var(--gold)">▶ Video</span>' : ''}
+            ${p.is_video ? '<span style="color:var(--gold)">▶ Video</span>' : ''}
+            <span style="color:var(--text3)">${isExpanded ? '▲ collapse' : '▼ expand'}</span>
           </div>
         </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    container.innerHTML = '<div style="padding:24px;color:var(--text3)">Could not load posts. Reddit may be unavailable.</div>';
+      </div>
+      ${isExpanded ? `<div class="social-embed-frame">
+        <iframe src="https://www.redditmedia.com/r/${subreddit}/comments/${postId}?embed=true&theme=dark&showmedia=true"
+          style="width:100%;min-height:420px;border:none;border-radius:8px;background:var(--bg3)"
+          scrolling="yes" allowfullscreen></iframe>
+        <div style="margin-top:8px;text-align:right">
+          <a href="https://reddit.com${decodeURIComponent('${encodeURIComponent(permalink)}')}" target="_blank"
+             style="font-size:11px;color:var(--green);font-weight:600;text-decoration:none">
+            View full thread & comments on Reddit ↗
+          </a>
+        </div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  container.innerHTML = sortBar + (postItems || '<div style="padding:16px;color:var(--text3)">No posts match this filter.</div>');
+}
+
+function toggleSocialPost(postId, subreddit, encodedPermalink) {
+  expandedPostId = expandedPostId === postId ? null : postId;
+  const container = document.getElementById('social-feed-container');
+  const flairs = [...new Set(socialPostCache.map(p => p.link_flair_text).filter(Boolean))].slice(0, 8);
+  renderSocialPosts(container, socialPostCache, flairs, subreddit);
+  if (expandedPostId) {
+    setTimeout(() => document.getElementById('post-' + postId)?.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
   }
+}
+
+function setSocialFlair(flair, subreddit) {
+  activeSocialFlair = flair;
+  const container = document.getElementById('social-feed-container');
+  const flairs = [...new Set(socialPostCache.map(p => p.link_flair_text).filter(Boolean))].slice(0, 8);
+  renderSocialPosts(container, socialPostCache, flairs, subreddit);
 }
 
 function redditTimeAgo(utc) {
