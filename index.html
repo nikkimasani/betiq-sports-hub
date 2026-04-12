@@ -469,6 +469,9 @@ nav::-webkit-scrollbar { display: none; }
 .social-feed-header { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
 .social-feed-body { padding:8px; }
 .social-feed-body iframe { border-radius:8px; }
+.social-post-item { display:flex; gap:12px; padding:13px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; align-items:flex-start; }
+.social-post-item:hover { background:var(--bg3); }
+.social-post-item:last-child { border-bottom:none; }
 .leader-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
 .leader-row:last-child { border-bottom:none; }
 .leader-name { font-size:13px; font-weight:600; }
@@ -860,8 +863,8 @@ nav::-webkit-scrollbar { display: none; }
     <div id="tab-social" class="tab">
       <div class="section-header" style="margin-bottom:16px">
         <div>
-          <div class="section-title">𝕏 Sports Feed</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">Live tweets from top insiders & official accounts</div>
+          <div class="section-title">📡 Sports Pulse</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">Live Reddit communities + follow top insiders on 𝕏</div>
         </div>
       </div>
       <div class="social-layout">
@@ -3726,7 +3729,7 @@ function updateScoresRefreshBadge() {
   if (badge) badge.textContent = `🔄 auto in ${scoresNextRefresh}s`;
 }
 
-// ─── SOCIAL / X FEED ──────────────────────────────────────────────────────────
+// ─── SOCIAL / SPORTS PULSE ───────────────────────────────────────────────────
 const SOCIAL_ACCOUNTS = [
   { label: 'ESPN',           handle: 'ESPN',           sport: 'all', desc: 'The worldwide leader', color: '#cc0000', initials: 'ES' },
   { label: 'SportsCenter',   handle: 'SportsCenter',   sport: 'all', desc: 'Top plays & highlights', color: '#c8a400', initials: 'SC' },
@@ -3744,61 +3747,51 @@ const SOCIAL_ACCOUNTS = [
   { label: 'ESPN MLB',       handle: 'espnmlb',         sport: 'mlb', desc: 'ESPN MLB coverage', color: '#002d72', initials: 'EM' },
 ];
 
-const SPORT_FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'nba', label: '🏀' },
-  { key: 'nfl', label: '🏈' },
-  { key: 'mlb', label: '⚾' },
-];
+// Reddit communities mapped to each sport filter
+const SOCIAL_SUBREDDITS = {
+  all:  [{ sub: 'sports',         label: 'r/sports' },
+         { sub: 'sportsbetting',  label: 'r/sportsbetting' },
+         { sub: 'fantasyfootball',label: 'r/fantasyfootball' }],
+  nba:  [{ sub: 'nba',            label: 'r/nba' },
+         { sub: 'nbadiscussion',  label: 'r/nbadiscussion' }],
+  nfl:  [{ sub: 'nfl',            label: 'r/nfl' },
+         { sub: 'fantasyfootball',label: 'r/fantasyfootball' }],
+  mlb:  [{ sub: 'baseball',       label: 'r/baseball' },
+         { sub: 'fantasybaseball',label: 'r/fantasybaseball' }],
+};
 
 let activeSocialHandle = null;
 let activeSocialSport = 'all';
-let twitterScriptLoaded = false;
-let twitterReadyQueue = [];
-
-function loadTwitterScript() {
-  if (document.getElementById('twitter-wjs')) return;
-  const s = document.createElement('script');
-  s.id = 'twitter-wjs';
-  s.src = 'https://platform.twitter.com/widgets.js';
-  s.charset = 'utf-8';
-  s.async = true;
-  s.onload = () => {
-    twitterScriptLoaded = true;
-    twitterReadyQueue.forEach(fn => window.twttr.ready(fn));
-    twitterReadyQueue = [];
-  };
-  document.head.appendChild(s);
-}
-
-function onTwitterReady(fn) {
-  if (twitterScriptLoaded && window.twttr && window.twttr.widgets) {
-    window.twttr.ready(fn);
-  } else {
-    twitterReadyQueue.push(fn);
-    if (!document.getElementById('twitter-wjs')) loadTwitterScript();
-  }
-}
+let activeSocialSubreddit = 'sports';
 
 function initSocial() {
-  // Build sport filter bar
   const filterBar = document.getElementById('social-filter-bar');
   if (!filterBar.children.length) {
-    filterBar.innerHTML = SPORT_FILTERS.map(f =>
+    const filters = [
+      { key: 'all', label: 'All Sports' },
+      { key: 'nba', label: '🏀 NBA' },
+      { key: 'nfl', label: '🏈 NFL' },
+      { key: 'mlb', label: '⚾ MLB' },
+    ];
+    filterBar.innerHTML = filters.map(f =>
       `<button class="social-sport-btn ${f.key === activeSocialSport ? 'active' : ''}"
         onclick="setSocialSportFilter('${f.key}')">${f.label}</button>`
     ).join('');
   }
   renderSocialAccountList();
-  if (!activeSocialHandle) loadSocialFeed('ESPN');
+  if (!activeSocialHandle) {
+    // Auto-load first subreddit on open
+    loadSocialReddit(SOCIAL_SUBREDDITS[activeSocialSport][0].sub);
+  }
 }
 
 function setSocialSportFilter(sport) {
   activeSocialSport = sport;
-  document.querySelectorAll('.social-sport-btn').forEach((b, i) => {
-    b.classList.toggle('active', SPORT_FILTERS[i].key === sport);
-  });
+  document.querySelectorAll('.social-sport-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
   renderSocialAccountList();
+  // Auto-load first subreddit for this sport
+  loadSocialReddit(SOCIAL_SUBREDDITS[sport][0].sub);
 }
 
 function renderSocialAccountList() {
@@ -3806,53 +3799,89 @@ function renderSocialAccountList() {
   const visible = activeSocialSport === 'all'
     ? SOCIAL_ACCOUNTS
     : SOCIAL_ACCOUNTS.filter(a => a.sport === activeSocialSport || a.sport === 'all');
-  list.innerHTML = visible.map(a => `
-    <div class="social-account-item ${activeSocialHandle === a.handle ? 'active' : ''}"
-         onclick="loadSocialFeed('${a.handle}')">
-      <div class="social-account-avatar" style="background:${a.color}22;color:${a.color};border:1px solid ${a.color}44">
-        ${a.initials}
-      </div>
-      <div class="social-account-info">
-        <div class="social-account-name">${a.label}</div>
-        <div class="social-account-handle">@${a.handle}</div>
-      </div>
-    </div>`).join('');
+
+  const subs = SOCIAL_SUBREDDITS[activeSocialSport] || SOCIAL_SUBREDDITS.all;
+
+  list.innerHTML = `
+    <div style="padding:10px 14px 6px;font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--text3);text-transform:uppercase">Live Communities</div>
+    ${subs.map(s => `
+      <div class="social-account-item ${activeSocialSubreddit === s.sub ? 'active' : ''}"
+           onclick="loadSocialReddit('${s.sub}')">
+        <div class="social-account-avatar" style="background:rgba(255,69,0,.15);color:#ff4500;border:1px solid rgba(255,69,0,.3);font-size:10px">r/</div>
+        <div class="social-account-info">
+          <div class="social-account-name">${s.label}</div>
+          <div class="social-account-handle">Hot posts · live</div>
+        </div>
+      </div>`).join('')}
+    <div style="padding:10px 14px 6px;margin-top:4px;font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--text3);text-transform:uppercase;border-top:1px solid var(--border)">Follow on 𝕏</div>
+    ${visible.map(a => `
+      <a href="https://twitter.com/${a.handle}" target="_blank" class="social-account-item" style="text-decoration:none">
+        <div class="social-account-avatar" style="background:${a.color}22;color:${a.color};border:1px solid ${a.color}44">
+          ${a.initials}
+        </div>
+        <div class="social-account-info">
+          <div class="social-account-name">${a.label}</div>
+          <div class="social-account-handle">@${a.handle}</div>
+        </div>
+        <div style="font-size:10px;color:var(--text3)">↗</div>
+      </a>`).join('')}`;
 }
 
-function loadSocialFeed(handle) {
-  activeSocialHandle = handle;
+async function loadSocialReddit(subreddit) {
+  activeSocialSubreddit = subreddit;
   renderSocialAccountList();
 
-  const acct = SOCIAL_ACCOUNTS.find(a => a.handle === handle);
   const header = document.getElementById('social-feed-header');
   header.innerHTML = `
-    <div class="social-account-avatar" style="width:36px;height:36px;background:${acct?.color}22;color:${acct?.color};border:1px solid ${acct?.color}44;font-size:11px;font-weight:800;border-radius:50%;display:flex;align-items:center;justify-content:center">
-      ${acct?.initials || handle[0]}
-    </div>
+    <div class="social-account-avatar" style="background:rgba(255,69,0,.15);color:#ff4500;border:1px solid rgba(255,69,0,.3);font-size:13px;font-weight:900">r/</div>
     <div style="flex:1">
-      <div style="font-size:14px;font-weight:700;color:var(--text)">${acct?.label || handle}</div>
-      <div style="font-size:11px;color:var(--text3)">@${handle} · ${acct?.desc || ''}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text)">r/${subreddit}</div>
+      <div style="font-size:11px;color:var(--text3)">Hot posts right now</div>
     </div>
-    <a href="https://twitter.com/${handle}" target="_blank"
+    <a href="https://reddit.com/r/${subreddit}" target="_blank"
        style="font-size:11px;color:var(--green);font-weight:600;text-decoration:none;white-space:nowrap">
-      Open on 𝕏 ↗
+      Open on Reddit ↗
     </a>`;
 
   const container = document.getElementById('social-feed-container');
-  container.innerHTML = `<div class="loading" style="padding:40px"><div class="spinner"></div><span>Loading @${handle}…</span></div>`;
+  container.innerHTML = '<div class="loading" style="padding:40px"><div class="spinner"></div><span>Loading posts…</span></div>';
 
-  onTwitterReady(() => {
-    container.innerHTML = `
-      <a class="twitter-timeline"
-         data-theme="dark"
-         data-height="560"
-         data-chrome="noheader nofooter noborders transparent"
-         data-tweet-limit="10"
-         href="https://twitter.com/${handle}">
-        Tweets by @${handle}
-      </a>`;
-    window.twttr.widgets.load(container);
-  });
+  try {
+    const res = await fetch(`https://www.reddit.com/r/${subreddit}/hot.json?limit=20&raw_json=1`);
+    const data = await res.json();
+    const posts = data?.data?.children?.map(c => c.data).filter(p => !p.stickied) || [];
+    if (!posts.length) { container.innerHTML = '<div style="padding:24px;color:var(--text3)">No posts found.</div>'; return; }
+
+    container.innerHTML = posts.map(p => {
+      const ago = redditTimeAgo(p.created_utc);
+      const flair = p.link_flair_text ? `<span style="background:var(--bg3);border:1px solid var(--border);border-radius:3px;font-size:10px;padding:1px 5px;margin-right:6px;color:var(--text2)">${esc(p.link_flair_text)}</span>` : '';
+      const thumb = p.thumbnail && p.thumbnail.startsWith('http') ? p.thumbnail : null;
+      const isVideo = p.is_video || p.url?.includes('youtube') || p.url?.includes('youtu.be');
+      const score = p.score >= 1000 ? (p.score/1000).toFixed(1)+'k' : p.score;
+      return `<div class="social-post-item" onclick="window.open('https://reddit.com${esc(p.permalink)}','_blank')">
+        ${thumb ? `<img src="${thumb}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border)" onerror="this.style.display='none'">` : ''}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:5px">${flair}${esc(p.title)}</div>
+          <div style="display:flex;gap:12px;font-size:11px;color:var(--text3);align-items:center;flex-wrap:wrap">
+            <span style="color:var(--green);font-weight:700">▲ ${score}</span>
+            <span>💬 ${p.num_comments >= 1000 ? (p.num_comments/1000).toFixed(1)+'k' : p.num_comments}</span>
+            <span>${ago}</span>
+            ${isVideo ? '<span style="color:var(--gold)">▶ Video</span>' : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<div style="padding:24px;color:var(--text3)">Could not load posts. Reddit may be unavailable.</div>';
+  }
+}
+
+function redditTimeAgo(utc) {
+  const diff = Math.floor(Date.now()/1000 - utc);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
 }
 
 // Auto-connect Supabase if credentials saved
