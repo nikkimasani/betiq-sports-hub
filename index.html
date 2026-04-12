@@ -1703,7 +1703,8 @@ function selectSport(sport) {
   state.currentSport = sport;
   document.querySelectorAll('#tab-scores .sport-tab').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
-  loadScores(sport);
+  if (currentScoresView === 'stats') loadLeaders(sport);
+  else loadScores(sport);
 }
 
 function refreshScores() { loadScores(state.currentSport); }
@@ -3081,7 +3082,7 @@ async function loadLeaders(sport) {
               <div class="leader-name" style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</div>
               ${team ? `<div style="font-size:10px;color:var(--text3)">${esc(team)}</div>` : ''}
             </div>
-            <div class="leader-val" style="font-size:14px;font-weight:800;color:var(--green);flex-shrink:0">${esc(l.displayValue || String(l.value) || '—')}</div>
+            <div class="leader-val" style="font-size:14px;font-weight:800;color:var(--green);flex-shrink:0">${esc((l.displayValue||String(l.value)||'—').split(',')[0].trim())}</div>
           </div>`;
         }).join('')}
       </div>`).join('')}</div>`;
@@ -3654,7 +3655,7 @@ async function loadSportsDBPlayer(id, name, sport) {
     const data = await res.json();
     const p = data.players?.[0] || {};
     const img = p.strThumb || p.strCutout || '';
-    const bio = p.strDescriptionEN ? p.strDescriptionEN.slice(0, 400) + (p.strDescriptionEN.length > 400 ? '…' : '') : '';
+    const bio = p.strDescriptionEN ? p.strDescriptionEN.slice(0, 800) + (p.strDescriptionEN.length > 800 ? '…' : '') : '';
 
     // Try to find ESPN season stats via team roster lookup
     let statsHTML = '';
@@ -4490,7 +4491,7 @@ async function initKalshi(force = false) {
       const ou = pc?.overUnder ? pc.overUnder : null;
       const sportEmoji = event.sport === 'nba' ? '🏀' : '⚾';
 
-      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px">
+      return `<div data-sport="${event.sport}" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <span style="font-size:11px;color:var(--text3)">${sportEmoji} ${esc(gameTime)}</span>
           <span style="font-size:11px;font-weight:700;color:${confColor}">${confidence} Confidence</span>
@@ -4544,7 +4545,9 @@ function filterKalshi(filter) {
   document.querySelectorAll('.kalshi-filter-btn').forEach(b => {
     b.classList.toggle('active', b.textContent.toLowerCase().includes(filter) || (filter === 'all' && b.textContent === 'All Sports'));
   });
-  if (kalshiCache) renderKalshi(kalshiCache);
+  document.querySelectorAll('#kalshi-container [data-sport]').forEach(card => {
+    card.style.display = (filter === 'all' || card.dataset.sport === filter) ? '' : 'none';
+  });
 }
 
 function renderKalshi(markets) {
