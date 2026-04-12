@@ -560,6 +560,82 @@ nav { align-items: center; }
 .pl-dk { background: rgba(26,124,62,.25); border: 1px solid rgba(26,124,62,.5); color: #4dcf82; }
 .pl-fd { background: rgba(20,147,255,.2); border: 1px solid rgba(20,147,255,.4); color: var(--blue); }
 .pl-pp { background: rgba(123,47,247,.2); border: 1px solid rgba(123,47,247,.4); color: #a87cf7; }
+
+/* EV ENGINE */
+.ev-badge {
+  font-size: 9px; font-weight: 800; margin-top: 3px;
+  letter-spacing: 0.2px; line-height: 1;
+}
+.ev-pos { color: #53d22c; }
+.ev-neg { color: #e44d4d; }
+.ev-neutral { color: var(--text3); }
+
+/* KALSHI */
+.kalshi-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+.kalshi-logo-pill {
+  background: rgba(0,210,160,.15); border: 1px solid rgba(0,210,160,.35);
+  border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 800;
+  color: #00d2a0;
+}
+.kalshi-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+  transition: border-color .15s;
+}
+.kalshi-card:hover { border-color: #00d2a0; }
+.kalshi-title { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 10px; }
+.kalshi-prices { display: flex; gap: 10px; margin-bottom: 8px; }
+.kalshi-price-box {
+  flex: 1; text-align: center; background: var(--bg4);
+  border-radius: 6px; padding: 8px 4px;
+}
+.kalshi-price-label { font-size: 10px; color: var(--text3); font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
+.kalshi-price-val { font-size: 20px; font-weight: 800; }
+.kalshi-yes { color: var(--green); }
+.kalshi-no { color: var(--red); }
+.kalshi-meta { font-size: 11px; color: var(--text3); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+.kalshi-edge-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 700; white-space: nowrap;
+}
+.kalshi-edge-pos { background: rgba(83,210,44,.12); color: var(--green); border: 1px solid rgba(83,210,44,.25); }
+.kalshi-edge-neg { background: rgba(228,77,77,.08); color: var(--red); border: 1px solid rgba(228,77,77,.2); }
+.kalshi-edge-neutral { background: var(--bg4); color: var(--text3); border: 1px solid var(--border); }
+.kalshi-filter-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.kalshi-filter-btn {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 16px;
+  padding: 5px 12px; font-size: 12px; font-weight: 600; color: var(--text2); cursor: pointer; transition: all .15s;
+}
+.kalshi-filter-btn.active { background: #00d2a0; border-color: #00d2a0; color: #000; }
+.kalshi-empty { text-align: center; color: var(--text3); padding: 40px 20px; font-size: 14px; }
+
+/* AI ANALYZE */
+.btn-analyze {
+  width: 100%; background: rgba(83,210,44,.1); border: 1px solid rgba(83,210,44,.25);
+  border-radius: 6px; padding: 9px; font-size: 12px; font-weight: 700;
+  color: var(--green); cursor: pointer; margin-top: 6px; transition: all .2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-analyze:hover:not(:disabled) { background: rgba(83,210,44,.2); }
+.btn-analyze:disabled { opacity: .35; cursor: not-allowed; }
+.ai-modal-body { max-height: 420px; overflow-y: auto; padding: 4px 0; }
+.ai-result-loading { text-align: center; color: var(--text3); padding: 24px; }
+.ai-result-text {
+  font-size: 13px; line-height: 1.75; color: var(--text2);
+}
+.ai-result-text strong { color: var(--text); }
+.ai-bullet { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+.ai-bullet-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+  flex-shrink: 0; margin-top: 6px;
+}
+.ai-verdict {
+  background: var(--bg4); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px; margin-top: 12px;
+  font-size: 13px; font-weight: 700;
+}
 .news-filter-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
 .news-filter-btn {
   background: var(--bg3); border: 1px solid var(--border); border-radius:16px;
@@ -751,6 +827,7 @@ nav { align-items: center; }
   <button class="nav-btn" data-tab="myteams" onclick="switchTab('myteams')">My Teams</button>
   <button class="nav-btn" data-tab="social" onclick="switchTab('social')">Social</button>
   <button class="nav-btn" data-tab="agent" onclick="switchTab('agent')">Data Agent</button>
+  <button class="nav-btn" data-tab="kalshi" onclick="switchTab('kalshi')">Kalshi</button>
   <div class="nav-divider"></div>
   <!-- Learn -->
   <button class="nav-btn" data-tab="knowledge" onclick="switchTab('knowledge')">Knowledge</button>
@@ -1053,6 +1130,15 @@ create table betiq_bankroll (user_id text primary key, balance numeric default 1
         </div>
       </div>
       <div class="settings-section">
+        <div class="settings-title">🤖 AI Parlay Analyst</div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:14px">Enter your Anthropic API key to enable AI-powered parlay analysis in the Bet Slip. Your key is stored only in your browser. <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--green)">Get a key →</a></p>
+        <div class="settings-row">
+          <div><label>Anthropic API Key</label><input type="password" id="claude-key" placeholder="sk-ant-..."></div>
+          <button class="btn-sm btn-sm-primary" onclick="saveClaudeKey()" style="margin-bottom:1px">Save</button>
+        </div>
+        <div id="claude-key-status" style="font-size:12px;color:var(--text3);margin-top:4px"></div>
+      </div>
+      <div class="settings-section">
         <div class="settings-title">📤 Data</div>
         <div style="display:flex;gap:8px">
           <button class="btn-sm btn-sm-secondary" onclick="exportData()">Export Parlay History (JSON)</button>
@@ -1246,6 +1332,25 @@ create table betiq_bankroll (user_id text primary key, balance numeric default 1
       </div>
     </div>
 
+    <!-- KALSHI MARKETS -->
+    <div id="tab-kalshi" class="tab">
+      <div class="kalshi-header">
+        <span class="kalshi-logo-pill">Kalshi</span>
+        <span style="font-size:13px;color:var(--text2)">Prediction market contracts — real-money probabilities</span>
+        <div class="section-action" style="margin-left:auto" onclick="initKalshi(true)">↻ Refresh</div>
+      </div>
+      <div class="kalshi-filter-bar" id="kalshi-filters">
+        <button class="kalshi-filter-btn active" onclick="filterKalshi('all')">All Sports</button>
+        <button class="kalshi-filter-btn" onclick="filterKalshi('nba')">NBA</button>
+        <button class="kalshi-filter-btn" onclick="filterKalshi('nfl')">NFL</button>
+        <button class="kalshi-filter-btn" onclick="filterKalshi('mlb')">MLB</button>
+        <button class="kalshi-filter-btn" onclick="filterKalshi('nhl')">NHL</button>
+      </div>
+      <div id="kalshi-container">
+        <div class="loading"><div class="spinner"></div><span>Loading Kalshi markets...</span></div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 
   <!-- BET SLIP SIDEBAR -->
@@ -1288,10 +1393,24 @@ create table betiq_bankroll (user_id text primary key, balance numeric default 1
         <a href="https://app.prizepicks.com" target="_blank" class="ext-link ext-pp">PrizePicks</a>
       </div>
       <button class="btn-place" id="place-btn" onclick="placeMockBet()" disabled>Place Mock Bet</button>
+      <button class="btn-analyze" id="analyze-btn" onclick="analyzeParlay()" disabled>🤖 Analyze with AI</button>
       <button class="btn-clear-slip" onclick="clearSlip()">Clear Slip</button>
     </div>
   </div>
 </div><!-- /app -->
+
+<!-- AI Analysis Modal -->
+<div class="modal-overlay" id="ai-modal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title">🤖 AI Parlay Analysis</div>
+    <div class="ai-modal-body" id="ai-modal-body">
+      <div class="ai-result-loading"><div class="spinner" style="margin:0 auto 12px"></div>Analyzing your parlay...</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('ai-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Floating sidebar open button (shown when sidebar is collapsed) -->
 <button class="sidebar-open-btn" id="sidebar-open-btn" onclick="toggleSidebar()">
@@ -1369,6 +1488,7 @@ function switchTab(name) {
   if (name === 'settings') initSettings();
   if (name === 'agent') initAgent();
   if (name === 'social') initSocial();
+  if (name === 'kalshi') initKalshi();
   if (name !== 'agent') stopLivePoll();
 }
 
@@ -1468,27 +1588,38 @@ function gameCard(sport, event, withOdds = false) {
   // Generate plausible odds
   const odds = generateOdds(sport, home, away, comp);
 
+  // EV Engine: compare model win probability to implied odds probability
+  const _sm = eloMap[sport] || {};
+  const _hWR = _sm[home?.team?.id] ?? 0.5;
+  const _aWR = _sm[away?.team?.id] ?? 0.5;
+  const _hProb = modelWinProb(_hWR, _aWR);
+  const _aProb = 1 - _hProb;
+
   const oddsHtml = withOdds ? `
     <div class="game-odds">
       <div class="odd-btn ${isInSlip(event.id,'ml-away')?' in-slip':''}" onclick="addToSlip('${sport}','${event.id}','ml-away','${esc(away.team.abbreviation)} ML','${odds.awayML}','${esc(away.team.displayName)} Moneyline')">
         <div class="odd-type">ML</div>
         <div class="odd-label">${esc(away.team.abbreviation)}</div>
         <div class="odd-val">${formatOdds(odds.awayML)}</div>
+        ${evBadgeHTML(computeEV(_aProb, odds.awayML))}
       </div>
       <div class="odd-btn ${isInSlip(event.id,'spread-away')?' in-slip':''}" onclick="addToSlip('${sport}','${event.id}','spread-away','${esc(away.team.abbreviation)} ${odds.spread > 0 ? '+' : ''}${odds.spread}','${odds.spreadOdds}','${esc(away.team.displayName)} ${odds.spread > 0 ? '+' : ''}${odds.spread}')">
         <div class="odd-type">Spread</div>
         <div class="odd-label">${esc(away.team.abbreviation)} ${odds.spread > 0 ? '+' : ''}${odds.spread}</div>
         <div class="odd-val">${formatOdds(odds.spreadOdds)}</div>
+        ${evBadgeHTML(computeEV(0.5, odds.spreadOdds))}
       </div>
       <div class="odd-btn ${isInSlip(event.id,'total-over')?' in-slip':''}" onclick="addToSlip('${sport}','${event.id}','total-over','O ${odds.total}','${odds.totalOdds}','Over ${odds.total} Total Points')">
         <div class="odd-type">Total</div>
         <div class="odd-label">O ${odds.total}</div>
         <div class="odd-val">${formatOdds(odds.totalOdds)}</div>
+        ${evBadgeHTML(computeEV(0.5, odds.totalOdds))}
       </div>
       <div class="odd-btn ${isInSlip(event.id,'ml-home')?' in-slip':''}" onclick="addToSlip('${sport}','${event.id}','ml-home','${esc(home.team.abbreviation)} ML','${odds.homeML}','${esc(home.team.displayName)} Moneyline')">
         <div class="odd-type">ML</div>
         <div class="odd-label">${esc(home.team.abbreviation)}</div>
         <div class="odd-val">${formatOdds(odds.homeML)}</div>
+        ${evBadgeHTML(computeEV(_hProb, odds.homeML))}
       </div>
     </div>` : '';
 
@@ -1723,6 +1854,8 @@ function renderSlip() {
 
   countEl.textContent = state.slip.length;
   updateSidebarCount(state.slip.length);
+  const analyzeBtn = document.getElementById('analyze-btn');
+  if (analyzeBtn) analyzeBtn.disabled = state.slip.length === 0;
 
   if (state.slip.length === 0) {
     legsEl.innerHTML = '<div class="slip-empty"><div class="icon">🎯</div><div>Add picks from any game to build your parlay</div></div>';
@@ -3341,6 +3474,12 @@ function initSettings() {
   document.getElementById('sb-url').value = url;
   document.getElementById('sb-key').value = key;
   document.getElementById('settings-bankroll').value = state.bankroll;
+  const claudeKey = localStorage.getItem('betiq_claude_key') || '';
+  document.getElementById('claude-key').value = claudeKey;
+  if (claudeKey) {
+    document.getElementById('claude-key-status').textContent = '✓ Key saved';
+    document.getElementById('claude-key-status').style.color = 'var(--green)';
+  }
   const connected = !!sbClient;
   updateSyncIndicator(connected);
   if (url && key && !sbClient) connectSupabase();
@@ -4044,6 +4183,251 @@ function redditTimeAgo(utc) {
   if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
   return `${Math.floor(diff/86400)}d ago`;
+}
+
+// ─── EV ENGINE ───────────────────────────────────────────────────────────────
+const eloMap = {};  // { sport: { teamId: winRate } }
+
+async function fetchAndCacheStandings(sport) {
+  if (eloMap[sport]) return;
+  const cfg = SPORTS[sport];
+  const url = `https://site.api.espn.com/apis/site/v2/sports/${cfg.espn}/standings`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const map = {};
+    // ESPN standings can be nested under conferences/divisions
+    const extractEntries = (obj) => {
+      if (obj?.standings?.entries) return obj.standings.entries;
+      if (Array.isArray(obj?.children)) {
+        return obj.children.flatMap(c => extractEntries(c));
+      }
+      return [];
+    };
+    const entries = extractEntries(data);
+    for (const entry of entries) {
+      const id = entry.team?.id;
+      if (!id) continue;
+      const wins   = entry.stats?.find(s => s.name === 'wins'   || s.abbreviation === 'W')?.value ?? 0;
+      const losses = entry.stats?.find(s => s.name === 'losses' || s.abbreviation === 'L')?.value ?? 0;
+      const total  = wins + losses;
+      map[id] = total > 0 ? wins / total : 0.5;
+    }
+    eloMap[sport] = Object.keys(map).length > 0 ? map : null;
+  } catch(e) {
+    eloMap[sport] = null;
+  }
+}
+
+// Log5 formula: P(A beats B) from win rates
+function modelWinProb(homeWR, awayWR) {
+  const a = homeWR || 0.5, b = awayWR || 0.5;
+  const d = a + b - 2 * a * b;
+  return d === 0 ? 0.5 : (a - a * b) / d;
+}
+
+function computeEV(modelProb, americanOdds) {
+  const dec = americanToDecimal(americanOdds);
+  return (modelProb * (dec - 1)) - (1 - modelProb);
+}
+
+function evBadgeHTML(ev) {
+  if (isNaN(ev)) return '';
+  if (Math.abs(ev) < 0.008) return `<div class="ev-badge ev-neutral">—</div>`;
+  const pct = (ev * 100).toFixed(1);
+  const cls = ev > 0 ? 'ev-pos' : 'ev-neg';
+  return `<div class="ev-badge ${cls}">${ev > 0 ? '+' : ''}${pct}%</div>`;
+}
+
+// Preload standings whenever a sport's games are loaded
+(function patchLoadScores() {
+  const _orig = window.loadScores || null;
+  // Hook into selectSport and selectParlayTab to warm standings cache
+  const _warmStandings = (sport) => fetchAndCacheStandings(sport);
+  ['nba','nfl','mlb'].forEach(s => _warmStandings(s));
+})();
+
+// ─── KALSHI MARKETS ───────────────────────────────────────────────────────────
+let kalshiCache = null;
+let kalshiFilter = 'all';
+const KALSHI_SPORT_KEYWORDS = {
+  nba: ['nba','basketball','lakers','celtics','warriors','heat','bulls','knicks','nets','suns'],
+  nfl: ['nfl','football','super bowl','chiefs','eagles','cowboys','patriots','49ers','packers'],
+  mlb: ['mlb','baseball','yankees','dodgers','astros','cubs','braves','mets','red sox'],
+  nhl: ['nhl','hockey','stanley cup','rangers','bruins','maple leafs','blackhawks'],
+};
+
+async function initKalshi(force = false) {
+  if (state.currentTab !== 'kalshi') return;
+  const container = document.getElementById('kalshi-container');
+  if (kalshiCache && !force) { renderKalshi(kalshiCache); return; }
+
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading Kalshi markets...</span></div>';
+
+  try {
+    // Kalshi public API — no auth required for market reads
+    const res = await fetch('https://trading-api.kalshi.com/trade-api/v2/markets?limit=200&status=open', {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`Kalshi API ${res.status}`);
+    const data = await res.json();
+    const markets = (data.markets || []).filter(m => {
+      const title = (m.title || '').toLowerCase();
+      const ticker = (m.ticker || '').toLowerCase();
+      const combined = title + ' ' + ticker;
+      return Object.values(KALSHI_SPORT_KEYWORDS).flat().some(kw => combined.includes(kw));
+    });
+    kalshiCache = markets;
+    renderKalshi(markets);
+  } catch(e) {
+    container.innerHTML = `<div class="kalshi-empty">
+      <div style="font-size:32px;margin-bottom:12px">📡</div>
+      <div style="font-weight:700;margin-bottom:8px">Couldn't reach Kalshi API</div>
+      <div style="font-size:12px;color:var(--text3);max-width:320px;margin:0 auto">
+        Kalshi's API may block direct browser requests. Try opening
+        <a href="https://kalshi.com/markets/sports" target="_blank" style="color:#00d2a0">kalshi.com/markets/sports</a>
+        directly to view live contracts.
+      </div>
+      <button onclick="initKalshi(true)" style="margin-top:16px;background:rgba(0,210,160,.15);border:1px solid rgba(0,210,160,.3);color:#00d2a0;border-radius:6px;padding:8px 18px;cursor:pointer;font-weight:700">Retry</button>
+    </div>`;
+  }
+}
+
+function filterKalshi(filter) {
+  kalshiFilter = filter;
+  document.querySelectorAll('.kalshi-filter-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(filter) || (filter === 'all' && b.textContent === 'All Sports'));
+  });
+  if (kalshiCache) renderKalshi(kalshiCache);
+}
+
+function renderKalshi(markets) {
+  const container = document.getElementById('kalshi-container');
+  let filtered = markets;
+  if (kalshiFilter !== 'all') {
+    const kws = KALSHI_SPORT_KEYWORDS[kalshiFilter] || [];
+    filtered = markets.filter(m => {
+      const t = (m.title + ' ' + m.ticker).toLowerCase();
+      return kws.some(kw => t.includes(kw));
+    });
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="kalshi-empty">No open ${kalshiFilter === 'all' ? 'sports' : kalshiFilter.toUpperCase()} markets found on Kalshi right now.</div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(m => {
+    const yesPct  = m.yes_ask != null ? (m.yes_ask * 100).toFixed(0) : '—';
+    const noPct   = m.no_ask  != null ? (m.no_ask  * 100).toFixed(0) : '—';
+    const vol     = m.volume  != null ? m.volume.toLocaleString() : '—';
+    const closes  = m.close_time ? new Date(m.close_time).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+
+    // Edge: implied prob vs fair 50/50 baseline (only meaningful for binary markets)
+    let edgeHtml = '';
+    if (m.yes_ask != null) {
+      const impliedYes = m.yes_ask;
+      const diff = impliedYes - 0.5;
+      if (Math.abs(diff) > 0.03) {
+        const edgeCls = diff > 0 ? 'kalshi-edge-pos' : 'kalshi-edge-neg';
+        edgeHtml = `<span class="kalshi-edge-badge ${edgeCls}">Yes favored ${yesPct}%</span>`;
+      } else {
+        edgeHtml = `<span class="kalshi-edge-badge kalshi-edge-neutral">Near 50/50</span>`;
+      }
+    }
+
+    const url = `https://kalshi.com/markets/${m.ticker}`;
+    return `<div class="kalshi-card" onclick="window.open('${url}','_blank')">
+      <div class="kalshi-title">${esc(m.title || m.ticker)}</div>
+      <div class="kalshi-prices">
+        <div class="kalshi-price-box">
+          <div class="kalshi-price-label">Yes</div>
+          <div class="kalshi-price-val kalshi-yes">${yesPct !== '—' ? yesPct + '¢' : '—'}</div>
+        </div>
+        <div class="kalshi-price-box">
+          <div class="kalshi-price-label">No</div>
+          <div class="kalshi-price-val kalshi-no">${noPct !== '—' ? noPct + '¢' : '—'}</div>
+        </div>
+        <div class="kalshi-price-box">
+          <div class="kalshi-price-label">Volume</div>
+          <div class="kalshi-price-val" style="font-size:14px;color:var(--text2)">${vol}</div>
+        </div>
+      </div>
+      <div class="kalshi-meta">
+        <span>${edgeHtml}</span>
+        <span>${closes ? 'Closes ' + closes : ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── AI PARLAY ANALYST ────────────────────────────────────────────────────────
+function saveClaudeKey() {
+  const key = document.getElementById('claude-key').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    document.getElementById('claude-key-status').textContent = '⚠️ Key should start with sk-ant-';
+    return;
+  }
+  localStorage.setItem('betiq_claude_key', key);
+  document.getElementById('claude-key-status').textContent = '✓ Saved — Analyze button now active in Bet Slip';
+  document.getElementById('claude-key-status').style.color = 'var(--green)';
+}
+
+async function analyzeParlay() {
+  const key = localStorage.getItem('betiq_claude_key');
+  if (!key) { toast('Add your Anthropic API key in Settings first', 'error'); return; }
+  if (state.slip.length === 0) return;
+
+  const modal = document.getElementById('ai-modal');
+  const body  = document.getElementById('ai-modal-body');
+  modal.classList.add('open');
+  body.innerHTML = '<div class="ai-result-loading"><div class="spinner" style="margin:0 auto 12px"></div>Analyzing your parlay...</div>';
+
+  const legsText = state.slip.map((s, i) =>
+    `${i+1}. ${SPORTS[s.sport].label} — ${s.label} @ ${formatOdds(s.odds)}`
+  ).join('\n');
+  const combined = formatOdds(combinedOdds(state.slip.map(s => s.odds)));
+
+  const prompt = `You are a sharp sports betting analyst. Analyze this mock parlay bet slip and give concise, practical feedback.
+
+Parlay: ${state.slip.length}-leg @ ${combined} combined odds
+Legs:
+${legsText}
+
+Provide analysis in exactly this format:
+1. CORRELATION RISK: Are any legs correlated (same game, same team)? This inflates or deflates true odds.
+2. VALUE ASSESSMENT: Which legs look sharp vs. square based on standard market pricing?
+3. WEAKEST LEG: Which single leg most threatens this parlay hitting?
+4. ALTERNATIVE: Suggest one specific adjustment to improve EV.
+5. VERDICT: One sentence bottom line — worth playing, trim it, or pass?
+
+Be direct and specific. No generic disclaimers.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${res.status}`);
+    }
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'No response';
+    body.innerHTML = `<div class="ai-result-text">${text.replace(/\n/g,'<br>')}</div>`;
+  } catch(e) {
+    body.innerHTML = `<div style="color:var(--red);font-size:13px">Error: ${esc(e.message)}<br><br>Check your API key in Settings.</div>`;
+  }
 }
 
 // Auto-connect Supabase if credentials saved
