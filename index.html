@@ -1094,6 +1094,9 @@ nav { align-items: center; }
           <div class="guide-nav-item" onclick="showGuide('myparlays')">📈 My Parlays</div>
           <div class="guide-nav-item" onclick="showGuide('knowledge')">📚 Knowledge Center</div>
           <div class="guide-nav-item" onclick="showGuide('calculators')">🧮 Calculators</div>
+          <div class="guide-nav-item" onclick="showGuide('dataagent')">🔍 Data Agent</div>
+          <div class="guide-nav-item" onclick="showGuide('predictions')">🎯 Predictions</div>
+          <div class="guide-nav-item" onclick="showGuide('supabase')">☁️ Supabase Sync</div>
           <div class="guide-nav-item" onclick="showGuide('settings')">⚙️ Settings</div>
         </div>
         <div id="guide-content"></div>
@@ -3203,8 +3206,7 @@ function selectTeamSport(sport) {
   renderTeamSelector(sport);
 }
 
-function renderTeamSelector(sport) {
-  const teams = ALL_TEAMS[sport];
+
   document.getElementById('team-selector-container').innerHTML = `
     <div class="sport-section-title">Select your ${SPORTS[sport].label} teams (click to toggle):</div>
     <div class="team-selector-grid">
@@ -3257,7 +3259,7 @@ async function loadTeamReddit(team) {
   const sub = ALL_TEAMS[team.sport]?.find(x => x.id === team.id)?.sub;
   if (!sub) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">Subreddit not found.</div>'; return; }
   try {
-    const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=6&raw_json=1`);
+    const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=6&raw_json=1`, {headers:{'User-Agent':'BetIQ/1.0'}});
     const data = await res.json();
     const posts = data?.data?.children?.map(c => c.data) || [];
     if (!posts.length) { el.innerHTML = `<div style="font-size:12px;color:var(--text3)">No posts found. <a href="https://www.reddit.com/r/${sub}" target="_blank" style="color:var(--green)">Open r/${sub} ↗</a></div>`; return; }
@@ -3509,7 +3511,58 @@ const GUIDE_ARTICLES = {
     <h3>Reset All Data</h3>
     <p>Clears everything from localStorage: parlays, favorites, bankroll, API keys. Cannot be undone.</p>`
   }
-};
+,
+  dataagent: {
+    title: 'Data Agent',
+    sub: 'Search players, compare teams, and explore live stats',
+    body: `
+    <h3>Player Search</h3>
+    <p>Search any NBA, NFL, or MLB player by name. Results come from TheSportsDB and include photo, position, team, height/weight, and bio. Click a player card to expand their profile.</p>
+    <h3>Season Stats</h3>
+    <p>After clicking a player, BetIQ looks up their current-season stats via ESPN's API — PPG, FG%, 3P%, FT%, assists, rebounds, and more. Stats are displayed in a stat grid below their bio. MLB players use the official MLB Stats API for batting/pitching lines.</p>
+    <h3>Team Compare</h3>
+    <p>Pick two teams from the same sport to see a side-by-side stat comparison using current season standings data.</p>
+    <h3>Live Poll</h3>
+    <p>Vote on hot sports takes in the Live Poll sub-tab. Results update in real time if Supabase sync is enabled.</p>`
+  },
+  predictions: {
+    title: 'Predictions Engine',
+    sub: 'AI-generated win probabilities for today's games',
+    body: `
+    <h3>How It Works</h3>
+    <p>BetIQ builds win predictions for every NBA and MLB game scheduled today. It pulls data from ESPN's live scoreboard and game summaries — no manual input needed.</p>
+    <h3>Win Probability</h3>
+    <p>When Vegas moneylines are available via ESPN's PickCenter, BetIQ converts them to implied probabilities and removes the vig to get a clean percentage for each team. When odds aren't available it falls back to season win% adjusted for home-court advantage (~4%).</p>
+    <h3>Reading the Cards</h3>
+    <ul>
+      <li><strong>Pick %</strong> — probability the model assigns to each team winning</li>
+      <li><strong>L5</strong> — last 5 games record (W-L) for recent form</li>
+      <li><strong>Spread / O/U</strong> — Vegas lines from ESPN PickCenter when available</li>
+      <li><strong>Confidence</strong> — High (70%+), Medium (58–70%), Even (below 58%)</li>
+    </ul>
+    <h3>Kalshi Markets</h3>
+    <p>The Predictions tab also links directly to Kalshi sports markets so you can compare BetIQ's model with real prediction-market prices. Kalshi now requires a login for API access, so the app redirects you to their site.</p>`
+  },
+  supabase: {
+    title: 'Supabase Sync',
+    sub: 'Back up parlays and favorites across devices',
+    body: `
+    <h3>Setup</h3>
+    <p>Go to <strong>Settings → Supabase Sync</strong>. You need a free Supabase account. Create a project at supabase.com, copy your project URL and anon/public key, and paste them in.</p>
+    <h3>Required Tables</h3>
+    <p>Run this SQL in your Supabase SQL Editor to create the three tables BetIQ needs:</p>
+    <pre style="background:var(--bg4);border-radius:6px;padding:12px;font-size:11px;overflow-x:auto;line-height:1.6">create table betiq_bankroll (user_id text primary key, balance numeric default 1000);
+create table betiq_parlays (id text primary key, user_id text, date text, legs jsonb, stake numeric, odds integer, payout text, result text default 'pending');
+create table betiq_favorites (id text primary key, user_id text, sport text, team_id text, team_name text, team_abbr text, subreddit text);</pre>
+    <h3>What Syncs</h3>
+    <ul>
+      <li>Virtual bankroll balance</li>
+      <li>Full parlay history</li>
+      <li>Favorite teams</li>
+    </ul>
+    <p>Each device gets a unique auto-generated user ID stored in localStorage. Data is tied to that ID, so you see the same data on any device that has the same credentials entered.</p>`
+  },
+}
 
 function initGuide() { showGuide('overview'); }
 
@@ -4234,7 +4287,7 @@ async function loadSocialReddit(subreddit, sort) {
 
   try {
     const url = `https://www.reddit.com/r/${subreddit}/${activeSocialSort}.json?limit=25&raw_json=1${activeSocialSort==='top'?'&t=day':''}`;
-    const res = await fetch(url);
+    const res = await fetch(url, {headers:{'User-Agent':'BetIQ/1.0'}});
     const data = await res.json();
     socialPostCache = (data?.data?.children?.map(c => c.data) || []).filter(p => !p.stickied);
     if (!socialPostCache.length) { container.innerHTML = '<div style="padding:24px;color:var(--text3)">No posts found.</div>'; return; }
