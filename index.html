@@ -4951,15 +4951,15 @@ async function loadPaperGames() {
       (alreadyBet
         ? '<div style="font-size:12px;color:var(--text3)">Bet placed — awaiting result</div>'
         : '<div class="paper-pick-row">' +
-          '<button class="paper-pick-btn" onclick="selectPaperPick('' + g.id + '','' + g.away.name.replace(/'/g,"\'") + '',' + g.away.odds + ','' + g.label.replace(/'/g,"\'") + '','' + g.sport + '')">' +
+          '<button class="paper-pick-btn" onclick="selectPaperPick(\'' + g.id + '\',\'' + g.away.name.replace(/'/g,"\\'") + '\',' + g.away.odds + ',\'' + g.label.replace(/'/g,"\\'") + '\',\'' + g.sport + '\')">' +
           g.away.abbr + '<span class="pick-odds">' + fmtOdds(g.away.odds) + '</span></button>' +
-          '<button class="paper-pick-btn" onclick="selectPaperPick('' + g.id + '','' + g.home.name.replace(/'/g,"\'") + '',' + g.home.odds + ','' + g.label.replace(/'/g,"\'") + '','' + g.sport + '')">' +
+          '<button class="paper-pick-btn" onclick="selectPaperPick(\'' + g.id + '\',\'' + g.home.name.replace(/'/g,"\\'") + '\',' + g.home.odds + ',\'' + g.label.replace(/'/g,"\\'") + '\',\'' + g.sport + '\')">' +
           g.home.abbr + '<span class="pick-odds">' + fmtOdds(g.home.odds) + '</span></button></div>' +
           '<div class="paper-stake-row" id="pstake-' + g.id + '" style="display:none">' +
           '<span style="font-size:12px;color:var(--text2)">Bet <strong id="ppick-label-' + g.id + '"></strong> for:</span>' +
           '<input class="paper-stake-input" type="number" id="pstake-input-' + g.id + '" placeholder="$10" min="1" ' + stakeMaxAttr + '>' +
-          '<button class="paper-confirm-btn" onclick="placePaperBet('' + g.id + '','' + g.label.replace(/'/g,"\'") + '','' + g.sport + '')">Place Bet</button>' +
-          '<button onclick="cancelPaperPick('' + g.id + '')" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-size:11px;cursor:pointer">Cancel</button></div>') +
+          '<button class="paper-confirm-btn" onclick="placePaperBet(\'' + g.id + '\',\'' + g.label.replace(/'/g,"\\'") + '\',\'' + g.sport + '\')">Place Bet</button>' +
+          '<button onclick="cancelPaperPick(\'' + g.id + '\')" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-size:11px;cursor:pointer">Cancel</button></div>') +
       '</div>';
   }).join('');
 }
@@ -5116,12 +5116,12 @@ function renderLearnCards() {
   container.innerHTML = LEARN_TYPES.map((type, ti) => {
     const qs = type.quiz.map((q, qi) => {
       const opts = q.opts.map((opt, oi) =>
-        '<button class="learn-q-opt" id="lopt-' + type.id + '-' + qi + '-' + oi + '" onclick="answerLearnQ('' + type.id + '',' + ti + ',' + qi + ',' + oi + ')">' + opt + '</button>'
+        '<button class="learn-q-opt" id="lopt-' + type.id + '-' + qi + '-' + oi + '" onclick="answerLearnQ(\'' + type.id + '\',' + ti + ',' + qi + ',' + oi + ')">' + opt + '</button>'
       ).join('');
       return '<div class="learn-q" id="lq-' + type.id + '-' + qi + '"><div class="learn-q-text">' + (qi+1) + '. ' + q.q + '</div><div class="learn-q-opts">' + opts + '</div></div>';
     }).join('');
     return '<div class="learn-card" id="lcard-' + type.id + '">' +
-      '<div class="learn-card-header" onclick="toggleLearnCard('' + type.id + '')">' +
+      '<div class="learn-card-header" onclick="toggleLearnCard(\'' + type.id + '\')">' +
       '<div class="learn-card-title">' + type.title + '</div>' +
       '<span id="lcard-arrow-' + type.id + '" style="color:var(--text3);font-size:16px">&#8250;</span></div>' +
       '<div class="learn-card-body" id="lcard-body-' + type.id + '">' +
