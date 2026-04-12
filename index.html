@@ -648,6 +648,7 @@ nav::-webkit-scrollbar { display: none; }
 
 <nav>
   <button class="nav-btn active" onclick="switchTab('dashboard')">🏠 Dashboard</button>
+  <button class="nav-btn" onclick="switchTab('agent')">🤖 Data Agent</button>
   <button class="nav-btn" onclick="switchTab('scores')">📊 Scores & Stats</button>
   <button class="nav-btn" onclick="switchTab('news')">📰 News</button>
   <button class="nav-btn" onclick="switchTab('parlay')">🎯 Parlay Builder</button>
@@ -657,7 +658,6 @@ nav::-webkit-scrollbar { display: none; }
   <button class="nav-btn" onclick="switchTab('calculator')">🧮 Calculators</button>
   <button class="nav-btn" onclick="switchTab('guide')">📖 Guide</button>
   <button class="nav-btn" onclick="switchTab('settings')">⚙️ Settings</button>
-  <button class="nav-btn" onclick="switchTab('agent')">🤖 Data Agent</button>
 </nav>
 
 <div class="app">
@@ -1206,7 +1206,7 @@ async function fetchESPN(sport, endpoint = 'scoreboard') {
 }
 
 // ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
-const TAB_ORDER = ['dashboard','scores','news','parlay','tracker','myteams','knowledge','calculator','guide','settings','agent'];
+const TAB_ORDER = ['dashboard','agent','scores','news','parlay','tracker','myteams','knowledge','calculator','guide','settings'];
 
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1248,10 +1248,17 @@ async function loadScores(sport) {
     ? `<div style="background:rgba(228,77,77,.12);border:1px solid var(--red);border-radius:6px;padding:8px 14px;margin-bottom:12px;font-size:13px;font-weight:600;color:var(--red)">🔴 ${liveGames.length} game${liveGames.length>1?'s':''} LIVE right now — click any card for play-by-play</div>`
     : '';
 
-  // Show "no games" but prompt to check other sports
-  if (!data || !data.events || data.events.length === 0) {
+  if (!data) {
     container.innerHTML = `<div class="card" style="text-align:center;padding:24px">
-      <div style="color:var(--text3);margin-bottom:12px">No ${SPORTS[sport].label} games today.</div>
+      <div style="color:var(--red);font-weight:700;margin-bottom:8px">⚠️ Unable to load scores</div>
+      <div style="color:var(--text3);font-size:13px;margin-bottom:14px">ESPN API may be temporarily unavailable.</div>
+      <button onclick="loadScores('${sport}')" style="background:var(--green);color:#000;border:none;border-radius:6px;padding:8px 18px;font-weight:700;cursor:pointer;font-size:13px">↺ Retry</button>
+    </div>`;
+    return;
+  }
+  if (!data.events || data.events.length === 0) {
+    container.innerHTML = `<div class="card" style="text-align:center;padding:24px">
+      <div style="color:var(--text3);margin-bottom:12px">No ${SPORTS[sport].label} games scheduled today.</div>
       <div style="display:flex;gap:8px;justify-content:center">
         ${Object.keys(SPORTS).filter(s=>s!==sport).map(s=>`<button onclick="selectSport('${s}')" style="background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--text2);cursor:pointer;font-size:13px">${SPORTS[s].emoji} Check ${SPORTS[s].label}</button>`).join('')}
       </div>
@@ -2356,18 +2363,36 @@ async function fetchGameDetail(sport, eventId) {
 
 function renderPlayByPlay(data) {
   const el = document.getElementById('gdp-plays');
-  const plays = data?.plays || data?.playByPlay?.plays || [];
-  if (!plays.length) { el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px">No play-by-play available yet.</div>'; return; }
-  const recent = [...plays].reverse().slice(0, 20);
+  // Try every known ESPN response path for plays
+  const plays = data?.plays
+    || data?.playByPlay?.plays
+    || data?.header?.competitions?.[0]?.plays
+    || [];
+  // Fallback to scoring plays if no full play-by-play
+  const scoringPlays = data?.scoringPlays || [];
+  const source = plays.length ? plays : scoringPlays;
+  if (!source.length) {
+    const gameState = data?.header?.competitions?.[0]?.status?.type?.state;
+    const msg = gameState === 'pre'
+      ? 'Game hasn\'t started yet — play-by-play will appear once it begins.'
+      : 'No play-by-play data available for this game.';
+    el.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:8px">${msg}</div>`;
+    return;
+  }
+  const recent = [...source].reverse().slice(0, 25);
   el.innerHTML = recent.map(p => {
-    const clock = p.clock?.displayValue || '';
-    const period = p.period?.number ? `Q${p.period.number}` : '';
-    const score = (p.homeScore != null && p.awayScore != null) ? `${p.awayScore}-${p.homeScore}` : '';
+    const clock = p.clock?.displayValue || p.clock || '';
+    const periodNum = p.period?.number || p.period;
+    const period = periodNum ? `Q${periodNum}` : '';
+    const homeScore = p.homeScore ?? p.score?.home ?? null;
+    const awayScore = p.awayScore ?? p.score?.away ?? null;
+    const score = (homeScore != null && awayScore != null) ? `${awayScore}-${homeScore}` : '';
     const team = p.team?.abbreviation || '';
+    const desc = p.text || p.description || p.shortText || '';
     return `<div class="play-item">
       <span class="play-clock">${period} ${clock}</span>
-      <span class="play-team" style="color:var(--gold)">${esc(team)}</span>
-      <span class="play-desc">${esc(p.text || p.description || '')}</span>
+      ${team ? `<span class="play-team" style="color:var(--gold)">${esc(team)}</span>` : ''}
+      <span class="play-desc">${esc(desc)}</span>
       ${score ? `<span class="play-score">${score}</span>` : ''}
     </div>`;
   }).join('');
@@ -2513,10 +2538,7 @@ const ALL_TEAMS = {
   ]
 };
 
-let favTeams = JSON.parse(localStorage.getItem('betiq_favteams') || '[]').map(t => {
-  const canonical = ALL_TEAMS[t.sport]?.find(x => x.id === t.id);
-  return canonical ? { ...t, sub: canonical.sub } : t;
-});
+let favTeams = JSON.parse(localStorage.getItem('betiq_favteams') || '[]').map(({sub, ...t}) => t);
 let teamSelectorSport = 'nba';
 
 function initMyTeams() {
@@ -2538,7 +2560,7 @@ function renderTeamSelector(sport) {
     <div class="team-selector-grid">
       ${teams.map(t => `
         <div class="team-chip ${favTeams.some(f=>f.id===t.id&&f.sport===sport)?'selected':''}"
-             onclick="toggleTeam('${sport}','${t.id}','${t.name}','${t.sub}')">
+             onclick="toggleTeam('${sport}','${t.id}','${t.name}')">
           <div class="tc-abbr">${t.id}</div>
           <div class="tc-name">${t.name}</div>
         </div>`).join('')}
@@ -2546,18 +2568,14 @@ function renderTeamSelector(sport) {
     <button onclick="saveTeams()" style="margin-bottom:20px;padding:9px 20px;background:var(--green);color:#000;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px">Save Favorites</button>`;
 }
 
-function toggleTeam(sport, id, name, sub) {
+function toggleTeam(sport, id, name) {
   const idx = favTeams.findIndex(f => f.id === id && f.sport === sport);
-  if (idx === -1) favTeams.push({sport, id, name, sub});
+  if (idx === -1) favTeams.push({sport, id, name});
   else favTeams.splice(idx, 1);
   renderTeamSelector(sport);
 }
 
 function saveTeams() {
-  favTeams = favTeams.map(t => {
-    const canonical = ALL_TEAMS[t.sport]?.find(x => x.id === t.id);
-    return canonical ? { ...t, sub: canonical.sub } : t;
-  });
   localStorage.setItem('betiq_favteams', JSON.stringify(favTeams));
   toast(`Saved ${favTeams.length} favorite team${favTeams.length!==1?'s':''}`, 'success');
   renderFavDashboard();
@@ -2572,12 +2590,11 @@ async function renderFavDashboard() {
   }
   el.innerHTML = '<div class="sport-section-title">Your Team Hub</div>' +
     favTeams.map(t => {
-      const canonical = ALL_TEAMS[t.sport]?.find(x => x.id === t.id);
-      const sub = canonical?.sub || t.sub;
+      const sub = ALL_TEAMS[t.sport]?.find(x => x.id === t.id)?.sub || '';
       return `<div class="fav-team-card" id="ftc-${t.sport}-${t.id}">
         <div class="fav-team-header">
           <div><div class="fav-team-name">${SPORTS[t.sport].emoji} ${t.name}</div><div class="fav-team-sport">${SPORTS[t.sport].label}</div></div>
-          <a href="https://www.reddit.com/r/${sub}" target="_blank" style="font-size:11px;color:var(--text3);text-decoration:none">r/${sub} ↗</a>
+          ${sub ? `<a href="https://www.reddit.com/r/${sub}" target="_blank" style="font-size:11px;color:var(--text3);text-decoration:none">r/${sub} ↗</a>` : ''}
         </div>
         <div id="team-reddit-${t.sport}-${t.id}"><div style="font-size:12px;color:var(--text3)">Loading Reddit...</div></div>
       </div>`;
@@ -2587,9 +2604,8 @@ async function renderFavDashboard() {
 
 async function loadTeamReddit(team) {
   const el = document.getElementById(`team-reddit-${team.sport}-${team.id}`);
-  // Always look up the canonical subreddit from ALL_TEAMS (fixes stale localStorage values)
-  const canonical = ALL_TEAMS[team.sport]?.find(t => t.id === team.id);
-  const sub = canonical?.sub || team.sub;
+  const sub = ALL_TEAMS[team.sport]?.find(x => x.id === team.id)?.sub;
+  if (!sub) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">Subreddit not found.</div>'; return; }
   try {
     const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=6&raw_json=1`);
     const data = await res.json();
