@@ -1071,7 +1071,7 @@ function switchTab(name) {
   const tabEl = document.getElementById('tab-' + name);
   if (tabEl) tabEl.classList.add('active');
   state.currentTab = name;
-  if (name === 'scores') loadScores(state.currentSport);
+  if (name === 'scores') loadScoresAutoDetect();
   if (name === 'news') loadNews(state.currentNewsSport);
   if (name === 'parlay') loadParlayGames(state.currentParlayTab);
   if (name === 'tracker') renderTracker();
@@ -2116,6 +2116,42 @@ function showArticle(id) {
     </div>`;
 }
 
+// ─── AUTO-DETECT LIVE SPORT ──────────────────────────────────────────────────
+async function loadScoresAutoDetect() {
+  // Fetch all 3 sports in parallel, pick the one with live/most games
+  const [nba, nfl, mlb] = await Promise.all([
+    fetchESPN('nba','scoreboard'),
+    fetchESPN('nfl','scoreboard'),
+    fetchESPN('mlb','scoreboard')
+  ]);
+  const counts = {
+    nba: { live: (nba?.events||[]).filter(e=>e.status?.type?.state==='in').length, total: (nba?.events||[]).length },
+    nfl: { live: (nfl?.events||[]).filter(e=>e.status?.type?.state==='in').length, total: (nfl?.events||[]).length },
+    mlb: { live: (mlb?.events||[]).filter(e=>e.status?.type?.state==='in').length, total: (mlb?.events||[]).length }
+  };
+  // Pick sport with most live games, then most total games
+  const best = Object.entries(counts).sort((a,b) => b[1].live - a[1].live || b[1].total - a[1].total)[0][0];
+  state.currentSport = best;
+  // Update sport tab buttons
+  document.querySelectorAll('#tab-scores .sport-tab').forEach(b => b.classList.remove('active'));
+  const sportBtns = document.querySelectorAll('#tab-scores .sport-tab');
+  const sportOrder = ['nba','nfl','mlb'];
+  sportBtns.forEach((b,i) => { if(sportOrder[i]===best) b.classList.add('active'); });
+  // Cache all fetched data
+  state.gameCache.nba = nba; state.gameCache.nfl = nfl; state.gameCache.mlb = mlb;
+  // Show live counts badge on sport buttons
+  sportBtns.forEach((b,i) => {
+    const s = sportOrder[i];
+    const lc = counts[s].live;
+    const tc = counts[s].total;
+    const badge = lc > 0 ? ` <span style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px">${lc} LIVE</span>`
+                : tc > 0 ? ` <span style="background:var(--bg4);color:var(--text3);border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px">${tc}</span>`
+                : '';
+    b.innerHTML = `${SPORTS[s].emoji} ${SPORTS[s].label}${badge}`;
+  });
+  loadScores(best);
+}
+
 // ─── SCORES VIEW SWITCHING ───────────────────────────────────────────────────
 let currentScoresView = 'scores';
 let liveRefreshTimer = null;
@@ -2381,13 +2417,17 @@ async function renderFavDashboard() {
     return;
   }
   el.innerHTML = '<div class="sport-section-title">Your Team Hub</div>' +
-    favTeams.map(t => `<div class="fav-team-card" id="ftc-${t.sport}-${t.id}">
-      <div class="fav-team-header">
-        <div><div class="fav-team-name">${SPORTS[t.sport].emoji} ${t.name}</div><div class="fav-team-sport">${SPORTS[t.sport].label}</div></div>
-        <a href="https://www.reddit.com/r/${t.sub}" target="_blank" style="font-size:11px;color:var(--text3);text-decoration:none">r/${t.sub} ↗</a>
-      </div>
-      <div id="team-reddit-${t.sport}-${t.id}"><div style="font-size:12px;color:var(--text3)">Loading Reddit...</div></div>
-    </div>`).join('');
+    favTeams.map(t => {
+      const canonical = ALL_TEAMS[t.sport]?.find(x => x.id === t.id);
+      const sub = canonical?.sub || t.sub;
+      return `<div class="fav-team-card" id="ftc-${t.sport}-${t.id}">
+        <div class="fav-team-header">
+          <div><div class="fav-team-name">${SPORTS[t.sport].emoji} ${t.name}</div><div class="fav-team-sport">${SPORTS[t.sport].label}</div></div>
+          <a href="https://www.reddit.com/r/${sub}" target="_blank" style="font-size:11px;color:var(--text3);text-decoration:none">r/${sub} ↗</a>
+        </div>
+        <div id="team-reddit-${t.sport}-${t.id}"><div style="font-size:12px;color:var(--text3)">Loading Reddit...</div></div>
+      </div>`;
+    }).join('');
   favTeams.forEach(t => loadTeamReddit(t));
 }
 
