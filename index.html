@@ -1330,17 +1330,50 @@ function gameCard(sport, event, withOdds = false) {
 
   const detailTitle = `${esc(away?.team?.abbreviation||'Away')} vs ${esc(home?.team?.abbreviation||'Home')}`;
   const clickable = !withOdds ? `onclick="openGameDetail('${sport}','${event.id}','${detailTitle}',${isLive})"` : '';
+
+  // Team-level quick stats from scoreboard data (available when live/final)
+  function teamQuickStat(competitor) {
+    if (!competitor?.statistics) return '';
+    const stats = competitor.statistics;
+    const find = (names) => { for (const n of names) { const s = stats.find(x => x.name === n || x.abbreviation === n); if (s) return s.displayValue || s.value || null; } return null; };
+    if (sport === 'nba') {
+      const fg = find(['fieldGoalPct','fieldGoalsMade-fieldGoalsAttempted','FGM-FGA']);
+      const fg3 = find(['threePointFieldGoalPct','threePointFieldGoalsMade-threePointFieldGoalsAttempted','3PM-3PA']);
+      const reb = find(['totalRebounds','rebounds','REB']);
+      const ast = find(['assists','AST']);
+      const parts = [fg ? `FG ${fg}` : null, fg3 ? `3P ${fg3}` : null, reb ? `${reb} REB` : null, ast ? `${ast} AST` : null].filter(Boolean);
+      return parts.slice(0,3).join(' · ');
+    } else if (sport === 'mlb') {
+      const hits = find(['hits','H']);
+      const errs = find(['errors','E']);
+      const lob = find(['leftOnBase','LOB']);
+      const parts = [hits != null ? `${hits} H` : null, errs != null ? `${errs} E` : null, lob != null ? `${lob} LOB` : null].filter(Boolean);
+      return parts.join(' · ');
+    } else if (sport === 'nfl') {
+      const yds = find(['totalYards','netYards','totalNetYards','NET']);
+      const to = find(['turnovers','TO']);
+      const parts = [yds ? `${yds} YDS` : null, to != null ? `${to} TO` : null].filter(Boolean);
+      return parts.join(' · ');
+    }
+    return '';
+  }
+
+  const awayQuick = (isFinal || isLive) ? teamQuickStat(away) : '';
+  const homeQuick = (isFinal || isLive) ? teamQuickStat(home) : '';
+
   return `<div class="score-card" ${clickable} style="${!withOdds?'cursor:pointer':''}">
     <div class="game-status ${statusClass}">${statusLabel}</div>
     <div class="team-row">
       <div class="team-name">${esc(away ? away.team.displayName : 'TBD')}</div>
       <div class="team-score ${awayWin?'winning':''}">${isFinal||isLive?awayScore:''}</div>
     </div>
+    ${awayQuick ? `<div style="font-size:10px;color:var(--text3);padding:0 4px 2px;text-align:right">${awayQuick}</div>` : ''}
     <div class="team-row">
       <div class="team-name">${esc(home ? home.team.displayName : 'TBD')}</div>
       <div class="team-score ${homeWin?'winning':''}">${isFinal||isLive?homeScore:''}</div>
     </div>
-    ${!withOdds ? `<div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center">Click for play-by-play & box score</div>` : ''}
+    ${homeQuick ? `<div style="font-size:10px;color:var(--text3);padding:0 4px 4px;text-align:right">${homeQuick}</div>` : ''}
+    ${!withOdds ? `<div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:center">Click for full box score & play-by-play</div>` : ''}
     ${oddsHtml}
   </div>`;
 }
@@ -2354,7 +2387,7 @@ async function fetchGameDetail(sport, eventId) {
     const res = await fetch(url);
     const data = await res.json();
     renderPlayByPlay(data);
-    renderBoxScore(data);
+    renderBoxScore(data, sport);
   } catch(e) {
     document.getElementById('gdp-plays').innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px">Play-by-play unavailable for this game.</div>';
     document.getElementById('gdp-boxscore').innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px">Box score unavailable.</div>';
@@ -2400,10 +2433,86 @@ function renderPlayByPlay(data) {
   }).join('');
 }
 
-function renderBoxScore(data) {
+function renderBoxScore(data, sport) {
   const el = document.getElementById('gdp-boxscore');
   const players = data?.boxscore?.players;
   if (!players || !players.length) { el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px">Box score not yet available.</div>'; return; }
+
+  // Line score (quarters/innings/periods)
+  const lineScoreHtml = renderLineScore(data, sport);
+
+  if (sport === 'nba') {
+    el.innerHTML = lineScoreHtml + renderNBABoxScore(players);
+  } else if (sport === 'nfl') {
+    el.innerHTML = lineScoreHtml + renderNFLBoxScore(data, players);
+  } else if (sport === 'mlb') {
+    el.innerHTML = lineScoreHtml + renderMLBBoxScore(data, players);
+  } else {
+    // Generic fallback
+    let html = lineScoreHtml;
+    players.forEach(teamData => {
+      const teamName = teamData.team?.displayName || teamData.team?.abbreviation || '';
+      const stats = teamData.statistics?.[0];
+      if (!stats) return;
+      const labels = stats.labels || stats.names || [];
+      const athletes = stats.athletes || [];
+      const keyCols = ['PTS','REB','AST','STL','BLK','FG','3PT','MIN'];
+      const colIdxs = labels.map((l,i) => keyCols.includes(l) ? i : -1).filter(i => i >= 0);
+      const colLabels = colIdxs.map(i => labels[i]);
+      html += `<div class="boxscore-team-header">${esc(teamName)}</div>`;
+      html += `<table class="boxscore-table"><thead><tr><th>Player</th>${colLabels.map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>`;
+      athletes.slice(0, 8).forEach(a => {
+        const name = a.athlete?.shortName || a.athlete?.displayName || '';
+        const row = a.stats || [];
+        html += `<tr><td>${esc(name)}</td>${colIdxs.map(i => `<td>${row[i] ?? '—'}</td>`).join('')}</tr>`;
+      });
+      html += '</tbody></table>';
+    });
+    el.innerHTML = html || '<div style="color:var(--text3);font-size:12px;padding:8px">No player data yet.</div>';
+  }
+}
+
+function renderLineScore(data, sport) {
+  const linescores = data?.header?.competitions?.[0]?.competitors;
+  if (!linescores) return '';
+  try {
+    const teams = linescores.map(c => ({
+      name: c.team?.abbreviation || c.team?.displayName || '',
+      linescores: c.linescores || [],
+      score: c.score || ''
+    }));
+    if (!teams.length || !teams[0].linescores.length) return '';
+    const periods = teams[0].linescores;
+    const periodLabels = sport === 'mlb'
+      ? periods.map((_,i) => (i+1).toString())
+      : sport === 'nba'
+      ? periods.map((_,i) => i < 4 ? `Q${i+1}` : `OT${i-3}`)
+      : periods.map((_,i) => i < 4 ? `Q${i+1}` : `OT${i-3}`);
+    return `<div style="overflow-x:auto;margin-bottom:14px">
+      <table class="boxscore-table" style="font-size:12px;min-width:0">
+        <thead><tr>
+          <th style="text-align:left">Team</th>
+          ${periodLabels.map(l => `<th>${l}</th>`).join('')}
+          <th style="font-weight:800">T</th>
+        </tr></thead>
+        <tbody>${teams.map(t => `<tr>
+          <td style="text-align:left;font-weight:700;white-space:nowrap">${esc(t.name)}</td>
+          ${t.linescores.map(ls => `<td>${ls.displayValue ?? ls.value ?? '—'}</td>`).join('')}
+          <td style="font-weight:800;color:var(--green)">${t.score}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  } catch(e) { return ''; }
+}
+
+function isTripleDouble(pts, reb, ast, stl, blk) {
+  const stats = [parseInt(pts)||0, parseInt(reb)||0, parseInt(ast)||0, parseInt(stl)||0, parseInt(blk)||0];
+  return stats.filter(s => s >= 10).length >= 3;
+}
+
+function renderNBABoxScore(players) {
+  // Columns: MIN, FG (M-A), 3PT (M-A), FT (M-A), OREB, REB, AST, STL, BLK, TO, PF, +/-, PTS
+  const SHOW = ['MIN','FG','3PT','FT','REB','AST','STL','BLK','TO','+/-','PTS'];
   let html = '';
   players.forEach(teamData => {
     const teamName = teamData.team?.displayName || teamData.team?.abbreviation || '';
@@ -2411,22 +2520,202 @@ function renderBoxScore(data) {
     if (!stats) return;
     const labels = stats.labels || stats.names || [];
     const athletes = stats.athletes || [];
-    // Show key columns only to keep it readable
-    const keyCols = ['PTS','REB','AST','STL','BLK','FG','3PT','MIN'];
-    const colIdxs = labels.map((l,i) => keyCols.includes(l) ? i : -1).filter(i => i >= 0);
-    const colLabels = colIdxs.map(i => labels[i]);
+    const colIdxs = SHOW.map(col => ({ col, idx: labels.indexOf(col) })).filter(x => x.idx >= 0);
     html += `<div class="boxscore-team-header">${esc(teamName)}</div>`;
-    html += `<table class="boxscore-table"><thead><tr>
-      <th>Player</th>${colLabels.map(l=>`<th>${l}</th>`).join('')}
+    html += `<div style="overflow-x:auto"><table class="boxscore-table"><thead><tr>
+      <th style="text-align:left">Player</th>
+      ${colIdxs.map(x => `<th title="${x.col === 'FG' ? 'Field Goals Made-Att' : x.col === '3PT' ? '3-Pointers Made-Att' : x.col === 'FT' ? 'Free Throws Made-Att' : x.col}">${x.col}</th>`).join('')}
     </tr></thead><tbody>`;
-    athletes.slice(0, 8).forEach(a => {
+    athletes.forEach(a => {
       const name = a.athlete?.shortName || a.athlete?.displayName || '';
       const row = a.stats || [];
-      html += `<tr><td>${esc(name)}</td>${colIdxs.map(i => `<td>${row[i] ?? '—'}</td>`).join('')}</tr>`;
+      if (!row.length) return; // DNP
+      const ptsIdx = labels.indexOf('PTS'), rebIdx = labels.indexOf('REB');
+      const astIdx = labels.indexOf('AST'), stlIdx = labels.indexOf('STL'), blkIdx = labels.indexOf('BLK');
+      const td = isTripleDouble(row[ptsIdx], row[rebIdx], row[astIdx], row[stlIdx], row[blkIdx]);
+      const tdBadge = td ? ' <span style="background:var(--gold);color:#000;font-size:9px;padding:1px 4px;border-radius:3px;font-weight:800;vertical-align:middle">TD</span>' : '';
+      html += `<tr ${td ? 'style="background:rgba(255,215,0,0.06)"' : ''}>
+        <td style="text-align:left;white-space:nowrap">${esc(name)}${tdBadge}</td>
+        ${colIdxs.map(x => {
+          const val = row[x.idx] ?? '—';
+          const isPts = x.col === 'PTS' && parseInt(val) >= 20;
+          const isReb = x.col === 'REB' && parseInt(val) >= 10;
+          const isAst = x.col === 'AST' && parseInt(val) >= 10;
+          const highlight = (isPts || isReb || isAst) ? 'style="color:var(--gold);font-weight:700"' : '';
+          return `<td ${highlight}>${val}</td>`;
+        }).join('')}
+      </tr>`;
     });
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
   });
-  el.innerHTML = html || '<div style="color:var(--text3);font-size:12px;padding:8px">No player data yet.</div>';
+  if (!html) return '<div style="color:var(--text3);font-size:12px;padding:8px">No player data yet.</div>';
+  html += `<div style="font-size:10px;color:var(--text3);margin-top:6px;padding:0 2px">
+    FG/3PT/FT = Made-Attempted &nbsp;|&nbsp; <span style="background:rgba(255,215,0,0.15);padding:1px 5px;border-radius:3px;font-weight:700">TD</span> = Triple-Double &nbsp;|&nbsp; Gold = 20+ PTS / 10+ REB / 10+ AST
+  </div>`;
+  return html;
+}
+
+function renderNFLBoxScore(data, players) {
+  // NFL: separate tables for Passing, Rushing, Receiving per team
+  // ESPN returns separate statistics groups
+  let html = '';
+  players.forEach(teamData => {
+    const teamName = teamData.team?.displayName || teamData.team?.abbreviation || '';
+    const statGroups = teamData.statistics || [];
+    html += `<div class="boxscore-team-header">${esc(teamName)}</div>`;
+
+    statGroups.forEach(group => {
+      const groupName = group.displayName || group.name || '';
+      const labels = group.labels || group.names || [];
+      const athletes = group.athletes || [];
+      if (!athletes.length) return;
+
+      // Friendly group titles
+      const groupTitle = groupName.toLowerCase().includes('pass') ? '🏈 Passing'
+        : groupName.toLowerCase().includes('rush') ? '🏃 Rushing'
+        : groupName.toLowerCase().includes('receiv') ? '📡 Receiving'
+        : groupName.toLowerCase().includes('defense') || groupName.toLowerCase().includes('tackle') ? '🛡️ Defense'
+        : groupName.toLowerCase().includes('kick') || groupName.toLowerCase().includes('punt') ? '🦵 Kicking/Punting'
+        : `📊 ${groupName}`;
+
+      html += `<div style="font-size:11px;font-weight:700;color:var(--green);margin:10px 0 4px;letter-spacing:.5px">${groupTitle}</div>`;
+      html += `<div style="overflow-x:auto"><table class="boxscore-table"><thead><tr>
+        <th style="text-align:left">Player</th>
+        ${labels.map(l => `<th title="${nflColTitle(l)}">${l}</th>`).join('')}
+      </tr></thead><tbody>`;
+      athletes.forEach(a => {
+        const name = a.athlete?.shortName || a.athlete?.displayName || '';
+        const row = a.stats || [];
+        if (!row.length) return;
+        html += `<tr><td style="text-align:left;white-space:nowrap">${esc(name)}</td>
+          ${row.map((v,i) => {
+            const label = labels[i] || '';
+            const isKey = (label === 'YDS' && parseInt(v) >= 100)
+              || (label === 'TD' && parseInt(v) >= 1)
+              || (label === 'C/ATT') // completion/attempt — always show plain
+              || (label === 'INT' && parseInt(v) >= 1);
+            const isTD = label === 'TD' && parseInt(v) >= 1;
+            const isINT = label === 'INT' && parseInt(v) >= 1;
+            const style = isTD ? 'style="color:var(--green);font-weight:700"'
+              : isINT ? 'style="color:var(--red);font-weight:700"'
+              : (label === 'YDS' && parseInt(v) >= 100) ? 'style="color:var(--gold);font-weight:700"'
+              : '';
+            return `<td ${style}>${v ?? '—'}</td>`;
+          }).join('')}
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
+    });
+  });
+  if (!html) return '<div style="color:var(--text3);font-size:12px;padding:8px">No player data yet.</div>';
+  html += `<div style="font-size:10px;color:var(--text3);margin-top:6px">
+    C/ATT = Completions/Attempts &nbsp;|&nbsp; <span style="color:var(--green)">Green</span> = TD &nbsp;|&nbsp; <span style="color:var(--red)">Red</span> = INT &nbsp;|&nbsp; <span style="color:var(--gold)">Gold</span> = 100+ YDS
+  </div>`;
+  return html;
+}
+
+function nflColTitle(label) {
+  const map = { 'C/ATT':'Completions/Attempts','YDS':'Yards','TD':'Touchdowns','INT':'Interceptions',
+    'RTG':'Passer Rating','CAR':'Carries','AVG':'Average','LONG':'Longest Play',
+    'REC':'Receptions','TAR':'Targets','SACK':'Sacks','TFL':'Tackles For Loss','FF':'Forced Fumbles' };
+  return map[label] || label;
+}
+
+function renderMLBBoxScore(data, players) {
+  let html = '';
+
+  // Linescore already shown above — add R/H/E summary
+  const linescores = data?.header?.competitions?.[0]?.competitors;
+  if (linescores) {
+    try {
+      const rhe = linescores.map(c => ({
+        name: c.team?.abbreviation || '',
+        score: c.score || '0',
+        hits: c.hits ?? '—',
+        errors: c.errors ?? '—'
+      }));
+      if (rhe.some(t => t.hits !== '—')) {
+        html += `<div style="overflow-x:auto;margin-bottom:14px">
+          <table class="boxscore-table" style="font-size:12px">
+            <thead><tr><th style="text-align:left">Team</th><th>R</th><th>H</th><th>E</th></tr></thead>
+            <tbody>${rhe.map(t => `<tr>
+              <td style="text-align:left;font-weight:700">${esc(t.name)}</td>
+              <td style="color:var(--green);font-weight:700">${t.score}</td>
+              <td>${t.hits}</td>
+              <td style="${parseInt(t.errors)>0?'color:var(--red)':''}">${t.errors}</td>
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>`;
+      }
+    } catch(e) {}
+  }
+
+  players.forEach(teamData => {
+    const teamName = teamData.team?.displayName || teamData.team?.abbreviation || '';
+    const statGroups = teamData.statistics || [];
+    html += `<div class="boxscore-team-header">${esc(teamName)}</div>`;
+
+    statGroups.forEach(group => {
+      const groupName = (group.displayName || group.name || '').toLowerCase();
+      const labels = group.labels || group.names || [];
+      const athletes = group.athletes || [];
+      if (!athletes.length) return;
+
+      const isBatting = groupName.includes('batting') || groupName.includes('hitting') || labels.includes('AB') || labels.includes('H');
+      const isPitching = groupName.includes('pitch') || labels.includes('IP') || labels.includes('ERA');
+
+      const groupTitle = isPitching ? '⚾ Pitching' : isBatting ? '🏏 Batting' : `📊 ${group.displayName || group.name || ''}`;
+      const showCols = isPitching
+        ? ['IP','H','R','ER','BB','SO','HR','ERA']
+        : ['AB','R','H','RBI','BB','SO','HR','AVG'];
+      const colIdxs = showCols.map(col => ({ col, idx: labels.indexOf(col) })).filter(x => x.idx >= 0);
+
+      if (!colIdxs.length) return;
+
+      html += `<div style="font-size:11px;font-weight:700;color:var(--green);margin:10px 0 4px;letter-spacing:.5px">${groupTitle}</div>`;
+      html += `<div style="overflow-x:auto"><table class="boxscore-table"><thead><tr>
+        <th style="text-align:left">Player</th>
+        ${colIdxs.map(x => `<th title="${mlbColTitle(x.col)}">${x.col}</th>`).join('')}
+      </tr></thead><tbody>`;
+
+      athletes.forEach(a => {
+        const name = a.athlete?.shortName || a.athlete?.displayName || '';
+        const row = a.stats || [];
+        if (!row.length) return;
+        const rbiIdx = colIdxs.find(x => x.col === 'RBI')?.idx ?? -1;
+        const hrIdx = colIdxs.find(x => x.col === 'HR')?.idx ?? -1;
+        const soIdx = colIdxs.find(x => x.col === 'SO')?.idx ?? -1;
+        html += `<tr><td style="text-align:left;white-space:nowrap">${esc(name)}</td>
+          ${colIdxs.map(x => {
+            const val = row[x.idx] ?? '—';
+            const isHR = x.col === 'HR' && parseInt(val) >= 1;
+            const isRBI = x.col === 'RBI' && parseInt(val) >= 3;
+            const isKO = x.col === 'SO' && isPitching && parseInt(val) >= 7;
+            const isErr = x.col === 'ER' && parseInt(val) >= 3;
+            const style = isHR ? 'style="color:var(--gold);font-weight:800"'
+              : isRBI ? 'style="color:var(--green);font-weight:700"'
+              : isKO ? 'style="color:var(--green);font-weight:700"'
+              : isErr ? 'style="color:var(--red)"'
+              : '';
+            return `<td ${style}>${val}</td>`;
+          }).join('')}
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
+    });
+  });
+
+  if (!html) return '<div style="color:var(--text3);font-size:12px;padding:8px">No player data yet.</div>';
+  html += `<div style="font-size:10px;color:var(--text3);margin-top:6px">
+    <span style="color:var(--gold)">Gold</span> = HR &nbsp;|&nbsp; <span style="color:var(--green)">Green</span> = 3+ RBI or 7+ K (pitching) &nbsp;|&nbsp; <span style="color:var(--red)">Red</span> = 3+ ER
+  </div>`;
+  return html;
+}
+
+function mlbColTitle(col) {
+  const map = { 'AB':'At Bats','R':'Runs','H':'Hits','RBI':'Runs Batted In','BB':'Walks','SO':'Strikeouts',
+    'HR':'Home Runs','AVG':'Batting Average','IP':'Innings Pitched','ER':'Earned Runs','ERA':'ERA' };
+  return map[col] || col;
 }
 
 // ─── LEADERS / STATS ──────────────────────────────────────────────────────────
