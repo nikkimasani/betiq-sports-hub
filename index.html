@@ -802,6 +802,51 @@ nav { align-items: center; }
 .pill-pre { background:var(--bg4); color:var(--text2); border:1px solid var(--border); }
 .pill-final { background:rgba(83,210,44,.1); color:var(--green); border:1px solid rgba(83,210,44,.3); }
 .live-no-games { color:var(--text3); font-size:13px; padding:8px 0; }
+/* ─── PRACTICE TAB ─────────────────────────────────────────────────── */
+.practice-nav { display:flex; gap:8px; padding:16px 16px 0; border-bottom:1px solid var(--border); }
+.practice-tab-btn { padding:8px 18px; border-radius:8px 8px 0 0; border:1px solid var(--border); border-bottom:none; background:var(--bg2); color:var(--text3); font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; }
+.practice-tab-btn.active { background:var(--bg); color:var(--green); border-color:var(--green); }
+.practice-section { padding:16px; }
+.paper-stats-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.paper-stat { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; min-width:80px; text-align:center; }
+.paper-stat-val { font-size:18px; font-weight:800; color:var(--green); }
+.paper-stat-lbl { font-size:10px; color:var(--text3); font-weight:700; margin-top:2px; }
+.paper-stat-val.red { color:var(--red); }
+.paper-bankroll-row { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.paper-bankroll-amt { font-size:22px; font-weight:800; color:var(--gold); }
+.paper-game-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; }
+.paper-game-matchup { font-size:14px; font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.paper-game-status { font-size:10px; color:var(--text3); background:var(--bg3); padding:2px 7px; border-radius:10px; font-weight:600; }
+.paper-pick-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.paper-pick-btn { padding:7px 13px; border-radius:8px; border:1px solid var(--border); background:var(--bg3); color:var(--text2); font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.paper-pick-btn:hover { border-color:var(--green); color:var(--green); }
+.paper-pick-btn .pick-odds { font-size:10px; color:var(--text3); font-weight:600; }
+.paper-stake-row { display:flex; gap:6px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+.paper-stake-input { background:var(--bg3); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:6px 10px; font-size:13px; width:90px; }
+.paper-confirm-btn { padding:6px 14px; background:var(--green); color:#000; border:none; border-radius:6px; font-weight:700; font-size:12px; cursor:pointer; }
+.paper-bet-item { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+.paper-bet-game { font-size:12px; color:var(--text3); }
+.paper-bet-pick { font-size:13px; font-weight:700; }
+.paper-bet-status { font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px; }
+.paper-bet-status.pending { background:rgba(200,164,0,.15); color:var(--gold); }
+.paper-bet-status.win { background:rgba(83,210,44,.15); color:var(--green); }
+.paper-bet-status.loss { background:rgba(231,68,68,.15); color:var(--red); }
+.learn-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; margin-bottom:12px; overflow:hidden; }
+.learn-card-header { padding:14px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none; }
+.learn-card-title { font-size:14px; font-weight:800; }
+.learn-card-body { padding:0 16px 16px; display:none; }
+.learn-card-body.open { display:block; }
+.learn-example { background:var(--bg3); border-left:3px solid var(--green); border-radius:4px; padding:10px 14px; margin:10px 0; font-size:12px; line-height:1.6; color:var(--text2); }
+.learn-quiz { margin-top:14px; }
+.learn-quiz-title { font-size:11px; font-weight:800; color:var(--text3); letter-spacing:.05em; margin-bottom:10px; }
+.learn-q { margin-bottom:14px; }
+.learn-q-text { font-size:13px; font-weight:600; margin-bottom:8px; }
+.learn-q-opts { display:flex; flex-direction:column; gap:6px; }
+.learn-q-opt { padding:7px 12px; border-radius:7px; border:1px solid var(--border); background:var(--bg3); color:var(--text2); font-size:12px; cursor:pointer; transition:all .15s; text-align:left; }
+.learn-q-opt:hover:not(:disabled) { border-color:var(--green); color:var(--green); }
+.learn-q-opt.correct { border-color:var(--green); background:rgba(83,210,44,.12); color:var(--green); font-weight:700; }
+.learn-q-opt.wrong { border-color:var(--red); background:rgba(231,68,68,.1); color:var(--red); }
+.learn-score { font-size:13px; font-weight:700; margin-top:10px; padding:8px 12px; border-radius:7px; background:var(--bg3); display:none; }
 </style>
 </head>
 <body>
@@ -833,6 +878,7 @@ nav { align-items: center; }
   <button class="nav-btn" data-tab="knowledge" onclick="switchTab('knowledge')">Knowledge</button>
   <button class="nav-btn" data-tab="calculator" onclick="switchTab('calculator')">Calculators</button>
   <button class="nav-btn" data-tab="guide" onclick="switchTab('guide')">Guide</button>
+  <button class="nav-btn" data-tab="practice" onclick="switchTab('practice')">Practice</button>
   <!-- Settings pushed right -->
   <div class="nav-spacer"></div>
   <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">⚙️</button>
@@ -1355,6 +1401,39 @@ create table betiq_bankroll (user_id text primary key, balance numeric default 1
       </div>
     </div>
 
+
+    <div id="tab-practice" class="tab">
+      <div class="practice-nav">
+        <button class="practice-tab-btn active" onclick="showPracticeSection('paper')">&#128203; Paper Bets</button>
+        <button class="practice-tab-btn" onclick="showPracticeSection('learn')">&#128218; Bet Types</button>
+      </div>
+
+      <div id="practice-paper" class="practice-section">
+        <div class="paper-bankroll-row">
+          <div>
+            <div style="font-size:10px;color:var(--text3);font-weight:700;margin-bottom:2px">PRACTICE BANKROLL</div>
+            <div class="paper-bankroll-amt" id="paper-bankroll-display">$500.00</div>
+          </div>
+          <button onclick="resetPaperBankroll()" style="padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text3);font-size:11px;font-weight:700;cursor:pointer">Reset $500</button>
+        </div>
+        <div class="paper-stats-bar">
+          <div class="paper-stat"><div class="paper-stat-val" id="pstat-bets">0</div><div class="paper-stat-lbl">BETS</div></div>
+          <div class="paper-stat"><div class="paper-stat-val" id="pstat-wins">0</div><div class="paper-stat-lbl">WINS</div></div>
+          <div class="paper-stat"><div class="paper-stat-val red" id="pstat-losses">0</div><div class="paper-stat-lbl">LOSSES</div></div>
+          <div class="paper-stat"><div class="paper-stat-val" id="pstat-pct">&#8212;</div><div class="paper-stat-lbl">WIN %</div></div>
+          <div class="paper-stat"><div class="paper-stat-val" id="pstat-roi">&#8212;</div><div class="paper-stat-lbl">ROI</div></div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:700">UPCOMING GAMES — pick a side to bet</div>
+        <div id="paper-games-container"><div class="loading"><div class="spinner"></div><span>Loading games...</span></div></div>
+        <div style="font-size:12px;color:var(--text3);margin:16px 0 8px;font-weight:700">YOUR BETS</div>
+        <div id="paper-bets-list"></div>
+      </div>
+
+      <div id="practice-learn" class="practice-section" style="display:none">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Learn how each bet type works, then test yourself.</div>
+        <div id="learn-cards-container"></div>
+      </div>
+    </div>
   </div><!-- /main -->
 
   <!-- BET SLIP SIDEBAR -->
@@ -1494,6 +1573,7 @@ function switchTab(name) {
   if (name === 'social') initSocial();
   if (name === 'kalshi') initKalshi();
   if (name === 'calculator') initCalculators();
+  if (name === 'practice') initPractice();
   if (name !== 'agent') stopLivePoll();
 }
 
@@ -4793,6 +4873,302 @@ Be direct and specific. No generic disclaimers.`;
     } catch(e) { sbClient = null; }
   }
 })();
+
+// ─── PRACTICE TAB ────────────────────────────────────────────────────────────
+let paperBets = JSON.parse(localStorage.getItem('betiq_paper_bets') || '[]');
+let paperBankroll = parseFloat(localStorage.getItem('betiq_paper_bankroll') || '500');
+let paperSelectedPick = null;
+
+function savePaperState() {
+  localStorage.setItem('betiq_paper_bets', JSON.stringify(paperBets));
+  localStorage.setItem('betiq_paper_bankroll', paperBankroll.toString());
+}
+
+function genOdds(isFav) {
+  if (isFav) return -(Math.floor(Math.random() * 100) + 130);
+  return Math.floor(Math.random() * 90) + 110;
+}
+
+function decimalOdds(american) {
+  return american > 0 ? (american / 100) + 1 : (100 / Math.abs(american)) + 1;
+}
+
+function fmtOdds(american) {
+  return american > 0 ? '+' + american : '' + american;
+}
+
+function showPracticeSection(section) {
+  document.getElementById('practice-paper').style.display = section === 'paper' ? '' : 'none';
+  document.getElementById('practice-learn').style.display = section === 'learn' ? '' : 'none';
+  document.querySelectorAll('.practice-tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && section === 'paper') || (i === 1 && section === 'learn'));
+  });
+  if (section === 'learn') renderLearnCards();
+}
+
+async function initPractice() {
+  resolvePaperBets();
+  renderPaperBankroll();
+  renderPaperStats();
+  renderPaperBetList();
+  await loadPaperGames();
+}
+
+async function loadPaperGames() {
+  const container = document.getElementById('paper-games-container');
+  if (!container) return;
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading games...</span></div>';
+  const sports = ['nba', 'nfl', 'mlb'];
+  const results = await Promise.all(sports.map(s => fetchESPN(s, 'scoreboard')));
+  const games = [];
+  sports.forEach((sport, i) => {
+    const events = results[i]?.events || [];
+    events.filter(e => ['pre','in'].includes(e.status?.type?.state)).slice(0, 4).forEach(e => {
+      const comp = e.competitions?.[0];
+      const home = comp?.competitors?.find(c => c.homeAway === 'home');
+      const away = comp?.competitors?.find(c => c.homeAway === 'away');
+      if (!home || !away) return;
+      const homeFav = Math.random() > 0.5;
+      const homeOdds = genOdds(homeFav);
+      const awayOdds = genOdds(!homeFav);
+      games.push({ sport, id: e.id,
+        label: away.team.displayName + ' @ ' + home.team.displayName,
+        home: { name: home.team.displayName, abbr: home.team.abbreviation, odds: homeOdds },
+        away: { name: away.team.displayName, abbr: away.team.abbreviation, odds: awayOdds },
+        state: e.status?.type?.state });
+    });
+  });
+  if (!games.length) {
+    container.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:12px">No upcoming games right now. Check back later.</div>';
+    return;
+  }
+  container.innerHTML = games.map(g => {
+    const alreadyBet = paperBets.some(b => b.gameId === g.id && b.result === 'pending');
+    const stakeMaxAttr = 'max="' + paperBankroll.toFixed(0) + '"';
+    return '<div class="paper-game-card" id="pgame-' + g.id + '">' +
+      '<div class="paper-game-matchup">' + SPORTS[g.sport].emoji + ' ' + g.label +
+      '<span class="paper-game-status">' + (g.state === 'in' ? 'LIVE' : 'Upcoming') + '</span></div>' +
+      (alreadyBet
+        ? '<div style="font-size:12px;color:var(--text3)">Bet placed — awaiting result</div>'
+        : '<div class="paper-pick-row">' +
+          '<button class="paper-pick-btn" onclick="selectPaperPick('' + g.id + '','' + g.away.name.replace(/'/g,"\'") + '',' + g.away.odds + ','' + g.label.replace(/'/g,"\'") + '','' + g.sport + '')">' +
+          g.away.abbr + '<span class="pick-odds">' + fmtOdds(g.away.odds) + '</span></button>' +
+          '<button class="paper-pick-btn" onclick="selectPaperPick('' + g.id + '','' + g.home.name.replace(/'/g,"\'") + '',' + g.home.odds + ','' + g.label.replace(/'/g,"\'") + '','' + g.sport + '')">' +
+          g.home.abbr + '<span class="pick-odds">' + fmtOdds(g.home.odds) + '</span></button></div>' +
+          '<div class="paper-stake-row" id="pstake-' + g.id + '" style="display:none">' +
+          '<span style="font-size:12px;color:var(--text2)">Bet <strong id="ppick-label-' + g.id + '"></strong> for:</span>' +
+          '<input class="paper-stake-input" type="number" id="pstake-input-' + g.id + '" placeholder="$10" min="1" ' + stakeMaxAttr + '>' +
+          '<button class="paper-confirm-btn" onclick="placePaperBet('' + g.id + '','' + g.label.replace(/'/g,"\'") + '','' + g.sport + '')">Place Bet</button>' +
+          '<button onclick="cancelPaperPick('' + g.id + '')" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-size:11px;cursor:pointer">Cancel</button></div>') +
+      '</div>';
+  }).join('');
+}
+
+function selectPaperPick(gameId, pick, odds, gameLabel, sport) {
+  paperSelectedPick = { gameId, pick, odds, gameLabel, sport };
+  const stakeRow = document.getElementById('pstake-' + gameId);
+  const label = document.getElementById('ppick-label-' + gameId);
+  if (stakeRow) stakeRow.style.display = 'flex';
+  if (label) label.textContent = pick + ' (' + fmtOdds(odds) + ')';
+}
+
+function cancelPaperPick(gameId) {
+  paperSelectedPick = null;
+  const stakeRow = document.getElementById('pstake-' + gameId);
+  if (stakeRow) stakeRow.style.display = 'none';
+}
+
+function placePaperBet(gameId, gameLabel, sport) {
+  if (!paperSelectedPick || paperSelectedPick.gameId !== gameId) return;
+  const input = document.getElementById('pstake-input-' + gameId);
+  const stake = parseFloat(input?.value);
+  if (!stake || stake <= 0) { showToast('Enter a valid stake'); return; }
+  if (stake > paperBankroll) { showToast('Not enough bankroll'); return; }
+  paperBankroll = parseFloat((paperBankroll - stake).toFixed(2));
+  paperBets.unshift({ id: Date.now(), gameId, gameLabel, sport,
+    pick: paperSelectedPick.pick, odds: paperSelectedPick.odds,
+    stake, result: 'pending', payout: 0 });
+  savePaperState();
+  renderPaperBankroll();
+  renderPaperStats();
+  renderPaperBetList();
+  loadPaperGames();
+  showToast('Bet placed! Good luck.');
+}
+
+async function resolvePaperBets() {
+  const pending = paperBets.filter(b => b.result === 'pending');
+  if (!pending.length) return;
+  const sports = [...new Set(pending.map(b => b.sport))];
+  const dataMap = {};
+  await Promise.all(sports.map(async s => { dataMap[s] = await fetchESPN(s, 'scoreboard'); }));
+  let changed = false;
+  pending.forEach(bet => {
+    const events = dataMap[bet.sport]?.events || [];
+    const ev = events.find(e => e.id === bet.gameId);
+    if (!ev || ev.status?.type?.state !== 'post') return;
+    const comp = ev.competitions?.[0];
+    const winner = comp?.competitors?.find(c => c.winner);
+    if (!winner) return;
+    const won = winner.team.displayName === bet.pick;
+    const payout = won ? parseFloat((bet.stake * decimalOdds(bet.odds)).toFixed(2)) : 0;
+    bet.result = won ? 'win' : 'loss';
+    bet.payout = payout;
+    if (won) paperBankroll = parseFloat((paperBankroll + payout).toFixed(2));
+    changed = true;
+  });
+  if (changed) { savePaperState(); renderPaperBankroll(); renderPaperStats(); renderPaperBetList(); }
+}
+
+function renderPaperBankroll() {
+  const el = document.getElementById('paper-bankroll-display');
+  if (el) el.textContent = '$' + paperBankroll.toFixed(2);
+}
+
+function renderPaperStats() {
+  const settled = paperBets.filter(b => b.result !== 'pending');
+  const wins = settled.filter(b => b.result === 'win');
+  const losses = settled.filter(b => b.result === 'loss');
+  const totalStaked = settled.reduce((s, b) => s + b.stake, 0);
+  const totalReturn = wins.reduce((s, b) => s + b.payout, 0);
+  const roi = totalStaked > 0 ? (((totalReturn - totalStaked) / totalStaked) * 100).toFixed(1) + '%' : '—';
+  const pct = settled.length > 0 ? Math.round((wins.length / settled.length) * 100) + '%' : '—';
+  const set = (id, val, red) => { const el = document.getElementById(id); if (!el) return; el.textContent = val; el.classList.toggle('red', !!red); };
+  set('pstat-bets', paperBets.length);
+  set('pstat-wins', wins.length);
+  set('pstat-losses', losses.length, true);
+  set('pstat-pct', pct);
+  set('pstat-roi', roi);
+}
+
+function renderPaperBetList() {
+  const el = document.getElementById('paper-bets-list');
+  if (!el) return;
+  if (!paperBets.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">No bets yet — pick a game above to get started.</div>'; return; }
+  el.innerHTML = paperBets.slice(0, 15).map(b => {
+    const statusClass = b.result === 'pending' ? 'pending' : b.result === 'win' ? 'win' : 'loss';
+    const statusLabel = b.result === 'pending' ? 'Pending' : b.result === 'win' ? 'Won +$' + (b.payout - b.stake).toFixed(2) : 'Lost -$' + b.stake.toFixed(2);
+    return '<div class="paper-bet-item"><div>' +
+      '<div class="paper-bet-game">' + b.gameLabel + '</div>' +
+      '<div class="paper-bet-pick">' + b.pick + ' <span style="color:var(--text3);font-weight:400;font-size:11px">' + fmtOdds(b.odds) + ' &middot; $' + b.stake + '</span></div>' +
+      '</div><span class="paper-bet-status ' + statusClass + '">' + statusLabel + '</span></div>';
+  }).join('');
+}
+
+function resetPaperBankroll() {
+  if (!confirm('Reset bankroll to $500 and clear all paper bets?')) return;
+  paperBets = []; paperBankroll = 500;
+  savePaperState(); renderPaperBankroll(); renderPaperStats(); renderPaperBetList(); loadPaperGames();
+}
+
+// ─── BET TYPE LEARN CARDS ────────────────────────────────────────────────────
+const LEARN_TYPES = [
+  { title: 'Moneyline', emoji: 'trophy', id: 'ml',
+    body: 'The simplest bet — pick who wins the game. No point spread, just the outright winner. The favorite has a negative number (you risk more to win less). The underdog has a positive number (you risk less to win more).',
+    example: 'Lakers -150 vs. Celtics +130\nA $150 bet on the Lakers wins $100.\nA $100 bet on the Celtics wins $130.',
+    quiz: [
+      { q: 'The Chiefs are listed at -180. How much do you need to bet to win $100?', opts: ['$100', '$180', '$80', '$280'], ans: 1 },
+      { q: 'You bet $50 on an underdog at +200. What is your total payout if they win?', opts: ['$100', '$150', '$200', '$250'], ans: 1 },
+      { q: 'Which team is the favorite?', opts: ['Team A +120', 'Team B -140', 'Team C +300', 'Team D +105'], ans: 1 }
+    ]
+  },
+  { title: 'Point Spread', emoji: 'ruler', id: 'spread',
+    body: 'The sportsbook gives the underdog a head-start in points. The favorite must win by more than the spread to "cover." The underdog needs to lose by less than the spread — or win outright.',
+    example: 'Cowboys -7.5 vs. Giants +7.5\nDallas must win by 8+ to cover.\nIf Dallas wins 24-20, Giants +7.5 wins (lost by only 4).',
+    quiz: [
+      { q: 'Bucks -5.5 win the game 110-106. Do they cover?', opts: ['Yes — won by 4', 'No — needed to win by 6+', 'Yes — any win covers', 'Push'], ans: 1 },
+      { q: 'You bet the underdog +3.5. They lose by exactly 3. What happens?', opts: ['Loss', 'Win', 'Push', 'Void'], ans: 1 },
+      { q: 'Why do spread bets almost always use -110 on both sides?', opts: ["It is random", 'The sportsbook charges a fee called the vig', 'To favor the favorite', 'To match moneyline odds'], ans: 1 }
+    ]
+  },
+  { title: 'Totals (Over/Under)', emoji: 'chart', id: 'total',
+    body: 'Instead of picking a winner, you bet on the combined score of both teams. Pick Over (total exceeds the line) or Under (total falls short). You do not care who wins — only how many points are scored.',
+    example: 'Celtics vs. Heat — Total: 214.5\nFinal: 112-105 (217 total) → Over wins.\nFinal: 108-104 (212 total) → Under wins.',
+    quiz: [
+      { q: 'Total is set at 47.5 for an NFL game. Final: 28-21 (49 pts). What wins?', opts: ['Over', 'Under', 'Push', 'Neither'], ans: 0 },
+      { q: 'Why might you bet the Under in a bad-weather game?', opts: ['Fewer turnovers', 'Rain and wind reduce scoring', 'More penalties', 'Players run faster'], ans: 1 },
+      { q: 'Both teams score 107. Total line was 214. What happens?', opts: ['Over wins', 'Under wins', 'Push — bet refunded', 'Loss for both sides'], ans: 2 }
+    ]
+  },
+  { title: 'Parlays', emoji: 'dice', id: 'parlay',
+    body: 'Combine 2 or more bets into one. ALL legs must win for the parlay to pay out. The odds multiply together for much higher payouts — but missing even one leg loses the entire bet.',
+    example: '3-leg parlay: Chiefs ML + Lakers ML + Over 47.5 (each -110)\nEach -110 = 1.909 decimal.\nCombined: 1.909 x 1.909 x 1.909 ≈ 6.96x\n$100 bet wins ~$596.',
+    quiz: [
+      { q: 'You have a 4-leg parlay. Three win, one loses. Result?', opts: ['Partial payout', 'Full win', 'Full loss', 'Push on losing leg'], ans: 2 },
+      { q: 'Why do sportsbooks love when bettors play parlays?', opts: ['They cost less to manage', 'The house edge compounds across every leg', 'Favorites always win', 'It simplifies their model'], ans: 1 },
+      { q: '2-leg parlay: +200 and -110. Approximate combined payout on $100?', opts: ['About $200', 'About $570', 'About $150', 'About $310'], ans: 1 }
+    ]
+  },
+  { title: 'Prop Bets', emoji: 'target', id: 'props',
+    body: 'Wager on individual player or game events instead of the final outcome. Examples: "Will LeBron score over 27.5 points?" Props let you use specific matchup knowledge — and sportsbooks often spend less time setting these lines.',
+    example: 'LeBron James Over 27.5 Points (-115)\nIf LeBron scores 28+, you win.\nYou do not care if his team wins or loses.',
+    quiz: [
+      { q: 'Which is a prop bet?', opts: ['Lakers -5.5', 'Over 215.5 total', 'Curry scores 30+ points', 'Celtics moneyline'], ans: 2 },
+      { q: 'Why can sharp bettors have an edge on props?', opts: ['Props have no vig', 'Sportsbooks spend less time setting prop lines', 'Props always pay more', 'No limits on prop bets'], ans: 1 },
+      { q: 'A player prop is graded No Action. What does that mean?', opts: ['The player won', 'Bet voided and stake refunded', 'You lose half the stake', 'The line moved'], ans: 1 }
+    ]
+  }
+];
+
+function renderLearnCards() {
+  const container = document.getElementById('learn-cards-container');
+  if (!container || container.children.length) return;
+  container.innerHTML = LEARN_TYPES.map((type, ti) => {
+    const qs = type.quiz.map((q, qi) => {
+      const opts = q.opts.map((opt, oi) =>
+        '<button class="learn-q-opt" id="lopt-' + type.id + '-' + qi + '-' + oi + '" onclick="answerLearnQ('' + type.id + '',' + ti + ',' + qi + ',' + oi + ')">' + opt + '</button>'
+      ).join('');
+      return '<div class="learn-q" id="lq-' + type.id + '-' + qi + '"><div class="learn-q-text">' + (qi+1) + '. ' + q.q + '</div><div class="learn-q-opts">' + opts + '</div></div>';
+    }).join('');
+    return '<div class="learn-card" id="lcard-' + type.id + '">' +
+      '<div class="learn-card-header" onclick="toggleLearnCard('' + type.id + '')">' +
+      '<div class="learn-card-title">' + type.title + '</div>' +
+      '<span id="lcard-arrow-' + type.id + '" style="color:var(--text3);font-size:16px">&#8250;</span></div>' +
+      '<div class="learn-card-body" id="lcard-body-' + type.id + '">' +
+      '<p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:0">' + type.body + '</p>' +
+      '<div class="learn-example"><strong>Example:</strong><br>' + type.example.replace(/\n/g,'<br>') + '</div>' +
+      '<div class="learn-quiz"><div class="learn-quiz-title">TEST YOURSELF</div>' + qs +
+      '<div class="learn-score" id="lscore-' + type.id + '"></div></div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function toggleLearnCard(id) {
+  const body = document.getElementById('lcard-body-' + id);
+  const arrow = document.getElementById('lcard-arrow-' + id);
+  const open = body.classList.toggle('open');
+  if (arrow) arrow.innerHTML = open ? '&#8964;' : '&#8250;';
+}
+
+function answerLearnQ(typeId, typeIdx, qIdx, optIdx) {
+  const type = LEARN_TYPES[typeIdx];
+  const correct = type.quiz[qIdx].ans;
+  const opts = document.querySelectorAll('[id^="lopt-' + typeId + '-' + qIdx + '-"]');
+  opts.forEach(b => { b.disabled = true; });
+  const chosen = document.getElementById('lopt-' + typeId + '-' + qIdx + '-' + optIdx);
+  const correctEl = document.getElementById('lopt-' + typeId + '-' + qIdx + '-' + correct);
+  if (optIdx === correct) { if (chosen) chosen.classList.add('correct'); }
+  else { if (chosen) chosen.classList.add('wrong'); if (correctEl) correctEl.classList.add('correct'); }
+  const allAnswered = type.quiz.every((q, qi) =>
+    document.querySelector('[id^="lopt-' + typeId + '-' + qi + '-"]:disabled') !== null
+  );
+  if (allAnswered) {
+    let wins = 0;
+    type.quiz.forEach((q, qi) => {
+      const correctOpt = document.getElementById('lopt-' + typeId + '-' + qi + '-' + q.ans);
+      if (correctOpt && correctOpt.classList.contains('correct') &&
+          !document.querySelector('[id^="lopt-' + typeId + '-' + qi + '-"].wrong')) wins++;
+    });
+    const scoreEl = document.getElementById('lscore-' + typeId);
+    if (scoreEl) {
+      scoreEl.style.display = 'block';
+      scoreEl.textContent = 'You got ' + wins + '/' + type.quiz.length + ' correct. ' +
+        (wins === type.quiz.length ? 'Perfect!' : wins >= 2 ? 'Good job!' : 'Review the explanation above.');
+      scoreEl.style.color = wins === type.quiz.length ? 'var(--green)' : wins >= 2 ? 'var(--gold)' : 'var(--red)';
+    }
+  }
+}
+
 </script>
 </body>
 </html>
