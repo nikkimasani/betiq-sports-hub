@@ -1,0 +1,2438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetIQ — Sports Betting Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+:root {
+  --bg: #0f1923;
+  --bg2: #1a2634;
+  --bg3: #1e2d3e;
+  --bg4: #243447;
+  --green: #53d22c;
+  --green2: #3aad1a;
+  --gold: #ffc940;
+  --red: #e44d4d;
+  --blue: #3b9eed;
+  --text: #ffffff;
+  --text2: #8fa3b4;
+  --text3: #506070;
+  --border: #2a3f55;
+  --radius: 8px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+/* HEADER */
+header {
+  background: var(--bg2);
+  border-bottom: 2px solid var(--green);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.logo span { color: var(--green); }
+.bankroll-badge {
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--text2);
+  cursor: pointer;
+}
+.bankroll-badge strong { color: var(--gold); }
+
+/* NAV */
+nav {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  padding: 0 16px;
+  scrollbar-width: none;
+}
+nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  background: none; border: none; color: var(--text2);
+  padding: 14px 18px; font-size: 13px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent;
+  transition: all .2s;
+}
+.nav-btn:hover { color: var(--text); }
+.nav-btn.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* LAYOUT */
+.app { display: flex; min-height: calc(100vh - 105px); }
+.main { flex: 1; padding: 20px; overflow: auto; }
+.bet-sidebar {
+  width: 320px; min-width: 320px;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+
+/* TABS */
+.tab { display: none; }
+.tab.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text3); margin-bottom: 12px;
+}
+
+/* SCORE CARD */
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+.score-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.score-card:hover { border-color: var(--green); background: var(--bg4); }
+.score-card.selected { border-color: var(--green); background: rgba(83,210,44,0.06); }
+.game-status {
+  font-size: 11px; font-weight: 700; color: var(--red);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.game-status.final { color: var(--text3); }
+.game-status.scheduled { color: var(--blue); }
+.team-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 0;
+}
+.team-name { font-size: 14px; font-weight: 600; }
+.team-score { font-size: 18px; font-weight: 800; }
+.team-score.winning { color: var(--green); }
+.game-odds {
+  display: flex; gap: 6px; margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.odd-btn {
+  flex: 1; background: var(--bg4); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 4px; text-align: center;
+  cursor: pointer; transition: all .2s; font-size: 11px;
+}
+.odd-btn:hover { border-color: var(--green); }
+.odd-btn.in-slip { background: rgba(83,210,44,0.15); border-color: var(--green); }
+.odd-btn .odd-type { color: var(--text3); font-size: 10px; font-weight: 600; text-transform: uppercase; }
+.odd-btn .odd-val { color: var(--text); font-weight: 700; font-size: 12px; }
+.odd-btn .odd-label { color: var(--text2); font-size: 10px; }
+
+/* SPORT TABS */
+.sport-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.sport-tab {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 20px; padding: 6px 16px; font-size: 13px;
+  font-weight: 600; cursor: pointer; color: var(--text2); transition: all .2s;
+}
+.sport-tab.active { background: var(--green); border-color: var(--green); color: #000; }
+
+/* NEWS */
+.news-item {
+  display: flex; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.news-item:last-child { border-bottom: none; }
+.news-thumb {
+  width: 80px; height: 56px; border-radius: 6px;
+  background: var(--bg4); object-fit: cover; flex-shrink: 0;
+}
+.news-headline { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 4px; }
+.news-meta { font-size: 11px; color: var(--text3); }
+.news-sport-badge {
+  display: inline-block; padding: 2px 6px; border-radius: 3px;
+  font-size: 10px; font-weight: 700; margin-right: 6px; text-transform: uppercase;
+}
+.badge-nba { background: rgba(var(--blue-rgb, 59,158,237), 0.2); color: var(--blue); }
+.badge-nfl { background: rgba(228,77,77,.2); color: var(--red); }
+.badge-mlb { background: rgba(255,201,64,.2); color: var(--gold); }
+
+/* BET SLIP */
+.slip-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.slip-title { font-weight: 700; font-size: 14px; }
+.slip-count {
+  background: var(--green); color: #000;
+  border-radius: 12px; padding: 2px 8px; font-size: 12px; font-weight: 800;
+}
+.slip-empty {
+  padding: 32px 16px; text-align: center; color: var(--text3); font-size: 13px;
+}
+.slip-empty .icon { font-size: 36px; margin-bottom: 8px; }
+.slip-legs { flex: 1; overflow-y: auto; padding: 8px; }
+.slip-leg {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 12px; margin-bottom: 6px;
+  position: relative;
+}
+.slip-leg-sport { font-size: 10px; color: var(--text3); text-transform: uppercase; font-weight: 700; }
+.slip-leg-pick { font-size: 13px; font-weight: 600; margin: 2px 0; }
+.slip-leg-odds { font-size: 12px; color: var(--green); font-weight: 700; }
+.slip-leg-remove {
+  position: absolute; top: 8px; right: 8px;
+  background: none; border: none; color: var(--text3);
+  cursor: pointer; font-size: 16px; line-height: 1;
+}
+.slip-leg-remove:hover { color: var(--red); }
+.slip-footer {
+  padding: 14px; border-top: 1px solid var(--border);
+  background: var(--bg2);
+}
+.slip-odds-row {
+  display: flex; justify-content: space-between; margin-bottom: 8px;
+  font-size: 13px;
+}
+.slip-odds-val { font-weight: 800; color: var(--gold); font-size: 16px; }
+.stake-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.stake-input {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: 14px;
+}
+.stake-input:focus { outline: none; border-color: var(--green); }
+.quick-stakes { display: flex; gap: 6px; margin-bottom: 10px; }
+.quick-stake {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 4px; padding: 5px; font-size: 11px; font-weight: 600;
+  cursor: pointer; text-align: center; color: var(--text2); transition: all .2s;
+}
+.quick-stake:hover { border-color: var(--green); color: var(--green); }
+.payout-row {
+  background: rgba(83,210,44,0.08); border: 1px solid rgba(83,210,44,0.25);
+  border-radius: 6px; padding: 10px 12px; margin-bottom: 10px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.payout-label { font-size: 12px; color: var(--text2); }
+.payout-amount { font-size: 20px; font-weight: 800; color: var(--green); }
+.btn-place {
+  width: 100%; background: var(--green); color: #000;
+  border: none; border-radius: 6px; padding: 12px;
+  font-size: 14px; font-weight: 800; cursor: pointer; transition: all .2s;
+}
+.btn-place:hover { background: var(--green2); }
+.btn-place:disabled { background: var(--bg4); color: var(--text3); cursor: not-allowed; }
+.btn-clear-slip {
+  width: 100%; background: none; border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px; font-size: 12px; color: var(--text3);
+  cursor: pointer; margin-top: 6px; transition: all .2s;
+}
+.btn-clear-slip:hover { border-color: var(--red); color: var(--red); }
+.ext-links { display: flex; gap: 6px; margin-bottom: 8px; }
+.ext-link {
+  flex: 1; padding: 7px; border-radius: 5px; font-size: 11px; font-weight: 700;
+  text-align: center; text-decoration: none; transition: opacity .2s;
+}
+.ext-link:hover { opacity: .85; }
+.ext-dk { background: #1a7c3e; color: #fff; }
+.ext-fd { background: #1493ff; color: #fff; }
+.ext-pp { background: #7b2ff7; color: #fff; }
+
+/* PARLAY HISTORY */
+.history-item {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px; margin-bottom: 8px;
+}
+.history-date { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.history-result {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 700;
+}
+.result-win { background: rgba(83,210,44,.2); color: var(--green); }
+.result-loss { background: rgba(228,77,77,.2); color: var(--red); }
+.result-pending { background: rgba(255,201,64,.2); color: var(--gold); }
+
+/* KNOWLEDGE CENTER */
+.knowledge-grid {
+  display: grid; grid-template-columns: 240px 1fr; gap: 20px;
+}
+.know-nav { display: flex; flex-direction: column; gap: 4px; }
+.know-nav-item {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 14px; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--text2);
+  transition: all .2s;
+}
+.know-nav-item:hover { border-color: var(--green); color: var(--text); }
+.know-nav-item.active { background: rgba(83,210,44,0.1); border-color: var(--green); color: var(--green); }
+.know-content { min-height: 500px; }
+.know-article { display: none; }
+.know-article.active { display: block; }
+.know-article h2 { font-size: 22px; margin-bottom: 6px; }
+.know-article .subtitle { color: var(--text2); margin-bottom: 20px; font-size: 14px; }
+.know-article h3 { font-size: 16px; margin: 20px 0 8px; color: var(--gold); }
+.know-article p { font-size: 14px; line-height: 1.7; color: var(--text2); margin-bottom: 12px; }
+.know-article ul { padding-left: 20px; margin-bottom: 12px; }
+.know-article ul li { font-size: 14px; line-height: 1.7; color: var(--text2); margin-bottom: 4px; }
+.know-article strong { color: var(--text); }
+.odds-example {
+  background: var(--bg4); border: 1px solid var(--border);
+  border-radius: 6px; padding: 14px; margin: 12px 0; font-family: monospace;
+  font-size: 13px; line-height: 1.8;
+}
+.highlight { color: var(--green); font-weight: 700; }
+.highlight-gold { color: var(--gold); font-weight: 700; }
+.highlight-red { color: var(--red); font-weight: 700; }
+
+/* QUIZ / CALC */
+.calc-box {
+  background: var(--bg4); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; margin: 16px 0;
+}
+.calc-box label { font-size: 12px; color: var(--text3); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; }
+.calc-box input, .calc-box select {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: 14px; margin-bottom: 10px;
+}
+.calc-box input:focus, .calc-box select:focus { outline: none; border-color: var(--green); }
+.calc-result {
+  background: rgba(83,210,44,0.1); border: 1px solid rgba(83,210,44,0.3);
+  border-radius: 6px; padding: 12px; text-align: center;
+}
+.calc-result .result-num { font-size: 28px; font-weight: 800; color: var(--green); }
+.calc-result .result-label { font-size: 12px; color: var(--text2); }
+
+/* DASHBOARD */
+.dashboard-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.stat-label { font-size: 11px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+.stat-value { font-size: 28px; font-weight: 800; }
+.stat-sub { font-size: 12px; color: var(--text2); }
+
+/* PLATFORM CARDS */
+.platform-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.platform-card {
+  border-radius: 8px; padding: 16px; text-align: center; cursor: pointer;
+  transition: opacity .2s; text-decoration: none;
+}
+.platform-card:hover { opacity: .85; }
+.platform-card .p-name { font-size: 13px; font-weight: 800; margin-top: 6px; }
+.platform-card .p-desc { font-size: 11px; margin-top: 3px; opacity: .8; }
+.platform-dk { background: #1a7c3e; color: #fff; }
+.platform-fd { background: #1493ff; color: #fff; }
+.platform-pp { background: #7b2ff7; color: #fff; }
+
+/* SECTION HEADER */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.section-title { font-size: 16px; font-weight: 700; }
+.section-action {
+  font-size: 12px; color: var(--green); cursor: pointer; font-weight: 600;
+}
+
+/* TOASTS */
+.toast-container {
+  position: fixed; bottom: 20px; right: 340px; z-index: 999;
+  display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+}
+.toast {
+  background: var(--bg4); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 16px;
+  font-size: 13px; font-weight: 600;
+  animation: slideIn .3s ease; pointer-events: none;
+}
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error { border-color: var(--red); color: var(--red); }
+@keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* PARLAY TRACKER */
+.tracker-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tracker-table th {
+  text-align: left; padding: 8px 12px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  color: var(--text3); border-bottom: 1px solid var(--border);
+}
+.tracker-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.tracker-table tr:last-child td { border-bottom: none; }
+
+/* LOADING */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; color: var(--text3); flex-direction: column; gap: 10px;
+}
+.spinner {
+  width: 32px; height: 32px; border: 3px solid var(--border);
+  border-top-color: var(--green); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; display: none;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; width: 500px; max-width: 95vw;
+}
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+.modal input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 14px; margin-bottom: 10px;
+}
+.modal input:focus { outline: none; border-color: var(--green); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.btn { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; }
+.btn-primary { background: var(--green); color: #000; }
+.btn-secondary { background: var(--bg4); color: var(--text2); border: 1px solid var(--border); }
+
+/* TIPS */
+.tip-box {
+  background: rgba(255,201,64,.07); border: 1px solid rgba(255,201,64,.25);
+  border-radius: 6px; padding: 12px 14px; font-size: 13px; line-height: 1.6;
+  color: var(--text2); margin: 12px 0;
+}
+.tip-box::before { content: '💡 '; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .bet-sidebar { display: none; }
+  .knowledge-grid { grid-template-columns: 1fr; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .platform-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* BREAKING NEWS */
+.breaking-badge {
+  display: inline-block; background: var(--red); color: #fff;
+  font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.5px; margin-right: 6px;
+  animation: pulse 1.5s infinite;
+}
+.impact-badge {
+  display: inline-block; background: rgba(255,201,64,.2); color: var(--gold);
+  border: 1px solid rgba(255,201,64,.4); font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 3px; margin-right: 6px;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+.news-item.breaking { border-left: 3px solid var(--red); padding-left: 10px; background: rgba(228,77,77,.04); border-radius: 4px; }
+.news-item.impact { border-left: 3px solid var(--gold); padding-left: 10px; background: rgba(255,201,64,.04); border-radius: 4px; }
+.news-filter-bar { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.news-filter-btn {
+  background: var(--bg3); border: 1px solid var(--border); border-radius:16px;
+  padding: 5px 12px; font-size:12px; font-weight:600; color:var(--text2); cursor:pointer;
+}
+.news-filter-btn.active { background:var(--red); border-color:var(--red); color:#fff; }
+.news-filter-btn.active.impact { background:var(--gold); border-color:var(--gold); color:#000; }
+
+/* MY TEAMS */
+.team-selector-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap:8px; margin-bottom:16px;
+}
+.team-chip {
+  background: var(--bg3); border: 1px solid var(--border); border-radius:6px;
+  padding: 8px 10px; cursor:pointer; transition:all .2s; text-align:center;
+}
+.team-chip:hover { border-color:var(--green); }
+.team-chip.selected { background:rgba(83,210,44,.12); border-color:var(--green); }
+.team-chip .tc-abbr { font-size:14px; font-weight:800; }
+.team-chip .tc-name { font-size:10px; color:var(--text3); margin-top:2px; }
+.fav-team-card {
+  background: var(--bg3); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:14px;
+}
+.fav-team-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.fav-team-name { font-size:16px; font-weight:800; }
+.fav-team-sport { font-size:11px; color:var(--text3); }
+.reddit-post {
+  display:flex; align-items:flex-start; gap:10px; padding:8px 0;
+  border-bottom:1px solid var(--border);
+}
+.reddit-post:last-child { border-bottom:none; }
+.reddit-score { font-size:11px; font-weight:700; color:var(--text3); min-width:36px; text-align:center; }
+.reddit-title { font-size:12px; line-height:1.4; }
+.reddit-title a { color:var(--text); text-decoration:none; }
+.reddit-title a:hover { color:var(--green); }
+.reddit-meta { font-size:10px; color:var(--text3); margin-top:2px; }
+.sport-section-title {
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+  color:var(--text3); margin:16px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+
+/* GUIDE */
+.guide-grid { display:grid; grid-template-columns:220px 1fr; gap:20px; }
+.guide-nav { display:flex; flex-direction:column; gap:4px; }
+.guide-nav-item {
+  background:var(--bg3); border:1px solid var(--border); border-radius:6px;
+  padding:9px 14px; cursor:pointer; font-size:13px; font-weight:600; color:var(--text2); transition:all .2s;
+}
+.guide-nav-item:hover { border-color:var(--green); color:var(--text); }
+.guide-nav-item.active { background:rgba(83,210,44,.1); border-color:var(--green); color:var(--green); }
+.guide-article { display:none; }
+.guide-article.active { display:block; }
+.guide-article h2 { font-size:20px; margin-bottom:6px; }
+.guide-article .guide-sub { font-size:13px; color:var(--text2); margin-bottom:18px; }
+.guide-article h3 { font-size:15px; color:var(--gold); margin:18px 0 8px; }
+.guide-article p { font-size:13px; line-height:1.7; color:var(--text2); margin-bottom:10px; }
+.guide-article ul { padding-left:18px; margin-bottom:12px; }
+.guide-article li { font-size:13px; line-height:1.7; color:var(--text2); margin-bottom:3px; }
+.guide-step {
+  display:flex; gap:12px; margin-bottom:12px; align-items:flex-start;
+}
+.guide-step-num {
+  background:var(--green); color:#000; border-radius:50%; width:24px; height:24px;
+  display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; margin-top:2px;
+}
+.guide-step-text { font-size:13px; line-height:1.6; color:var(--text2); }
+
+/* SETTINGS */
+.settings-section { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:18px; margin-bottom:14px; }
+.settings-title { font-size:14px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.settings-row { display:flex; gap:10px; align-items:flex-end; margin-bottom:10px; }
+.settings-row > div { flex:1; }
+.settings-row label { font-size:11px; color:var(--text3); font-weight:700; text-transform:uppercase; display:block; margin-bottom:4px; }
+.settings-row input { width:100%; background:var(--bg4); border:1px solid var(--border); border-radius:6px; padding:9px 12px; color:var(--text); font-size:13px; }
+.settings-row input:focus { outline:none; border-color:var(--green); }
+.sync-indicator {
+  display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; margin-left:auto;
+}
+.sync-dot { width:8px; height:8px; border-radius:50%; }
+.sync-dot.green { background:var(--green); }
+.sync-dot.gray { background:var(--text3); }
+.btn-sm { padding:7px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; border:none; }
+.btn-sm-primary { background:var(--green); color:#000; }
+.btn-sm-secondary { background:var(--bg4); border:1px solid var(--border); color:var(--text2); }
+.btn-sm-danger { background:rgba(228,77,77,.15); border:1px solid var(--red); color:var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Bet<span>IQ</span> 🎯</div>
+  <div class="bankroll-badge" onclick="openBankrollModal()">
+    Virtual Bank: <strong id="bankroll-display">$1,000.00</strong>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="switchTab('dashboard')">🏠 Dashboard</button>
+  <button class="nav-btn" onclick="switchTab('scores')">📊 Scores & Stats</button>
+  <button class="nav-btn" onclick="switchTab('news')">📰 News</button>
+  <button class="nav-btn" onclick="switchTab('parlay')">🎯 Parlay Builder</button>
+  <button class="nav-btn" onclick="switchTab('tracker')">📈 My Parlays</button>
+  <button class="nav-btn" onclick="switchTab('myteams')">⭐ My Teams</button>
+  <button class="nav-btn" onclick="switchTab('knowledge')">📚 Knowledge Center</button>
+  <button class="nav-btn" onclick="switchTab('calculator')">🧮 Calculators</button>
+  <button class="nav-btn" onclick="switchTab('guide')">📖 Guide</button>
+  <button class="nav-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+</nav>
+
+<div class="app">
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="tab active">
+      <div class="dashboard-grid" id="dashboard-stats">
+        <div class="stat-card">
+          <div class="stat-label">Virtual Bankroll</div>
+          <div class="stat-value" id="dash-bankroll" style="color:var(--green)">$1,000</div>
+          <div class="stat-sub">Starting balance</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Parlays Placed</div>
+          <div class="stat-value" id="dash-placed">0</div>
+          <div class="stat-sub">All time mock bets</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Win Rate</div>
+          <div class="stat-value" id="dash-winrate">—</div>
+          <div class="stat-sub">Mock parlay record</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Profit</div>
+          <div class="stat-value" id="dash-profit">$0</div>
+          <div class="stat-sub">Virtual P&L</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Connect to Platforms</div>
+      </div>
+      <div class="platform-grid" style="margin-bottom:20px">
+        <a href="https://www.draftkings.com/lobby#/NFL" target="_blank" class="platform-card platform-dk">
+          <div style="font-size:28px">🏈</div>
+          <div class="p-name">DraftKings</div>
+          <div class="p-desc">Sportsbook + DFS</div>
+        </a>
+        <a href="https://www.fanduel.com/sportsbook" target="_blank" class="platform-card platform-fd">
+          <div style="font-size:28px">⚡</div>
+          <div class="p-name">FanDuel</div>
+          <div class="p-desc">Sportsbook + DFS</div>
+        </a>
+        <a href="https://app.prizepicks.com/" target="_blank" class="platform-card platform-pp">
+          <div style="font-size:28px">🎮</div>
+          <div class="p-name">PrizePicks</div>
+          <div class="p-desc">Player Props</div>
+        </a>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Today's Games</div>
+        <div class="section-action" onclick="switchTab('scores')">See all →</div>
+      </div>
+      <div id="dashboard-games">
+        <div class="loading"><div class="spinner"></div><span>Loading games...</span></div>
+      </div>
+
+      <div class="section-header" style="margin-top:20px">
+        <div class="section-title">Latest Headlines</div>
+        <div class="section-action" onclick="switchTab('news')">See all →</div>
+      </div>
+      <div class="card" id="dashboard-news">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- SCORES & STATS -->
+    <div id="tab-scores" class="tab">
+      <div class="sport-tabs">
+        <button class="sport-tab active" onclick="selectSport('nba')">🏀 NBA</button>
+        <button class="sport-tab" onclick="selectSport('nfl')">🏈 NFL</button>
+        <button class="sport-tab" onclick="selectSport('mlb')">⚾ MLB</button>
+      </div>
+      <div class="section-header">
+        <div class="section-title" id="scores-title">NBA — Today's Games</div>
+        <div class="section-action" onclick="refreshScores()">↻ Refresh</div>
+      </div>
+      <div id="scores-container">
+        <div class="loading"><div class="spinner"></div><span>Loading scores...</span></div>
+      </div>
+    </div>
+
+    <!-- NEWS -->
+    <div id="tab-news" class="tab">
+      <div class="sport-tabs">
+        <button class="sport-tab active" onclick="selectNewsSport('nba')">🏀 NBA</button>
+        <button class="sport-tab" onclick="selectNewsSport('nfl')">🏈 NFL</button>
+        <button class="sport-tab" onclick="selectNewsSport('mlb')">⚾ MLB</button>
+      </div>
+      <div class="card" id="news-container">
+        <div class="loading"><div class="spinner"></div><span>Loading news...</span></div>
+      </div>
+    </div>
+
+    <!-- PARLAY BUILDER -->
+    <div id="tab-parlay" class="tab">
+      <div class="tip-box" style="margin-bottom:16px">
+        Click any odds button on a game below to add it to your <strong>Bet Slip</strong> on the right. Build a parlay with 2–10 legs. When ready, hit <strong>Place Mock Bet</strong> to log it with your virtual bankroll.
+      </div>
+      <div class="sport-tabs">
+        <button class="sport-tab active" onclick="selectParlayTab('nba')">🏀 NBA</button>
+        <button class="sport-tab" onclick="selectParlayTab('nfl')">🏈 NFL</button>
+        <button class="sport-tab" onclick="selectParlayTab('mlb')">⚾ MLB</button>
+      </div>
+      <div id="parlay-games-container">
+        <div class="loading"><div class="spinner"></div><span>Loading games...</span></div>
+      </div>
+    </div>
+
+    <!-- TRACKER -->
+    <div id="tab-tracker" class="tab">
+      <div class="section-header">
+        <div class="section-title">My Parlay History</div>
+        <div class="section-action" onclick="clearHistory()" style="color:var(--red)">Clear All</div>
+      </div>
+      <div id="tracker-container">
+        <div class="card" style="text-align:center;color:var(--text3);padding:32px">
+          No parlays yet. Build one in the Parlay Builder tab!
+        </div>
+      </div>
+    </div>
+
+    <!-- MY TEAMS -->
+    <div id="tab-myteams" class="tab">
+      <div class="section-header">
+        <div class="section-title">⭐ My Favorite Teams</div>
+        <div class="section-action" onclick="saveTeams()">Save Favorites</div>
+      </div>
+      <div class="sport-tabs">
+        <button class="sport-tab active" onclick="selectTeamSport('nba')">🏀 NBA</button>
+        <button class="sport-tab" onclick="selectTeamSport('nfl')">🏈 NFL</button>
+        <button class="sport-tab" onclick="selectTeamSport('mlb')">⚾ MLB</button>
+      </div>
+      <div id="team-selector-container"></div>
+      <div id="fav-teams-dashboard"></div>
+    </div>
+
+    <!-- GUIDE -->
+    <div id="tab-guide" class="tab">
+      <div class="guide-grid">
+        <div class="guide-nav" id="guide-nav">
+          <div class="guide-nav-item active" onclick="showGuide('overview')">🏠 Overview</div>
+          <div class="guide-nav-item" onclick="showGuide('dashboard')">📊 Dashboard</div>
+          <div class="guide-nav-item" onclick="showGuide('scores')">🏀 Scores & Stats</div>
+          <div class="guide-nav-item" onclick="showGuide('news')">📰 News</div>
+          <div class="guide-nav-item" onclick="showGuide('myteams')">⭐ My Teams</div>
+          <div class="guide-nav-item" onclick="showGuide('parlaybuilder')">🎯 Parlay Builder</div>
+          <div class="guide-nav-item" onclick="showGuide('betslip')">🧾 Bet Slip</div>
+          <div class="guide-nav-item" onclick="showGuide('myparlays')">📈 My Parlays</div>
+          <div class="guide-nav-item" onclick="showGuide('knowledge')">📚 Knowledge Center</div>
+          <div class="guide-nav-item" onclick="showGuide('calculators')">🧮 Calculators</div>
+          <div class="guide-nav-item" onclick="showGuide('settings')">⚙️ Settings</div>
+        </div>
+        <div id="guide-content"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="tab-settings" class="tab">
+      <div class="settings-section">
+        <div class="settings-title">☁️ Supabase Database <span id="supabase-status" class="sync-indicator"><span class="sync-dot gray" id="sync-dot"></span><span id="sync-label">Not connected</span></span></div>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:14px">Connect Supabase to sync your parlays and favorites across devices. <a href="https://supabase.com" target="_blank" style="color:var(--green)">Create a free account →</a></p>
+        <div class="settings-row">
+          <div><label>Supabase Project URL</label><input type="text" id="sb-url" placeholder="https://xxxx.supabase.co"></div>
+        </div>
+        <div class="settings-row">
+          <div><label>Anon / Public Key</label><input type="password" id="sb-key" placeholder="eyJ..."></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn-sm btn-sm-primary" onclick="connectSupabase()">Connect</button>
+          <button class="btn-sm btn-sm-secondary" onclick="disconnectSupabase()">Disconnect</button>
+        </div>
+        <div id="sb-sql-hint" style="display:none;margin-top:14px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;color:var(--text3)">
+          <strong style="color:var(--text2);display:block;margin-bottom:6px">Run this SQL in your Supabase SQL editor to create the required tables:</strong>
+          <pre style="font-size:10px;white-space:pre-wrap;color:var(--text2)">create table betiq_parlays (id text primary key, user_id text, date text, legs jsonb, stake numeric, odds integer, payout text, result text default 'pending');
+create table betiq_favorites (id text primary key, user_id text, sport text, team_id text, team_name text, team_abbr text, subreddit text);
+create table betiq_bankroll (user_id text primary key, balance numeric default 1000);</pre>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">💰 Virtual Bankroll</div>
+        <div class="settings-row">
+          <div><label>Current Balance</label><input type="number" id="settings-bankroll" placeholder="1000" min="1"></div>
+          <button class="btn-sm btn-sm-primary" onclick="applySettingsBankroll()" style="margin-bottom:1px">Apply</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">📤 Data</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sm btn-sm-secondary" onclick="exportData()">Export Parlay History (JSON)</button>
+          <button class="btn-sm btn-sm-danger" onclick="resetAllData()">Reset All Data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KNOWLEDGE CENTER -->
+    <div id="tab-knowledge" class="tab">
+      <div class="knowledge-grid">
+        <div class="know-nav" id="know-nav">
+          <div class="know-nav-item active" onclick="showArticle('odds-basics')">📖 How Odds Work</div>
+          <div class="know-nav-item" onclick="showArticle('moneyline')">💵 Moneyline Bets</div>
+          <div class="know-nav-item" onclick="showArticle('spread')">📏 Point Spread</div>
+          <div class="know-nav-item" onclick="showArticle('totals')">➕ Over/Under (Totals)</div>
+          <div class="know-nav-item" onclick="showArticle('parlays')">🎯 Parlay Bets</div>
+          <div class="know-nav-item" onclick="showArticle('props')">🎲 Prop Bets</div>
+          <div class="know-nav-item" onclick="showArticle('sgp')">🔥 Same-Game Parlays</div>
+          <div class="know-nav-item" onclick="showArticle('bankroll')">💰 Bankroll Management</div>
+          <div class="know-nav-item" onclick="showArticle('ev')">📊 Expected Value (EV)</div>
+          <div class="know-nav-item" onclick="showArticle('dfs')">🏆 DFS Basics</div>
+          <div class="know-nav-item" onclick="showArticle('strategy')">🧠 Betting Strategy</div>
+          <div class="know-nav-item" onclick="showArticle('platforms')">📱 Platform Guide</div>
+        </div>
+        <div class="know-content" id="know-content"></div>
+      </div>
+    </div>
+
+    <!-- CALCULATORS -->
+    <div id="tab-calculator" class="tab">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <!-- Odds Converter -->
+        <div class="card">
+          <div class="card-title">Odds Converter</div>
+          <div class="calc-box">
+            <label>American Odds (e.g. -110, +250)</label>
+            <input type="number" id="conv-american" placeholder="-110" oninput="convertOdds()">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label>Decimal</label>
+                <input type="number" id="conv-decimal" placeholder="1.91" oninput="convertFromDecimal()" step="0.01">
+              </div>
+              <div>
+                <label>Fractional</label>
+                <input type="text" id="conv-fractional" placeholder="10/11" readonly>
+              </div>
+            </div>
+            <label>Implied Probability</label>
+            <div class="calc-result" id="conv-prob">
+              <div class="result-num" id="conv-prob-num">—</div>
+              <div class="result-label">implied win probability</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payout Calculator -->
+        <div class="card">
+          <div class="card-title">Payout Calculator</div>
+          <div class="calc-box">
+            <label>Bet Amount ($)</label>
+            <input type="number" id="pay-stake" placeholder="100" oninput="calcPayout()" min="1">
+            <label>American Odds</label>
+            <input type="number" id="pay-odds" placeholder="-110" oninput="calcPayout()">
+            <div class="calc-result">
+              <div class="result-num" id="pay-profit">—</div>
+              <div class="result-label">profit | <span id="pay-total">—</span> total payout</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Parlay Calculator -->
+        <div class="card" style="grid-column:1/-1">
+          <div class="card-title">Parlay Odds Calculator</div>
+          <div class="calc-box">
+            <label>Enter leg odds separated by commas (American, e.g. -110, +150, -130)</label>
+            <input type="text" id="parlay-calc-input" placeholder="-110, +150, -130" oninput="calcParlayOdds()">
+            <label>Stake ($)</label>
+            <input type="number" id="parlay-calc-stake" placeholder="25" oninput="calcParlayOdds()" min="1">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:6px">
+              <div class="calc-result">
+                <div class="result-num" id="pc-combined">—</div>
+                <div class="result-label">Combined Odds</div>
+              </div>
+              <div class="calc-result">
+                <div class="result-num" id="pc-profit">—</div>
+                <div class="result-label">Profit</div>
+              </div>
+              <div class="calc-result">
+                <div class="result-num" id="pc-payout">—</div>
+                <div class="result-label">Total Payout</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kelly Criterion -->
+        <div class="card">
+          <div class="card-title">Kelly Criterion (Bet Sizing)</div>
+          <div class="calc-box">
+            <label>Your Edge / Win Probability (%)</label>
+            <input type="number" id="kelly-prob" placeholder="55" oninput="calcKelly()" min="1" max="99">
+            <label>Odds on Bet (American)</label>
+            <input type="number" id="kelly-odds" placeholder="-110" oninput="calcKelly()">
+            <label>Bankroll ($)</label>
+            <input type="number" id="kelly-bank" placeholder="1000" oninput="calcKelly()">
+            <div class="calc-result">
+              <div class="result-num" id="kelly-result">—</div>
+              <div class="result-label">recommended bet size (Full Kelly)</div>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin-top:8px">⚠️ Most bettors use 1/4 Kelly to reduce variance. If Kelly returns negative, the bet has no edge.</p>
+        </div>
+
+        <!-- Break-Even Calculator -->
+        <div class="card">
+          <div class="card-title">Break-Even Calculator</div>
+          <div class="calc-box">
+            <label>Odds (American)</label>
+            <input type="number" id="be-odds" placeholder="-110" oninput="calcBreakEven()">
+            <div class="calc-result">
+              <div class="result-num" id="be-result">—</div>
+              <div class="result-label">you need to win this % to break even</div>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin-top:8px">Standard -110 vig requires winning 52.4% of bets to break even.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- BET SLIP SIDEBAR -->
+  <div class="bet-sidebar">
+    <div class="slip-header">
+      <span class="slip-title">Bet Slip</span>
+      <span class="slip-count" id="slip-count">0</span>
+    </div>
+    <div class="slip-legs" id="slip-legs">
+      <div class="slip-empty">
+        <div class="icon">🎯</div>
+        <div>Add picks from any game to build your parlay</div>
+      </div>
+    </div>
+    <div class="slip-footer">
+      <div class="slip-odds-row">
+        <span style="color:var(--text2);font-size:13px">Parlay Odds</span>
+        <span class="slip-odds-val" id="slip-total-odds">—</span>
+      </div>
+      <div class="quick-stakes">
+        <div class="quick-stake" onclick="setStake(5)">$5</div>
+        <div class="quick-stake" onclick="setStake(10)">$10</div>
+        <div class="quick-stake" onclick="setStake(25)">$25</div>
+        <div class="quick-stake" onclick="setStake(50)">$50</div>
+        <div class="quick-stake" onclick="setStake(100)">$100</div>
+      </div>
+      <div class="stake-input-row">
+        <input class="stake-input" type="number" id="stake-input" placeholder="Wager $" min="1" oninput="updatePayout()">
+      </div>
+      <div class="payout-row">
+        <span class="payout-label">Potential Payout</span>
+        <span class="payout-amount" id="potential-payout">$0.00</span>
+      </div>
+      <div class="ext-links">
+        <a href="https://www.draftkings.com/lobby" target="_blank" class="ext-link ext-dk">DraftKings</a>
+        <a href="https://www.fanduel.com/sportsbook" target="_blank" class="ext-link ext-fd">FanDuel</a>
+        <a href="https://app.prizepicks.com" target="_blank" class="ext-link ext-pp">PrizePicks</a>
+      </div>
+      <button class="btn-place" id="place-btn" onclick="placeMockBet()" disabled>Place Mock Bet</button>
+      <button class="btn-clear-slip" onclick="clearSlip()">Clear Slip</button>
+    </div>
+  </div>
+</div><!-- /app -->
+
+<!-- Bankroll Modal -->
+<div class="modal-overlay" id="bankroll-modal">
+  <div class="modal">
+    <div class="modal-title">💰 Set Virtual Bankroll</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px">This is your mock/practice balance. No real money involved.</p>
+    <label style="font-size:12px;color:var(--text3);font-weight:700;display:block;margin-bottom:4px">Bankroll Amount ($)</label>
+    <input type="number" id="bankroll-input" placeholder="1000" min="1">
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeBankrollModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBankroll()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const state = {
+  currentTab: 'dashboard',
+  currentSport: 'nba',
+  currentNewsSport: 'nba',
+  currentParlayTab: 'nba',
+  slip: [],         // { id, sport, pick, odds, type, label }
+  parlayHistory: JSON.parse(localStorage.getItem('betiq_history') || '[]'),
+  bankroll: parseFloat(localStorage.getItem('betiq_bankroll') || '1000'),
+  gameCache: {},
+  newsCache: {}
+};
+
+// ─── SPORT CONFIG ─────────────────────────────────────────────────────────────
+const SPORTS = {
+  nba: { espn: 'basketball/nba', label: 'NBA', emoji: '🏀', badge: 'badge-nba' },
+  nfl: { espn: 'football/nfl',   label: 'NFL', emoji: '🏈', badge: 'badge-nfl' },
+  mlb: { espn: 'baseball/mlb',   label: 'MLB', emoji: '⚾', badge: 'badge-mlb' }
+};
+
+// ─── ESPN API ─────────────────────────────────────────────────────────────────
+async function fetchESPN(sport, endpoint = 'scoreboard') {
+  const cfg = SPORTS[sport];
+  const url = `https://site.api.espn.com/apis/site/v2/sports/${cfg.espn}/${endpoint}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('ESPN fetch failed');
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+// ─── TAB NAVIGATION ──────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  btns.forEach(b => { if (b.textContent.toLowerCase().includes(name.split('-')[0].slice(0,4))) b.classList.add('active'); });
+  state.currentTab = name;
+  if (name === 'scores') loadScores(state.currentSport);
+  if (name === 'news') loadNews(state.currentNewsSport);
+  if (name === 'parlay') loadParlayGames(state.currentParlayTab);
+  if (name === 'tracker') renderTracker();
+  if (name === 'knowledge') renderKnowledge();
+  if (name === 'myteams') initMyTeams();
+  if (name === 'guide') initGuide();
+  if (name === 'settings') initSettings();
+}
+
+// fix nav button matching
+document.querySelectorAll('.nav-btn').forEach((b, i) => {
+  const tabs = ['dashboard','scores','news','parlay','tracker','knowledge','calculator'];
+  b.onclick = () => switchTab(tabs[i]);
+});
+
+// ─── SCORES ───────────────────────────────────────────────────────────────────
+async function loadScores(sport) {
+  document.getElementById('scores-container').innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
+  document.getElementById('scores-title').textContent = `${SPORTS[sport].emoji} ${SPORTS[sport].label} — Games`;
+  const data = await fetchESPN(sport, 'scoreboard');
+  state.gameCache[sport] = data;
+  renderScores(sport, data, 'scores-container');
+}
+
+function renderScores(sport, data, containerId, limit = 0) {
+  const el = document.getElementById(containerId);
+  if (!data || !data.events || data.events.length === 0) {
+    el.innerHTML = `<div class="card" style="text-align:center;color:var(--text3);padding:24px">No games scheduled today for ${SPORTS[sport].label}. Check back soon!</div>`;
+    return;
+  }
+  let events = data.events;
+  if (limit) events = events.slice(0, limit);
+  el.innerHTML = `<div class="score-grid">${events.map(e => gameCard(sport, e, containerId === 'parlay-games-container')).join('')}</div>`;
+}
+
+function gameCard(sport, event, withOdds = false) {
+  const comp = event.competitions[0];
+  const home = comp.competitors.find(c => c.homeAway === 'home');
+  const away = comp.competitors.find(c => c.homeAway === 'away');
+  const status = event.status.type;
+  const isLive = status.state === 'in';
+  const isFinal = status.state === 'post';
+  const statusLabel = isLive ? `🔴 LIVE — ${event.status.displayClock || ''}` : isFinal ? 'FINAL' : event.date ? new Date(event.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : 'TBD';
+  const statusClass = isLive ? '' : isFinal ? 'final' : 'scheduled';
+  const homeScore = home ? parseInt(home.score || 0) : 0;
+  const awayScore = away ? parseInt(away.score || 0) : 0;
+  const homeWin = isFinal && homeScore > awayScore;
+  const awayWin = isFinal && awayScore > homeScore;
+
+  // Generate plausible odds
+  const odds = generateOdds(sport, home, away, comp);
+
+  const oddsHtml = withOdds ? `
+    <div class="game-odds">
+      <div class="odd-btn ${isInSlip(event.id,'ml-away')?' in-slip':''}" onclick="addToSlip('${sport}','${event.id}','ml-away','${esc(away.team.abbreviation)} ML','${odds.awayML}','${esc(away.team.displayName)} Moneyline')">
+        <div class="odd-type">ML</div>
+        <div class="odd-label">${esc(away.team.abbreviation)}</div>
+        <div class="odd-val">${formatOdds(odds.awayML)}</div>
+      </div>
+      <div class="odd-btn ${isInSlip(event.id,'spread-away')?' in-slip':''}" onclick="addToSlip('${sport}','${event.id}','spread-away','${esc(away.team.abbreviation)} ${odds.spread > 0 ? '+' : ''}${odds.spread}','${odds.spreadOdds}','${esc(away.team.displayName)} ${odds.spread > 0 ? '+' : ''}${odds.spread}')">
+        <div class="odd-type">Spread</div>
+        <div class="odd-label">${esc(away.team.abbreviation)} ${odds.spread > 0 ? '+' : ''}${odds.spread}</div>
+        <div class="odd-val">${formatOdds(odds.spreadOdds)}</div>
+      </div>
+      <div class="odd-btn ${isInSlip(event.id,'total-over')?' in-slip':''}" onclick="addToSlip('${sport}','${event.id}','total-over','O ${odds.total}','${odds.totalOdds}','Over ${odds.total} Total Points')">
+        <div class="odd-type">Total</div>
+        <div class="odd-label">O ${odds.total}</div>
+        <div class="odd-val">${formatOdds(odds.totalOdds)}</div>
+      </div>
+      <div class="odd-btn ${isInSlip(event.id,'ml-home')?' in-slip':''}" onclick="addToSlip('${sport}','${event.id}','ml-home','${esc(home.team.abbreviation)} ML','${odds.homeML}','${esc(home.team.displayName)} Moneyline')">
+        <div class="odd-type">ML</div>
+        <div class="odd-label">${esc(home.team.abbreviation)}</div>
+        <div class="odd-val">${formatOdds(odds.homeML)}</div>
+      </div>
+    </div>` : '';
+
+  return `<div class="score-card">
+    <div class="game-status ${statusClass}">${statusLabel}</div>
+    <div class="team-row">
+      <div class="team-name">${esc(away ? away.team.displayName : 'TBD')}</div>
+      <div class="team-score ${awayWin?'winning':''}">${isFinal||isLive?awayScore:''}</div>
+    </div>
+    <div class="team-row">
+      <div class="team-name">${esc(home ? home.team.displayName : 'TBD')}</div>
+      <div class="team-score ${homeWin?'winning':''}">${isFinal||isLive?homeScore:''}</div>
+    </div>
+    ${oddsHtml}
+  </div>`;
+}
+
+function generateOdds(sport, home, away, comp) {
+  // Seeded pseudo-random for consistent odds per game
+  const seed = (home?.team?.id || 1) * 17 + (away?.team?.id || 1) * 31;
+  const r = (n) => Math.sin(seed * n) * 10000 - Math.floor(Math.sin(seed * n) * 10000);
+
+  const totals = { nba: [215,225,230,235,240,245], nfl: [42,44.5,47,49.5,51,53.5], mlb: [7.5,8,8.5,9,9.5,10] };
+  const totalVals = totals[sport] || totals.nba;
+  const total = totalVals[Math.floor(r(1) * totalVals.length)];
+
+  // Favorite/underdog split
+  const favOdds = [-115,-120,-125,-130,-140,-150,-160,-170][Math.floor(r(2) * 8)];
+  const dogOdds = Math.round((10000 / Math.abs(favOdds)) * (favOdds < 0 ? 1 : -1));
+  const isHomeFav = r(3) > 0.5;
+
+  return {
+    homeML: isHomeFav ? favOdds : dogOdds > 0 ? dogOdds : Math.abs(dogOdds),
+    awayML: isHomeFav ? (dogOdds > 0 ? dogOdds : Math.abs(dogOdds)) : favOdds,
+    spread: isHomeFav ? -(Math.floor(r(4)*4+1)*0.5+1) : (Math.floor(r(4)*4+1)*0.5+1),
+    spreadOdds: -110,
+    total,
+    totalOdds: -110
+  };
+}
+
+// ─── SPORT TAB SWITCHING ──────────────────────────────────────────────────────
+function selectSport(sport) {
+  state.currentSport = sport;
+  document.querySelectorAll('#tab-scores .sport-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  loadScores(sport);
+}
+
+function refreshScores() { loadScores(state.currentSport); }
+
+function selectNewsSport(sport) {
+  state.currentNewsSport = sport;
+  document.querySelectorAll('#tab-news .sport-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  loadNews(sport);
+}
+
+function selectParlayTab(sport) {
+  state.currentParlayTab = sport;
+  document.querySelectorAll('#tab-parlay .sport-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  loadParlayGames(sport);
+}
+
+// ─── NEWS ─────────────────────────────────────────────────────────────────────
+const BREAKING_KEYWORDS = ['injury','injured','out for','ruled out','suspended','arrested','postponed','cancelled','canceled','delayed','rescheduled'];
+const IMPACT_KEYWORDS   = ['questionable','doubtful','day-to-day','game-time','gtd','dnp','traded','waived','signed','acquired','released','cut','scratched','won\'t play','will not play','knee','ankle','hamstring','concussion','shoulder'];
+
+function classifyArticle(headline) {
+  const h = (headline || '').toLowerCase();
+  if (BREAKING_KEYWORDS.some(k => h.includes(k))) return 'breaking';
+  if (IMPACT_KEYWORDS.some(k => h.includes(k))) return 'impact';
+  return 'normal';
+}
+
+function newsItemHTML(a, sport, filter) {
+  const cls = classifyArticle(a.headline);
+  if (filter === 'breaking' && cls !== 'breaking') return '';
+  if (filter === 'impact' && cls === 'normal') return '';
+  const badge = cls === 'breaking'
+    ? '<span class="breaking-badge">🚨 Breaking</span>'
+    : cls === 'impact'
+    ? '<span class="impact-badge">⚠️ Impact</span>'
+    : '';
+  return `<div class="news-item ${cls !== 'normal' ? cls : ''}">
+    ${a.images?.[0] ? `<img class="news-thumb" src="${a.images[0].url}" onerror="this.style.display='none'">` : ''}
+    <div style="flex:1">
+      <div class="news-headline">${badge}<a href="${a.links?.web?.href||'#'}" target="_blank" style="color:inherit;text-decoration:none">${esc(a.headline)}</a></div>
+      <div class="news-meta">
+        <span class="news-sport-badge ${SPORTS[sport].badge}">${SPORTS[sport].label}</span>
+        ${a.published ? new Date(a.published).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+let currentNewsFilter = 'all';
+
+async function loadNews(sport) {
+  const el = document.getElementById('news-container');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading news...</span></div>';
+  const data = await fetchESPN(sport, 'news');
+  if (!data || !data.articles) {
+    el.innerHTML = '<div style="padding:20px;color:var(--text3)">Could not load news. Try again later.</div>';
+    return;
+  }
+  // Sort: breaking first, impact second, normal last
+  const articles = [...data.articles].sort((a, b) => {
+    const order = { breaking: 0, impact: 1, normal: 2 };
+    return order[classifyArticle(a.headline)] - order[classifyArticle(b.headline)];
+  }).slice(0, 25);
+  state.newsCache[sport] = articles;
+  renderNews(sport, articles, currentNewsFilter);
+}
+
+function renderNews(sport, articles, filter) {
+  const el = document.getElementById('news-container');
+  const breakingCount = articles.filter(a => classifyArticle(a.headline) === 'breaking').length;
+  const impactCount   = articles.filter(a => classifyArticle(a.headline) !== 'normal').length;
+  const filterBar = `<div class="news-filter-bar">
+    <button class="news-filter-btn ${filter==='all'?'active':''}" onclick="filterNews('all')">All (${articles.length})</button>
+    <button class="news-filter-btn ${filter==='breaking'?'active':''}" onclick="filterNews('breaking')">🚨 Breaking (${breakingCount})</button>
+    <button class="news-filter-btn ${filter==='impact'?'active impact':''}" onclick="filterNews('impact')">⚠️ Betting Impact (${impactCount})</button>
+  </div>`;
+  const items = articles.map(a => newsItemHTML(a, sport, filter)).join('');
+  el.innerHTML = filterBar + (items || '<div style="padding:16px;color:var(--text3)">No articles match this filter.</div>');
+}
+
+function filterNews(filter) {
+  currentNewsFilter = filter;
+  const articles = state.newsCache[state.currentNewsSport];
+  if (articles) renderNews(state.currentNewsSport, articles, filter);
+}
+
+// ─── PARLAY BUILDER ───────────────────────────────────────────────────────────
+async function loadParlayGames(sport) {
+  const el = document.getElementById('parlay-games-container');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading games...</span></div>';
+  let data = state.gameCache[sport];
+  if (!data) {
+    data = await fetchESPN(sport, 'scoreboard');
+    state.gameCache[sport] = data;
+  }
+  if (!data || !data.events || data.events.length === 0) {
+    el.innerHTML = `<div class="card" style="text-align:center;color:var(--text3);padding:32px">
+      No ${SPORTS[sport].label} games right now. Try another sport or check back later!
+    </div>`;
+    return;
+  }
+  el.innerHTML = `<div class="score-grid">${data.events.map(e => gameCard(sport, e, true)).join('')}</div>`;
+}
+
+// ─── BET SLIP ─────────────────────────────────────────────────────────────────
+function isInSlip(gameId, type) {
+  return state.slip.some(s => s.gameId === gameId && s.type === type);
+}
+
+function addToSlip(sport, gameId, type, pick, odds, label) {
+  // Check if already in slip
+  if (isInSlip(gameId, type)) {
+    // Remove it (toggle)
+    state.slip = state.slip.filter(s => !(s.gameId === gameId && s.type === type));
+    renderSlip();
+    refreshParlayCards();
+    return;
+  }
+  if (state.slip.length >= 10) { toast('Max 10 legs in a parlay', 'error'); return; }
+  state.slip.push({ id: Date.now() + Math.random(), gameId, sport, type, pick, odds: parseInt(odds), label });
+  renderSlip();
+  refreshParlayCards();
+  toast(`Added: ${pick}`, 'success');
+}
+
+function removeFromSlip(id) {
+  state.slip = state.slip.filter(s => s.id != id);
+  renderSlip();
+  refreshParlayCards();
+}
+
+function clearSlip() {
+  state.slip = [];
+  renderSlip();
+  refreshParlayCards();
+}
+
+function refreshParlayCards() {
+  if (state.currentTab === 'parlay') loadParlayGames(state.currentParlayTab);
+}
+
+function renderSlip() {
+  const legsEl = document.getElementById('slip-legs');
+  const countEl = document.getElementById('slip-count');
+  const oddsEl = document.getElementById('slip-total-odds');
+  const placeBtn = document.getElementById('place-btn');
+
+  countEl.textContent = state.slip.length;
+
+  if (state.slip.length === 0) {
+    legsEl.innerHTML = '<div class="slip-empty"><div class="icon">🎯</div><div>Add picks from any game to build your parlay</div></div>';
+    oddsEl.textContent = '—';
+    document.getElementById('potential-payout').textContent = '$0.00';
+    placeBtn.disabled = true;
+    return;
+  }
+
+  legsEl.innerHTML = state.slip.map(s => `
+    <div class="slip-leg">
+      <div class="slip-leg-sport">${SPORTS[s.sport].emoji} ${SPORTS[s.sport].label}</div>
+      <div class="slip-leg-pick">${esc(s.label)}</div>
+      <div class="slip-leg-odds">${formatOdds(s.odds)}</div>
+      <button class="slip-leg-remove" onclick="removeFromSlip(${s.id})">×</button>
+    </div>`).join('');
+
+  const combined = combinedOdds(state.slip.map(s => s.odds));
+  oddsEl.textContent = formatOdds(combined);
+
+  placeBtn.disabled = state.slip.length < 2;
+  if (state.slip.length === 1) placeBtn.textContent = 'Need 2+ legs for parlay';
+  else placeBtn.textContent = `Place Mock Bet (${state.slip.length}-leg Parlay)`;
+
+  updatePayout();
+}
+
+function updatePayout() {
+  const stake = parseFloat(document.getElementById('stake-input').value) || 0;
+  if (state.slip.length === 0 || stake === 0) {
+    document.getElementById('potential-payout').textContent = '$0.00';
+    return;
+  }
+  const combined = combinedOdds(state.slip.map(s => s.odds));
+  const payout = calcPayoutFromOdds(stake, combined);
+  document.getElementById('potential-payout').textContent = '$' + payout.toFixed(2);
+}
+
+function setStake(amount) {
+  document.getElementById('stake-input').value = amount;
+  updatePayout();
+}
+
+// ─── ODDS MATH ────────────────────────────────────────────────────────────────
+function americanToDecimal(odds) {
+  if (odds >= 0) return (odds / 100) + 1;
+  return (100 / Math.abs(odds)) + 1;
+}
+
+function decimalToAmerican(dec) {
+  if (dec >= 2) return Math.round((dec - 1) * 100);
+  return Math.round(-100 / (dec - 1));
+}
+
+function combinedOdds(oddsArr) {
+  const combined = oddsArr.reduce((acc, o) => acc * americanToDecimal(o), 1);
+  return decimalToAmerican(combined);
+}
+
+function calcPayoutFromOdds(stake, odds) {
+  const dec = americanToDecimal(odds);
+  return stake * dec;
+}
+
+function formatOdds(odds) {
+  return odds >= 0 ? `+${odds}` : `${odds}`;
+}
+
+// ─── MOCK BET ─────────────────────────────────────────────────────────────────
+function placeMockBet() {
+  const stake = parseFloat(document.getElementById('stake-input').value);
+  if (!stake || stake <= 0) { toast('Enter a stake amount', 'error'); return; }
+  if (stake > state.bankroll) { toast('Insufficient bankroll', 'error'); return; }
+  if (state.slip.length < 2) { toast('Need at least 2 legs', 'error'); return; }
+
+  const combined = combinedOdds(state.slip.map(s => s.odds));
+  const payout = calcPayoutFromOdds(stake, combined);
+
+  const parlay = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    legs: [...state.slip],
+    stake,
+    odds: combined,
+    payout: payout.toFixed(2),
+    result: 'pending'
+  };
+
+  state.bankroll -= stake;
+  state.parlayHistory.unshift(parlay);
+  localStorage.setItem('betiq_history', JSON.stringify(state.parlayHistory));
+  localStorage.setItem('betiq_bankroll', state.bankroll.toString());
+  updateBankrollDisplay();
+  clearSlip();
+  toast(`Parlay placed! ${state.slip.length}-leg @ ${formatOdds(combined)}`, 'success');
+  state.slip = [];
+  renderSlip();
+  updateDashboardStats();
+}
+
+// ─── TRACKER ─────────────────────────────────────────────────────────────────
+function renderTracker() {
+  const el = document.getElementById('tracker-container');
+  if (state.parlayHistory.length === 0) {
+    el.innerHTML = '<div class="card" style="text-align:center;color:var(--text3);padding:32px">No parlays yet. Build one in the Parlay Builder tab!</div>';
+    return;
+  }
+  el.innerHTML = state.parlayHistory.map(p => {
+    const legs = p.legs.map(l => `<div style="font-size:12px;color:var(--text2);margin:2px 0">${SPORTS[l.sport]?.emoji || ''} ${esc(l.label)} <span style="color:var(--green)">${formatOdds(l.odds)}</span></div>`).join('');
+    const resultClass = p.result === 'win' ? 'result-win' : p.result === 'loss' ? 'result-loss' : 'result-pending';
+    const profit = p.result === 'win' ? `+$${(parseFloat(p.payout)-p.stake).toFixed(2)}` : p.result === 'loss' ? `-$${p.stake}` : 'Pending';
+    return `<div class="history-item">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div class="history-date">${new Date(p.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'})}</div>
+          <div style="font-size:13px;font-weight:700">${p.legs.length}-Leg Parlay @ ${formatOdds(p.odds)}</div>
+        </div>
+        <div style="text-align:right">
+          <span class="history-result ${resultClass}">${p.result.toUpperCase()}</span>
+          <div style="font-size:13px;font-weight:700;margin-top:4px;color:${p.result==='win'?'var(--green)':p.result==='loss'?'var(--red)':'var(--gold)'}">${profit}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:8px">${legs}</div>
+      <div style="display:flex;gap:6px;font-size:12px;color:var(--text3)">
+        <span>Stake: <strong style="color:var(--text)">$${p.stake}</strong></span>
+        <span>|</span>
+        <span>Potential: <strong style="color:var(--gold)">$${p.payout}</strong></span>
+      </div>
+      ${p.result === 'pending' ? `<div style="display:flex;gap:6px;margin-top:10px">
+        <button onclick="settleParlay(${p.id},'win')" style="flex:1;padding:6px;background:rgba(83,210,44,.2);border:1px solid var(--green);border-radius:5px;color:var(--green);font-weight:700;cursor:pointer;font-size:12px">✓ Mark Win</button>
+        <button onclick="settleParlay(${p.id},'loss')" style="flex:1;padding:6px;background:rgba(228,77,77,.2);border:1px solid var(--red);border-radius:5px;color:var(--red);font-weight:700;cursor:pointer;font-size:12px">✗ Mark Loss</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function settleParlay(id, result) {
+  const idx = state.parlayHistory.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  state.parlayHistory[idx].result = result;
+  if (result === 'win') {
+    state.bankroll += parseFloat(state.parlayHistory[idx].payout);
+    toast(`Winner! +$${state.parlayHistory[idx].payout}`, 'success');
+  } else {
+    toast('Parlay lost. Better luck next time.', 'error');
+  }
+  localStorage.setItem('betiq_history', JSON.stringify(state.parlayHistory));
+  localStorage.setItem('betiq_bankroll', state.bankroll.toString());
+  updateBankrollDisplay();
+  updateDashboardStats();
+  renderTracker();
+}
+
+function clearHistory() {
+  if (!confirm('Clear all parlay history?')) return;
+  state.parlayHistory = [];
+  localStorage.removeItem('betiq_history');
+  renderTracker();
+  updateDashboardStats();
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  updateDashboardStats();
+  // Load games
+  const data = await fetchESPN('nba', 'scoreboard');
+  state.gameCache.nba = data;
+  renderScores('nba', data, 'dashboard-games', 4);
+  // Load news
+  const newsEl = document.getElementById('dashboard-news');
+  const newsData = await fetchESPN('nba', 'news');
+  if (newsData?.articles) {
+    const articles = newsData.articles.slice(0,5);
+    newsEl.innerHTML = articles.map(a => `
+      <div class="news-item">
+        ${a.images?.[0] ? `<img class="news-thumb" src="${a.images[0].url}" onerror="this.style.display='none'">` : ''}
+        <div>
+          <div class="news-headline"><a href="${a.links?.web?.href||'#'}" target="_blank" style="color:inherit;text-decoration:none">${esc(a.headline)}</a></div>
+          <div class="news-meta"><span class="news-sport-badge badge-nba">NBA</span>${a.published ? new Date(a.published).toLocaleDateString() : ''}</div>
+        </div>
+      </div>`).join('');
+  } else {
+    newsEl.innerHTML = '<div style="color:var(--text3);font-size:13px">Could not load news.</div>';
+  }
+}
+
+function updateDashboardStats() {
+  document.getElementById('dash-bankroll').textContent = '$' + state.bankroll.toFixed(0);
+  document.getElementById('dash-placed').textContent = state.parlayHistory.length;
+  const settled = state.parlayHistory.filter(p => p.result !== 'pending');
+  const wins = settled.filter(p => p.result === 'win').length;
+  document.getElementById('dash-winrate').textContent = settled.length ? `${Math.round((wins/settled.length)*100)}%` : '—';
+  const profit = state.parlayHistory.reduce((acc, p) => {
+    if (p.result === 'win') return acc + parseFloat(p.payout) - p.stake;
+    if (p.result === 'loss') return acc - p.stake;
+    return acc;
+  }, 0);
+  const profitEl = document.getElementById('dash-profit');
+  profitEl.textContent = (profit >= 0 ? '+' : '') + '$' + profit.toFixed(0);
+  profitEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+// ─── BANKROLL ─────────────────────────────────────────────────────────────────
+function updateBankrollDisplay() {
+  document.getElementById('bankroll-display').textContent = '$' + state.bankroll.toFixed(2);
+  updateDashboardStats();
+}
+function openBankrollModal() {
+  document.getElementById('bankroll-input').value = state.bankroll;
+  document.getElementById('bankroll-modal').classList.add('open');
+}
+function closeBankrollModal() { document.getElementById('bankroll-modal').classList.remove('open'); }
+function saveBankroll() {
+  const val = parseFloat(document.getElementById('bankroll-input').value);
+  if (!val || val <= 0) { toast('Enter a valid amount', 'error'); return; }
+  state.bankroll = val;
+  localStorage.setItem('betiq_bankroll', val.toString());
+  updateBankrollDisplay();
+  closeBankrollModal();
+  toast('Bankroll updated!', 'success');
+}
+
+// ─── CALCULATORS ──────────────────────────────────────────────────────────────
+function convertOdds() {
+  const american = parseFloat(document.getElementById('conv-american').value);
+  if (isNaN(american)) return;
+  const dec = americanToDecimal(american);
+  document.getElementById('conv-decimal').value = dec.toFixed(4);
+  // Fractional approx
+  const num = Math.round((dec - 1) * 100);
+  const den = 100;
+  const g = gcd(num, den);
+  document.getElementById('conv-fractional').value = `${num/g}/${den/g}`;
+  // Implied prob
+  const prob = american < 0 ? Math.abs(american)/(Math.abs(american)+100)*100 : 100/(american+100)*100;
+  document.getElementById('conv-prob-num').textContent = prob.toFixed(1) + '%';
+}
+function convertFromDecimal() {
+  const dec = parseFloat(document.getElementById('conv-decimal').value);
+  if (isNaN(dec) || dec <= 1) return;
+  const am = decimalToAmerican(dec);
+  document.getElementById('conv-american').value = am;
+  convertOdds();
+}
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+
+function calcPayout() {
+  const stake = parseFloat(document.getElementById('pay-stake').value);
+  const odds = parseFloat(document.getElementById('pay-odds').value);
+  if (isNaN(stake) || isNaN(odds)) return;
+  const payout = calcPayoutFromOdds(stake, odds);
+  const profit = payout - stake;
+  document.getElementById('pay-profit').textContent = '$' + profit.toFixed(2);
+  document.getElementById('pay-total').textContent = '$' + payout.toFixed(2);
+}
+
+function calcParlayOdds() {
+  const input = document.getElementById('parlay-calc-input').value;
+  const stake = parseFloat(document.getElementById('parlay-calc-stake').value) || 0;
+  const parts = input.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+  if (parts.length < 2) {
+    document.getElementById('pc-combined').textContent = '—';
+    document.getElementById('pc-profit').textContent = '—';
+    document.getElementById('pc-payout').textContent = '—';
+    return;
+  }
+  const combined = combinedOdds(parts);
+  document.getElementById('pc-combined').textContent = formatOdds(combined);
+  if (stake > 0) {
+    const payout = calcPayoutFromOdds(stake, combined);
+    document.getElementById('pc-profit').textContent = '$' + (payout - stake).toFixed(2);
+    document.getElementById('pc-payout').textContent = '$' + payout.toFixed(2);
+  }
+}
+
+function calcKelly() {
+  const prob = parseFloat(document.getElementById('kelly-prob').value) / 100;
+  const odds = parseFloat(document.getElementById('kelly-odds').value);
+  const bank = parseFloat(document.getElementById('kelly-bank').value);
+  if (isNaN(prob) || isNaN(odds) || isNaN(bank)) return;
+  const dec = americanToDecimal(odds);
+  const b = dec - 1;
+  const q = 1 - prob;
+  const kelly = (b * prob - q) / b;
+  const bet = kelly * bank;
+  const el = document.getElementById('kelly-result');
+  if (kelly <= 0) {
+    el.textContent = 'No Edge';
+    el.style.color = 'var(--red)';
+  } else {
+    el.textContent = '$' + bet.toFixed(2);
+    el.style.color = 'var(--green)';
+  }
+}
+
+function calcBreakEven() {
+  const odds = parseFloat(document.getElementById('be-odds').value);
+  if (isNaN(odds)) return;
+  const prob = odds < 0 ? Math.abs(odds)/(Math.abs(odds)+100)*100 : 100/(odds+100)*100;
+  document.getElementById('be-result').textContent = prob.toFixed(1) + '%';
+}
+
+// ─── KNOWLEDGE CENTER ─────────────────────────────────────────────────────────
+const ARTICLES = {
+  'odds-basics': {
+    title: 'How Odds Work',
+    subtitle: 'Understanding American, Decimal, and Fractional odds — the foundation of sports betting',
+    content: `
+      <h3>What Are Odds?</h3>
+      <p>Odds represent two things simultaneously: the <strong>probability</strong> a sportsbook assigns to an outcome, and the <strong>payout</strong> you receive if you win. Every bet you see has odds attached — learning to read them is step one.</p>
+
+      <h3>American Odds (Moneyline)</h3>
+      <p>American odds use <strong>+</strong> and <strong>−</strong> signs, always based on a $100 unit:</p>
+      <div class="odds-example">
+        <strong class="highlight">+250</strong>  →  Underdog. Bet $100, WIN $250 (total payout: $350)<br>
+        <strong class="highlight-red">-110</strong>  →  Favorite (slight). Bet $110 to WIN $100 (total: $210)<br>
+        <strong class="highlight-red">-200</strong>  →  Heavy favorite. Bet $200 to WIN $100 (total: $300)
+      </div>
+      <p>The minus sign tells you how much you must risk to win $100. The plus sign tells you what you win on a $100 bet. You can scale these to any amount — they're ratios.</p>
+
+      <h3>Decimal Odds (Used in Europe)</h3>
+      <p>Multiply your stake by the decimal to get your <strong>total payout</strong> (including your stake back):</p>
+      <div class="odds-example">
+        2.50  →  Bet $100 → $250 total ($150 profit)<br>
+        1.91  →  Bet $100 → $191 total ($91 profit) — same as -110<br>
+        3.50  →  Bet $100 → $350 total ($250 profit) — same as +250
+      </div>
+
+      <h3>The Vig (Juice)</h3>
+      <p>The sportsbook charges a fee called the <strong>vig</strong> or <strong>juice</strong>. On a standard -110 line for a coin-flip game, each side pays -110. If you bet $110 and win, you get $100 profit. The book keeps the edge. This is why -110/-110 doesn't add up to 100% probability — the gap is the book's profit margin (~4.5%).</p>
+      <div class="tip-box">The vig is why casinos always win long-term. To beat sports betting, you need to find lines where the true probability is better than what the odds imply.</div>
+
+      <h3>Converting Odds to Implied Probability</h3>
+      <div class="odds-example">
+        <strong>Positive odds (+X):</strong>  100 ÷ (X + 100) × 100 = %<br>
+        → +250:  100 ÷ 350 = <span class="highlight">28.6%</span> implied win chance<br><br>
+        <strong>Negative odds (-X):</strong>  X ÷ (X + 100) × 100 = %<br>
+        → -110:  110 ÷ 210 = <span class="highlight">52.4%</span> implied win chance
+      </div>
+    `
+  },
+  'moneyline': {
+    title: 'Moneyline Bets',
+    subtitle: 'The simplest bet — pick who wins. No spreads, no totals.',
+    content: `
+      <h3>What Is a Moneyline Bet?</h3>
+      <p>You're betting on which team wins the game outright. No point spreads. No margin of victory. Just: <strong>who wins?</strong></p>
+
+      <div class="odds-example">
+        Lakers   <span class="highlight-red">-165</span>  (favorite)<br>
+        Celtics  <span class="highlight">+140</span>   (underdog)
+      </div>
+
+      <p>Bet $165 on Lakers to win $100. Bet $100 on Celtics to win $140. The Lakers are favored — you risk more to win less.</p>
+
+      <h3>When to Bet Moneylines</h3>
+      <ul>
+        <li>When you're confident in a team winning but the spread seems risky</li>
+        <li>When taking underdogs — moneyline payouts are juicy on plus-money dogs</li>
+        <li>In MLB and NHL, where moneylines are the primary bet type (spreads are run lines/puck lines with set 1.5 margins)</li>
+      </ul>
+
+      <h3>Moneyline Parlays</h3>
+      <p>Parlaying several moneyline underdogs is a popular strategy. Hit 3 underdogs at +150 each and your parlay pays +637 combined. The risk: you need all three to win.</p>
+
+      <div class="tip-box">Heavy favorites (-200 and beyond) are bad parlay legs — you're risking a lot for minimal odds boost. A -400 favorite only moves a $100 parlay to about $125. Stick to -150 or better for parlay efficiency.</div>
+
+      <h3>MLB: The Run Line</h3>
+      <p>Baseball uses a standard 1.5-run spread called the <strong>run line</strong>. Favorites cover at -1.5 and dogs get +1.5. The moneyline still exists for straight win bets — run line just has tighter payouts.</p>
+    `
+  },
+  'spread': {
+    title: 'Point Spread Betting',
+    subtitle: 'Betting with a handicap — the most popular bet type in football and basketball',
+    content: `
+      <h3>What Is the Spread?</h3>
+      <p>The sportsbook sets a handicap to level the playing field between a favorite and underdog. The <strong>favorite gives points</strong>, the <strong>underdog gets points</strong>.</p>
+
+      <div class="odds-example">
+        Chiefs  <span class="highlight-red">-6.5</span>  (-110)<br>
+        Ravens  <span class="highlight">+6.5</span>   (-110)
+      </div>
+
+      <p>Betting Chiefs -6.5 means they must win by <strong>7 or more</strong> for you to win. Betting Ravens +6.5 means they must lose by <strong>6 or fewer</strong> (or win outright) for your bet to win.</p>
+
+      <h3>How the Line Moves</h3>
+      <p>Sharp money (professional bettors) and public betting volume move lines. If a team opens at -3 and moves to -5, heavy money came in on that favorite. <strong>Line movement</strong> is a signal.</p>
+
+      <h3>Key Numbers in NFL</h3>
+      <p>In football, the most common margins of victory are <strong>3 and 7</strong> (field goal and touchdown). Lines at 3 and 7 are the most critical — a half-point either way has huge value:</p>
+      <ul>
+        <li>Getting +3.5 vs +3 is a massive advantage — you win on 3-point losses instead of pushing</li>
+        <li>Getting -6.5 vs -7 avoids a push on the most common margin</li>
+      </ul>
+
+      <h3>Push (Tie)</h3>
+      <p>If the final margin equals the spread exactly (e.g., a 3-point game on a -3 spread), the bet <strong>pushes</strong> — you get your money back, no win or loss.</p>
+
+      <div class="tip-box">Always shop lines across sportsbooks. Getting +3 at one book vs +2.5 at another is literally free money. Half-point differences win and lose bets every week.</div>
+    `
+  },
+  'totals': {
+    title: 'Over/Under (Totals)',
+    subtitle: 'Bet on how many total points both teams combine for — not who wins',
+    content: `
+      <h3>How Totals Work</h3>
+      <p>The sportsbook sets a number (the total) for the combined score of both teams. You bet whether the actual combined score will go <strong>Over</strong> or <strong>Under</strong> that number.</p>
+
+      <div class="odds-example">
+        Nets vs Bucks — Total: <span class="highlight">224.5</span><br>
+        Over 224.5  (-110)<br>
+        Under 224.5  (-110)
+      </div>
+
+      <p>If the game ends 115-110, the combined score is 225. The Over wins by 0.5 points.</p>
+
+      <h3>Factors That Impact Totals</h3>
+      <ul>
+        <li><strong>Weather (outdoor sports):</strong> Wind kills passing games in NFL. Rain slows scoring. Cold suppresses field goals in football.</li>
+        <li><strong>Pace:</strong> In NBA, fast-paced teams (OKC, Atlanta) produce more possessions = more points. Grinders (Memphis, NYK) keep totals low.</li>
+        <li><strong>Injuries:</strong> A key offensive player out typically drops the total. A key defender out raises it.</li>
+        <li><strong>Starting pitchers (MLB):</strong> The single biggest factor in baseball totals. Ace pitcher = lower total.</li>
+        <li><strong>Home/Away:</strong> Some teams score more at home. Altitude (Denver) inflates scores.</li>
+      </ul>
+
+      <h3>Live Totals</h3>
+      <p>Most books offer live in-game totals that adjust based on the score. A cold first half might drop the live total significantly — if you think the teams will wake up in the second half, that's a betting opportunity.</p>
+
+      <div class="tip-box">Totals are generally the "softest" line at most books — they're harder for books to model than sides, which means more value opportunities for sharp bettors.</div>
+    `
+  },
+  'parlays': {
+    title: 'Parlay Bets',
+    subtitle: 'Chain multiple bets together for massive payouts — but all legs must win',
+    content: `
+      <h3>What Is a Parlay?</h3>
+      <p>A parlay combines 2 or more individual bets into one. The winnings from each leg roll into the next. If <strong>every single leg wins</strong>, you win big. If even one leg loses, <strong>the entire parlay loses</strong>.</p>
+
+      <h3>How Parlay Odds Are Calculated</h3>
+      <p>Convert each leg's American odds to decimal, multiply all decimals together, convert back:</p>
+      <div class="odds-example">
+        Leg 1: Lakers ML  <span class="highlight-red">-130</span> → decimal 1.769<br>
+        Leg 2: Cowboys -3  <span class="highlight-red">-110</span> → decimal 1.909<br>
+        Leg 3: Yankees ML  <span class="highlight">+115</span>  → decimal 2.150<br><br>
+        1.769 × 1.909 × 2.150 = <span class="highlight-gold">7.259</span> decimal<br>
+        → American: <span class="highlight">+626</span><br><br>
+        Bet $100 → Win <span class="highlight">$626</span>
+      </div>
+
+      <h3>Parlay Size vs. Win Probability</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin:12px 0">
+        <tr style="color:var(--text3)"><th style="text-align:left;padding:6px">Legs</th><th style="padding:6px">Odds (all -110)</th><th style="padding:6px">Win Prob</th><th style="padding:6px">Payout ($100)</th></tr>
+        <tr style="border-top:1px solid var(--border)"><td style="padding:6px">2</td><td style="padding:6px;color:var(--gold)">+260</td><td style="padding:6px;color:var(--text2)">27.1%</td><td style="padding:6px;color:var(--green)">$360</td></tr>
+        <tr style="border-top:1px solid var(--border)"><td style="padding:6px">3</td><td style="padding:6px;color:var(--gold)">+595</td><td style="padding:6px;color:var(--text2)">14.1%</td><td style="padding:6px;color:var(--green)">$695</td></tr>
+        <tr style="border-top:1px solid var(--border)"><td style="padding:6px">4</td><td style="padding:6px;color:var(--gold)">+1228</td><td style="padding:6px;color:var(--text2)">7.4%</td><td style="padding:6px;color:var(--green)">$1,328</td></tr>
+        <tr style="border-top:1px solid var(--border)"><td style="padding:6px">5</td><td style="padding:6px;color:var(--gold)">+2435</td><td style="padding:6px;color:var(--text2)">3.8%</td><td style="padding:6px;color:var(--green)">$2,535</td></tr>
+      </table>
+
+      <div class="tip-box">Sportsbooks love parlays because the house edge compounds with each leg. A single -110 bet has ~4.5% vig. A 4-leg parlay has ~17% vig. Parlays are entertainment — not long-term profit plays — unless you have real edges on each leg.</div>
+
+      <h3>Correlated vs. Uncorrelated Legs</h3>
+      <p><strong>Uncorrelated:</strong> Lakers ML + Cowboys spread + Yankees total. These are independent events — all fine.</p>
+      <p><strong>Correlated:</strong> Lakers ML + Lakers over total. If the Lakers dominate and win big, both bets benefit. Books often <strong>block same-game correlated parlays</strong> for this reason — or offer them at reduced odds via SGP.</p>
+    `
+  },
+  'props': {
+    title: 'Prop Bets',
+    subtitle: 'Bet on specific player or team statistics — the engine of DFS and PrizePicks',
+    content: `
+      <h3>What Are Props?</h3>
+      <p>Proposition bets focus on individual <strong>player or team statistics</strong> rather than the game outcome. They're the core product of PrizePicks and Underdog, and a major category on DraftKings/FanDuel.</p>
+
+      <h3>Player Props</h3>
+      <div class="odds-example">
+        LeBron James — Points<br>
+        Over 26.5  (-115)<br>
+        Under 26.5  (-105)
+      </div>
+      <ul>
+        <li><strong>Points/Assists/Rebounds</strong> — most common NBA props</li>
+        <li><strong>Passing yards/TDs/Interceptions</strong> — NFL QB props</li>
+        <li><strong>Strikeouts/Hits allowed</strong> — MLB pitcher props</li>
+        <li><strong>Fantasy score</strong> — entire fantasy output in one prop</li>
+      </ul>
+
+      <h3>PrizePicks Flex Play</h3>
+      <p>PrizePicks is a player-props platform that's legal in more states than traditional sportsbooks. You pick 2-6 players to go Over or Under their prop lines. <strong>Power Play</strong> requires all picks correct. <strong>Flex Play</strong> pays partial if you miss 1-2.</p>
+
+      <div class="odds-example">
+        PrizePicks 3-pick Power Play:<br>
+        All 3 correct → <span class="highlight">5× your entry</span><br>
+        2 of 3 → $0 (Power Play loses)<br><br>
+        3-pick Flex Play:<br>
+        All 3 → <span class="highlight">2.25×</span><br>
+        2 of 3 → <span class="highlight-gold">1.25×</span><br>
+        1 of 3 → $0
+      </div>
+
+      <h3>Research for Props</h3>
+      <ul>
+        <li><strong>Matchup:</strong> Is the player facing a team that gives up tons of points to his position?</li>
+        <li><strong>Pace:</strong> More possessions = more stats for everyone</li>
+        <li><strong>Usage rate:</strong> Will this player actually play enough minutes?</li>
+        <li><strong>Recent trend:</strong> Is he on a hot or cold streak?</li>
+        <li><strong>Line movement:</strong> If the number moved, sharps have an opinion</li>
+      </ul>
+    `
+  },
+  'sgp': {
+    title: 'Same-Game Parlays (SGP)',
+    subtitle: 'Multiple bets within a single game — high risk, high reward, big fun',
+    content: `
+      <h3>What Is an SGP?</h3>
+      <p>A Same-Game Parlay combines multiple bets from the <strong>same game</strong> into one bet. DraftKings and FanDuel offer SGPs with their own calculated odds — they adjust for correlations between legs.</p>
+
+      <h3>Example SGP</h3>
+      <div class="odds-example">
+        Chiefs vs Bills — SGP:<br>
+        Chiefs -3.5  (-110)<br>
+        Mahomes Over 280.5 Passing Yards  (-115)<br>
+        Travis Kelce Over 70.5 Rec Yards  (-120)<br><br>
+        Standard parlay: <span class="highlight">+425</span><br>
+        SGP (book-adjusted): <span class="highlight-gold">+380</span>
+      </div>
+      <p>Books reduce SGP odds slightly because correlated legs (Mahomes yards + Kelce yards are highly correlated) reduce the true edge you'd get on a raw parlay.</p>
+
+      <h3>SGP+ (Cross-Game SGP)</h3>
+      <p>Some books now allow <strong>multi-game SGPs</strong> where you combine player props across several games. This gives you more legs to work with while still including player-specific props.</p>
+
+      <h3>SGP Strategy</h3>
+      <ul>
+        <li>Look for logical game scripts — if you think a team will dominate, parlay their cover + their star player's stats over</li>
+        <li>Avoid forced correlations — don't SGP things that don't relate to the same narrative</li>
+        <li>Keep SGPs to 3-4 legs max for realistic hit rates</li>
+        <li>Compare the SGP odds to what a standard parlay calculator gives you — if the book is offering more, they're pricing it generously</li>
+      </ul>
+
+      <div class="tip-box">SGPs on DraftKings sometimes get boosted as promotions. Watch for "SGP boosts" that add +100 or more to specific game parlays — these are often +EV opportunities worth taking.</div>
+    `
+  },
+  'bankroll': {
+    title: 'Bankroll Management',
+    subtitle: 'The single most important skill in betting — survive long enough to win',
+    content: `
+      <h3>Why Bankroll Management Is #1</h3>
+      <p>Even a skilled bettor will go through losing streaks. Without proper bankroll management, a bad run wipes you out before your edge can play out. <strong>Never bet what you can't afford to lose.</strong></p>
+
+      <h3>The Unit System</h3>
+      <p>A <strong>unit</strong> is a fixed percentage of your bankroll — typically <strong>1–3%</strong>. Sizing bets in units protects you from catastrophic losses and scales your bets naturally as your bankroll grows or shrinks.</p>
+      <div class="odds-example">
+        Bankroll: $1,000<br>
+        1 unit = $10–$20<br>
+        Standard bet: 1–2 units<br>
+        High confidence bet: 3 units (max)
+      </div>
+
+      <h3>Flat Betting (Beginner)</h3>
+      <p>Bet the same amount on every game — e.g., always $10. Simple, protects against tilt (emotional overbetting after losses), and is easy to track performance.</p>
+
+      <h3>Proportional / Kelly Betting</h3>
+      <p>Bet a percentage based on your edge (use the Kelly Calculator tab). This maximizes long-run bankroll growth mathematically. Most pros use <strong>1/4 Kelly</strong> to reduce variance:</p>
+      <div class="odds-example">
+        Full Kelly says bet 8%  → Bet 2% (1/4 Kelly)<br>
+        Full Kelly says bet 15% → Bet 3.75% (1/4 Kelly)
+      </div>
+
+      <h3>Rules to Live By</h3>
+      <ul>
+        <li>Never bet more than 5% of bankroll on a single bet</li>
+        <li>Never chase losses — don't double your bet after a loss to "get even"</li>
+        <li>Set a stop-loss: if you lose 25% of your bankroll, take a break</li>
+        <li>Track every single bet in a spreadsheet or app</li>
+        <li>Treat your betting bankroll as completely separate from your regular money</li>
+      </ul>
+
+      <div class="tip-box">The #1 cause of bankroll blowups is not bad picks — it's bad bet sizing. A 55% win rate at good odds is profitable. A 55% win rate with erratic sizing still loses money.</div>
+    `
+  },
+  'ev': {
+    title: 'Expected Value (EV)',
+    subtitle: 'The math that separates profitable bettors from everyone else',
+    content: `
+      <h3>What Is Expected Value?</h3>
+      <p>Expected value (EV) is the average amount you expect to win or lose <strong>per bet</strong> if you placed it thousands of times. Positive EV (+EV) bets make money long-term. Negative EV (−EV) bets lose money long-term.</p>
+
+      <h3>EV Formula</h3>
+      <div class="odds-example">
+        EV = (Probability of Win × Profit) − (Probability of Loss × Stake)<br><br>
+        Example: Coin flip at +110<br>
+        Win prob: 50% | Profit: $110 | Loss prob: 50% | Stake: $100<br><br>
+        EV = (0.50 × $110) − (0.50 × $100)<br>
+        EV = $55 − $50 = <span class="highlight">+$5</span> per $100 bet
+      </div>
+      <p>This is a +EV bet. A coin flip should be -100 (50/50), but the book is offering +110 — meaning they mispriced the line.</p>
+
+      <h3>Finding +EV Bets</h3>
+      <p>You need your own probability estimate that differs from what the odds imply:</p>
+      <ul>
+        <li><strong>Your model says Lakers win 65% of the time.</strong> The line is -150 (implied 60%). That's +EV — bet it.</li>
+        <li><strong>Your model says 58%.</strong> The line is -150 (implied 60%). That's -EV — pass.</li>
+      </ul>
+
+      <h3>Line Shopping</h3>
+      <p>The easiest way to find +EV: check odds across multiple books and always bet the best number. DraftKings might have -110, FanDuel has -105. Getting -105 instead of -110 adds ~$0.24 of EV per $100 bet — that compounds massively over hundreds of bets.</p>
+
+      <div class="tip-box">Professional bettors have accounts at 5-10 sportsbooks specifically for line shopping. Moving from -110 to -105 across 500 bets/year at $100 each adds ~$120/year in pure EV for free.</div>
+    `
+  },
+  'dfs': {
+    title: 'Daily Fantasy Sports (DFS) Basics',
+    subtitle: 'DraftKings, FanDuel — pick a lineup, compete for cash prizes',
+    content: `
+      <h3>DFS vs. Sports Betting</h3>
+      <p>In <strong>sports betting</strong>, you bet against the sportsbook. In <strong>DFS</strong>, you compete against other players. DFS is legal in more US states than traditional betting because it's classified as a "game of skill."</p>
+
+      <h3>How DraftKings Works</h3>
+      <ul>
+        <li>Each player has a <strong>salary</strong> (e.g., LeBron costs $9,800)</li>
+        <li>You have a <strong>salary cap</strong> (DK: $50,000)</li>
+        <li>Fill your lineup within the cap</li>
+        <li>Players score <strong>fantasy points</strong> based on real-game stats</li>
+        <li>Your total score competes against others in contests</li>
+      </ul>
+
+      <h3>Contest Types</h3>
+      <ul>
+        <li><strong>GPP (Guaranteed Prize Pool):</strong> Large tournaments, top ~20% paid, massive prizes possible. Need chalk-busting picks to win.</li>
+        <li><strong>50/50 / Double-Up:</strong> Top 50% of entrants double their money. Play high-floor, safe picks.</li>
+        <li><strong>Head-to-Head:</strong> Beat one opponent. Also play safe, high-floor.</li>
+        <li><strong>3-Man / Showdown:</strong> Single-game contests. Two teams only.</li>
+      </ul>
+
+      <h3>Key Concepts</h3>
+      <ul>
+        <li><strong>Ownership %:</strong> What percent of lineups include this player. High ownership = chalk. Low ownership = contrarian.</li>
+        <li><strong>Ceiling:</strong> A player's best-case fantasy score. Important for GPPs.</li>
+        <li><strong>Floor:</strong> A player's worst-case scenario. Important for cash games.</li>
+        <li><strong>Stacking:</strong> Pairing a QB with his WR(s) — their points correlate.</li>
+        <li><strong>Value:</strong> Cheap players who could explode — they free up salary for expensive studs.</li>
+      </ul>
+
+      <div class="tip-box">For beginners: start with 50/50s, not GPPs. In 50/50s, you just need to be above average. In GPPs, you need to be in the top 20% — much harder when 150,000 people are competing.</div>
+    `
+  },
+  'strategy': {
+    title: 'Betting Strategy',
+    subtitle: 'Advanced concepts for building a long-term edge',
+    content: `
+      <h3>The Sharp vs. Square Divide</h3>
+      <p><strong>Squares</strong> (recreational bettors) follow gut, bet favorites, and love parlays. <strong>Sharps</strong> (professional bettors) bet with models, look for value, and often bet underdogs/bad teams when the number is right.</p>
+
+      <h3>Fading the Public</h3>
+      <p>When 80%+ of bets are on one side, books sometimes shade the line to attract money to the other side. Betting against overwhelming public consensus — especially on heavy favorite covers — can be profitable:</p>
+      <ul>
+        <li>Public loves big favorites, primetime teams, and popular brands (Cowboys, Lakers, Yankees)</li>
+        <li>When the public hammers a team, the line inflates beyond true probability</li>
+        <li>Fading the public works best on inflated point spreads, less so on totals</li>
+      </ul>
+
+      <h3>Market Timing</h3>
+      <ul>
+        <li><strong>Bet early</strong> if you think the line will move against you</li>
+        <li><strong>Bet late</strong> if you think sharp money will move the line your way first</li>
+        <li>Opening lines are set to attract action, not necessarily the sharpest number</li>
+        <li>Closing lines are the most accurate — sharps have done their work</li>
+      </ul>
+
+      <h3>Closing Line Value (CLV)</h3>
+      <p>If you bet a team at -3 and the line closes at -4.5, you beat the closing line by 1.5 points. Over time, consistently beating closing lines is the best predictor of long-term profitability — better than your actual win rate in the short run.</p>
+
+      <h3>Model-Based Betting</h3>
+      <p>Build or use a model that predicts game outcomes. Compare model probabilities to implied odds. Bet when the gap is meaningful (3+ percentage points). Resources: ESPN Analytics, The Athletic, FiveThirtyEight (RIP), Action Network.</p>
+
+      <div class="tip-box">The most profitable bettors I know do two things: 1) have a real edge in a specific sport/market, and 2) shop lines obsessively. Pick one sport, go deep on it.</div>
+    `
+  },
+  'platforms': {
+    title: 'Platform Guide',
+    subtitle: 'DraftKings vs FanDuel vs PrizePicks — where to bet what',
+    content: `
+      <h3>DraftKings Sportsbook</h3>
+      <p>The largest US sportsbook by handle. Best for:</p>
+      <ul>
+        <li>Huge same-game parlay market with excellent builder</li>
+        <li>Rapid payouts via PayPal/Venmo</li>
+        <li>Biggest new-user promos ($150 bonus on $5 bet currently)</li>
+        <li>Best live betting interface</li>
+        <li>DFS contests also available in the same app</li>
+      </ul>
+      <a href="https://www.draftkings.com" target="_blank" style="color:var(--green)">→ draftkings.com</a>
+
+      <h3>FanDuel Sportsbook</h3>
+      <p>DK's closest competitor. Best for:</p>
+      <ul>
+        <li>Often sharpest moneylines (lower vig on many markets)</li>
+        <li>Great NFL same-game parlays</li>
+        <li>Super Bowl betting volume is highest in the US</li>
+        <li>Clean, fast mobile app</li>
+      </ul>
+      <a href="https://www.fanduel.com/sportsbook" target="_blank" style="color:var(--blue)">→ fanduel.com</a>
+
+      <h3>PrizePicks</h3>
+      <p>Player props platform, legal in 35+ states including some without sports betting. Best for:</p>
+      <ul>
+        <li>Simple Over/Under player props</li>
+        <li>Flex Play option if you miss a leg</li>
+        <li>Great mobile experience</li>
+        <li>NFL, NBA, MLB, NHL, soccer, golf, WNBA</li>
+      </ul>
+      <a href="https://app.prizepicks.com" target="_blank" style="color:#7b2ff7">→ prizepicks.com</a>
+
+      <h3>Other Books Worth Noting</h3>
+      <ul>
+        <li><strong>Caesars:</strong> Huge brand, aggressive promos, great for line shopping</li>
+        <li><strong>BetMGM:</strong> Good for parlay insurance promos</li>
+        <li><strong>ESPN Bet:</strong> ESPN-branded, great integration with ESPN content</li>
+        <li><strong>Underdog Fantasy:</strong> Another props platform similar to PrizePicks</li>
+      </ul>
+
+      <div class="tip-box">Create accounts at ALL major books as soon as you start. New-user bonuses ($100–$1000+ in free bets) are some of the best +EV you'll ever find. Do it before you deposit your first dollar anywhere.</div>
+    `
+  }
+};
+
+function renderKnowledge() {
+  showArticle('odds-basics');
+}
+
+function showArticle(id) {
+  document.querySelectorAll('.know-nav-item').forEach(el => el.classList.remove('active'));
+  const navItems = document.querySelectorAll('.know-nav-item');
+  navItems.forEach((el, i) => {
+    const keys = Object.keys(ARTICLES);
+    if (keys[i] === id) el.classList.add('active');
+  });
+  const article = ARTICLES[id];
+  if (!article) return;
+  document.getElementById('know-content').innerHTML = `
+    <div class="know-article active">
+      <h2>${article.title}</h2>
+      <div class="subtitle">${article.subtitle}</div>
+      ${article.content}
+    </div>`;
+}
+
+// ─── MY TEAMS ────────────────────────────────────────────────────────────────
+const ALL_TEAMS = {
+  nba: [
+    {id:'LAL',name:'Lakers',sub:'lakers'},{id:'BOS',name:'Celtics',sub:'bostonceltics'},{id:'GSW',name:'Warriors',sub:'warriors'},
+    {id:'MIA',name:'Heat',sub:'heat'},{id:'PHI',name:'76ers',sub:'sixers'},{id:'NYK',name:'Knicks',sub:'NYKnicks'},
+    {id:'CHI',name:'Bulls',sub:'chicagobulls'},{id:'DEN',name:'Nuggets',sub:'denvernuggets'},{id:'PHX',name:'Suns',sub:'suns'},
+    {id:'MIL',name:'Bucks',sub:'mkebucks'},{id:'DAL',name:'Mavericks',sub:'mavericks'},{id:'CLE',name:'Cavaliers',sub:'clevelandcavs'},
+    {id:'OKC',name:'Thunder',sub:'thunder'},{id:'MIN',name:'Timberwolves',sub:'timberwolves'},{id:'SAC',name:'Kings',sub:'kings'},
+    {id:'NOP',name:'Pelicans',sub:'NOLAPelicans'},{id:'MEM',name:'Grizzlies',sub:'memphisgrizzlies'},{id:'IND',name:'Pacers',sub:'pacers'},
+    {id:'ORL',name:'Magic',sub:'orlandomagic'},{id:'ATL',name:'Hawks',sub:'atlantahawks'},{id:'BKN',name:'Nets',sub:'gonets'},
+    {id:'CHA',name:'Hornets',sub:'charlottehornets'},{id:'DET',name:'Pistons',sub:'detroitpistons'},{id:'HOU',name:'Rockets',sub:'rockets'},
+    {id:'LAC',name:'Clippers',sub:'laclippers'},{id:'POR',name:'Trail Blazers',sub:'ripcity'},{id:'SAS',name:'Spurs',sub:'nbaspurs'},
+    {id:'TOR',name:'Raptors',sub:'torontoraptors'},{id:'UTA',name:'Jazz',sub:'utahjazz'},{id:'WAS',name:'Wizards',sub:'washingtonwizards'}
+  ],
+  nfl: [
+    {id:'KC',name:'Chiefs',sub:'KansasCityChiefs'},{id:'DAL',name:'Cowboys',sub:'DallasCowboys'},{id:'NE',name:'Patriots',sub:'newenglandpatriots'},
+    {id:'GB',name:'Packers',sub:'GreenBayPackers'},{id:'SF',name:'49ers',sub:'49ers'},{id:'SEA',name:'Seahawks',sub:'Seahawks'},
+    {id:'PHI',name:'Eagles',sub:'eagles'},{id:'BUF',name:'Bills',sub:'buffalobills'},{id:'BAL',name:'Ravens',sub:'ravens'},
+    {id:'CIN',name:'Bengals',sub:'bengals'},{id:'MIA',name:'Dolphins',sub:'miamidolphins'},{id:'MIN',name:'Vikings',sub:'minnesotavikings'},
+    {id:'LAR',name:'Rams',sub:'LosAngelesRams'},{id:'TB',name:'Buccaneers',sub:'buccaneers'},{id:'LV',name:'Raiders',sub:'raiders'},
+    {id:'DEN',name:'Broncos',sub:'DenverBroncos'},{id:'PIT',name:'Steelers',sub:'steelers'},{id:'CHI',name:'Bears',sub:'CHIBears'},
+    {id:'CLE',name:'Browns',sub:'browns'},{id:'HOU',name:'Texans',sub:'HoustonTexans'},{id:'IND',name:'Colts',sub:'Colts'},
+    {id:'JAX',name:'Jaguars',sub:'jaguars'},{id:'TEN',name:'Titans',sub:'Tennesseetitans'},{id:'NO',name:'Saints',sub:'Saints'},
+    {id:'ATL',name:'Falcons',sub:'falcons'},{id:'CAR',name:'Panthers',sub:'panthers'},{id:'NYG',name:'Giants',sub:'NYGiants'},
+    {id:'NYJ',name:'Jets',sub:'nyjets'},{id:'LAC',name:'Chargers',sub:'chargers'},{id:'WAS',name:'Commanders',sub:'Commanders'},
+    {id:'ARI',name:'Cardinals',sub:'AZCardinals'},{id:'DET',name:'Lions',sub:'detroitlions'}
+  ],
+  mlb: [
+    {id:'NYY',name:'Yankees',sub:'yankees'},{id:'BOS',name:'Red Sox',sub:'redsox'},{id:'LAD',name:'Dodgers',sub:'Dodgers'},
+    {id:'CHC',name:'Cubs',sub:'chicagocubs'},{id:'ATL',name:'Braves',sub:'Braves'},{id:'HOU',name:'Astros',sub:'astros'},
+    {id:'NYM',name:'Mets',sub:'NewYorkMets'},{id:'SF',name:'Giants',sub:'SFGiants'},{id:'PHI',name:'Phillies',sub:'phillies'},
+    {id:'STL',name:'Cardinals',sub:'Cardinals'},{id:'SD',name:'Padres',sub:'Padres'},{id:'SEA',name:'Mariners',sub:'Mariners'},
+    {id:'TOR',name:'Blue Jays',sub:'Torontobluejays'},{id:'MIL',name:'Brewers',sub:'Brewers'},{id:'MIN',name:'Twins',sub:'minnesotatwins'},
+    {id:'TEX',name:'Rangers',sub:'TexasRangers'},{id:'BAL',name:'Orioles',sub:'orioles'},{id:'CLE',name:'Guardians',sub:'ClevelandGuardians'},
+    {id:'TB',name:'Rays',sub:'tampabayrays'},{id:'LAA',name:'Angels',sub:'angelsbaseball'},{id:'ARI',name:'D-backs',sub:'azdiamondbacks'},
+    {id:'COL',name:'Rockies',sub:'ColoradoRockies'},{id:'DET',name:'Tigers',sub:'motorcitykitties'},{id:'KC',name:'Royals',sub:'KCRoyals'},
+    {id:'MIA',name:'Marlins',sub:'letsgofish'},{id:'OAK',name:'Athletics',sub:'OaklandAthletics'},{id:'PIT',name:'Pirates',sub:'buccos'},
+    {id:'CIN',name:'Reds',sub:'reds'},{id:'CWS',name:'White Sox',sub:'WhiteSox'},{id:'WAS',name:'Nationals',sub:'Nationals'}
+  ]
+};
+
+let favTeams = JSON.parse(localStorage.getItem('betiq_favteams') || '[]');
+let teamSelectorSport = 'nba';
+
+function initMyTeams() {
+  renderTeamSelector(teamSelectorSport);
+  renderFavDashboard();
+}
+
+function selectTeamSport(sport) {
+  teamSelectorSport = sport;
+  document.querySelectorAll('#tab-myteams .sport-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderTeamSelector(sport);
+}
+
+function renderTeamSelector(sport) {
+  const teams = ALL_TEAMS[sport];
+  document.getElementById('team-selector-container').innerHTML = `
+    <div class="sport-section-title">Select your ${SPORTS[sport].label} teams (click to toggle):</div>
+    <div class="team-selector-grid">
+      ${teams.map(t => `
+        <div class="team-chip ${favTeams.some(f=>f.id===t.id&&f.sport===sport)?'selected':''}"
+             onclick="toggleTeam('${sport}','${t.id}','${t.name}','${t.sub}')">
+          <div class="tc-abbr">${t.id}</div>
+          <div class="tc-name">${t.name}</div>
+        </div>`).join('')}
+    </div>
+    <button onclick="saveTeams()" style="margin-bottom:20px;padding:9px 20px;background:var(--green);color:#000;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px">Save Favorites</button>`;
+}
+
+function toggleTeam(sport, id, name, sub) {
+  const idx = favTeams.findIndex(f => f.id === id && f.sport === sport);
+  if (idx === -1) favTeams.push({sport, id, name, sub});
+  else favTeams.splice(idx, 1);
+  renderTeamSelector(sport);
+}
+
+function saveTeams() {
+  localStorage.setItem('betiq_favteams', JSON.stringify(favTeams));
+  toast(`Saved ${favTeams.length} favorite team${favTeams.length!==1?'s':''}`, 'success');
+  renderFavDashboard();
+  syncFavoritesToSupabase();
+}
+
+async function renderFavDashboard() {
+  const el = document.getElementById('fav-teams-dashboard');
+  if (favTeams.length === 0) {
+    el.innerHTML = '<div class="card" style="text-align:center;color:var(--text3);padding:28px">Select teams above and hit Save to build your personalized dashboard.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="sport-section-title">Your Team Hub</div>' +
+    favTeams.map(t => `<div class="fav-team-card" id="ftc-${t.sport}-${t.id}">
+      <div class="fav-team-header">
+        <div><div class="fav-team-name">${SPORTS[t.sport].emoji} ${t.name}</div><div class="fav-team-sport">${SPORTS[t.sport].label}</div></div>
+        <a href="https://www.reddit.com/r/${t.sub}" target="_blank" style="font-size:11px;color:var(--text3);text-decoration:none">r/${t.sub} ↗</a>
+      </div>
+      <div id="team-reddit-${t.sport}-${t.id}"><div style="font-size:12px;color:var(--text3)">Loading Reddit...</div></div>
+    </div>`).join('');
+  favTeams.forEach(t => loadTeamReddit(t));
+}
+
+async function loadTeamReddit(team) {
+  const el = document.getElementById(`team-reddit-${team.sport}-${team.id}`);
+  try {
+    const res = await fetch(`https://www.reddit.com/r/${team.sub}/hot.json?limit=6&raw_json=1`);
+    const data = await res.json();
+    const posts = data?.data?.children?.map(c => c.data) || [];
+    if (!posts.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">No posts found.</div>'; return; }
+    el.innerHTML = posts.map(p => `
+      <div class="reddit-post">
+        <div class="reddit-score">▲ ${p.score > 999 ? (p.score/1000).toFixed(1)+'k' : p.score}</div>
+        <div>
+          <div class="reddit-title"><a href="https://reddit.com${p.permalink}" target="_blank">${esc(p.title)}</a></div>
+          <div class="reddit-meta">${p.num_comments} comments · ${new Date(p.created_utc*1000).toLocaleDateString()}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--text3)">Reddit unavailable. <a href="https://www.reddit.com/r/${team.sub}" target="_blank" style="color:var(--green)">Open r/${team.sub} ↗</a></div>`;
+  }
+}
+
+// ─── SUPABASE ─────────────────────────────────────────────────────────────────
+let sbClient = null;
+const SB_USER = localStorage.getItem('betiq_user_id') || (() => {
+  const id = 'u_' + Math.random().toString(36).slice(2);
+  localStorage.setItem('betiq_user_id', id);
+  return id;
+})();
+
+async function connectSupabase() {
+  const url = document.getElementById('sb-url').value.trim();
+  const key = document.getElementById('sb-key').value.trim();
+  if (!url || !key) { toast('Enter both URL and key', 'error'); return; }
+  try {
+    sbClient = window.supabase ? window.supabase.createClient(url, key) : null;
+    if (!sbClient) { toast('Supabase SDK not loaded. Check connection.', 'error'); return; }
+    const { error } = await sbClient.from('betiq_bankroll').upsert({user_id: SB_USER, balance: state.bankroll});
+    if (error) throw error;
+    localStorage.setItem('betiq_sb_url', url);
+    localStorage.setItem('betiq_sb_key', key);
+    updateSyncIndicator(true);
+    document.getElementById('sb-sql-hint').style.display = 'none';
+    toast('Supabase connected!', 'success');
+  } catch(e) {
+    document.getElementById('sb-sql-hint').style.display = 'block';
+    toast('Connection failed — check your credentials and table setup', 'error');
+    sbClient = null;
+    updateSyncIndicator(false);
+  }
+}
+
+function disconnectSupabase() {
+  sbClient = null;
+  localStorage.removeItem('betiq_sb_url');
+  localStorage.removeItem('betiq_sb_key');
+  updateSyncIndicator(false);
+  toast('Disconnected from Supabase', 'success');
+}
+
+function updateSyncIndicator(connected) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  if (!dot) return;
+  dot.className = 'sync-dot ' + (connected ? 'green' : 'gray');
+  label.textContent = connected ? 'Connected' : 'Not connected';
+}
+
+async function syncParlayToSupabase(parlay) {
+  if (!sbClient) return;
+  try { await sbClient.from('betiq_parlays').upsert({...parlay, user_id: SB_USER, legs: JSON.stringify(parlay.legs)}); } catch(e) {}
+}
+
+async function syncFavoritesToSupabase() {
+  if (!sbClient) return;
+  try {
+    await sbClient.from('betiq_favorites').delete().eq('user_id', SB_USER);
+    const rows = favTeams.map(t => ({id: SB_USER+'_'+t.sport+'_'+t.id, user_id: SB_USER, ...t}));
+    if (rows.length) await sbClient.from('betiq_favorites').insert(rows);
+  } catch(e) {}
+}
+
+// ─── GUIDE ────────────────────────────────────────────────────────────────────
+const GUIDE_ARTICLES = {
+  overview: {
+    title: 'BetIQ — Full User Guide',
+    sub: 'Everything you need to know to use every feature of this app',
+    body: `<p>BetIQ is an all-in-one sports hub for fans who want to track their favorite teams, follow live scores and news, learn sports betting from scratch, and practice building parlays with a virtual bankroll — no real money ever required.</p>
+    <h3>How the app is organized</h3>
+    <ul>
+      <li><strong>Dashboard</strong> — Your home base. Live game previews, latest news, bankroll stats, and quick links to DraftKings, FanDuel, and PrizePicks.</li>
+      <li><strong>Scores & Stats</strong> — Real-time scores from ESPN for NBA, NFL, and MLB.</li>
+      <li><strong>News</strong> — ESPN headlines with automatic breaking-news and betting-impact detection.</li>
+      <li><strong>My Teams</strong> — Pick your favorite teams. Get a personalized dashboard with Reddit feeds for each team.</li>
+      <li><strong>Parlay Builder</strong> — Browse games, click odds to add legs, build parlays, and place mock bets against your virtual bankroll.</li>
+      <li><strong>My Parlays</strong> — History of every mock parlay you've placed. Mark wins/losses to track your P&L.</li>
+      <li><strong>Knowledge Center</strong> — 12 in-depth articles teaching you how betting works from the ground up.</li>
+      <li><strong>Calculators</strong> — Odds converter, payout calculator, parlay calculator, Kelly Criterion, break-even % calculator.</li>
+      <li><strong>Settings</strong> — Connect Supabase for cloud sync, adjust bankroll, export data.</li>
+    </ul>
+    <div class="tip-box" style="margin-top:16px">Start with the Knowledge Center if you're new to betting. Then come back and practice in the Parlay Builder. The virtual bankroll means zero risk while you learn.</div>`
+  },
+  dashboard: {
+    title: 'Dashboard',
+    sub: 'Your home screen — stats, games, news, and platform links at a glance',
+    body: `<h3>Bankroll Stats (top row)</h3>
+    <p>Four cards show your current virtual bankroll balance, total parlays placed, your mock win rate, and total virtual profit/loss. These update every time you place or settle a bet.</p>
+    <h3>Platform Links</h3>
+    <p>Three buttons link directly to DraftKings, FanDuel, and PrizePicks. Use these when you're ready to place real bets after practicing here. Each opens in a new tab.</p>
+    <h3>Today's Games</h3>
+    <p>Shows up to 4 live or upcoming NBA games (refreshes when you open the app). Click "See all →" to go to the full Scores tab.</p>
+    <h3>Latest Headlines</h3>
+    <p>Top 5 ESPN news items. Breaking news items appear with a red 🚨 badge. Click "See all →" to go to the News tab with full filtering.</p>
+    <h3>Virtual Bankroll Badge</h3>
+    <p>Click the <strong>"Virtual Bank: $X"</strong> badge in the top-right header to set your starting bankroll to any amount. This is purely practice money.</p>`
+  },
+  scores: {
+    title: 'Scores & Stats',
+    sub: 'Live ESPN data for NBA, NFL, and MLB',
+    body: `<h3>Switching Sports</h3>
+    <p>Use the three sport buttons (🏀 NBA, 🏈 NFL, ⚾ MLB) to switch between leagues. Data loads fresh each time from ESPN's API.</p>
+    <h3>Reading a Game Card</h3>
+    <ul>
+      <li><strong>Red status / "LIVE"</strong> — game is in progress. Score shown is current.</li>
+      <li><strong>Blue status / time</strong> — game hasn't started yet. Shows scheduled tipoff/kickoff time.</li>
+      <li><strong>Gray "FINAL"</strong> — game is over. Final score shown.</li>
+      <li><strong>Winning score</strong> — shown in green for the leading team.</li>
+    </ul>
+    <h3>Refresh Button</h3>
+    <p>Hit <strong>↻ Refresh</strong> to pull the latest scores. Live games update their clock and score each time.</p>`
+  },
+  news: {
+    title: 'News',
+    sub: 'ESPN headlines with automatic breaking-news and betting-impact detection',
+    body: `<h3>Breaking News Detection</h3>
+    <p>Every headline is scanned automatically for keywords. Articles are classified into three categories:</p>
+    <ul>
+      <li><strong>🚨 Breaking</strong> (red badge) — contains words like "injury," "suspended," "postponed," "cancelled." These directly affect game outcomes and betting lines.</li>
+      <li><strong>⚠️ Betting Impact</strong> (gold badge) — contains words like "questionable," "traded," "game-time decision," "DNP." Worth monitoring before placing bets.</li>
+      <li><strong>Normal</strong> — general news with no direct betting relevance.</li>
+    </ul>
+    <h3>Filter Bar</h3>
+    <p>Three filter buttons at the top: <strong>All</strong>, <strong>Breaking</strong>, <strong>Betting Impact</strong>. Click any to narrow the list. The count next to each label shows how many articles match.</p>
+    <h3>Sort Order</h3>
+    <p>Breaking articles always appear first, impact articles second, normal articles last — regardless of publish time. This ensures you never miss critical info.</p>
+    <div class="tip-box">Check the News tab before building any parlay. An injury alert for a star player can move a line by 3-5 points within minutes of being reported.</div>`
+  },
+  myteams: {
+    title: 'My Teams',
+    sub: 'Personalized hub for your favorite NBA, NFL, and MLB teams',
+    body: `<h3>Selecting Teams</h3>
+    <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text">Use the sport tabs (NBA / NFL / MLB) to switch between leagues.</div></div>
+    <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text">Click any team chip to select it. It highlights green. Click again to deselect.</div></div>
+    <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">Hit <strong>Save Favorites</strong>. Your picks are saved in localStorage (and synced to Supabase if connected).</div></div>
+    <h3>Team Dashboard</h3>
+    <p>Below the selector, each saved team gets its own card showing:</p>
+    <ul>
+      <li><strong>Reddit feed</strong> — top 6 hot posts from that team's subreddit, with upvote counts and comment totals. Click any title to open the full post on Reddit.</li>
+      <li><strong>r/subreddit link</strong> — opens the full community in a new tab.</li>
+    </ul>
+    <p>You can save teams from multiple sports simultaneously — the dashboard shows all of them.</p>`
+  },
+  parlaybuilder: {
+    title: 'Parlay Builder',
+    sub: 'Build multi-leg parlays from real games and practice against your virtual bankroll',
+    body: `<h3>How to Build a Parlay</h3>
+    <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text">Select a sport (NBA / NFL / MLB) using the tabs at the top of the Parlay Builder.</div></div>
+    <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text">Browse the game cards. Each card shows three betting options: <strong>ML</strong> (moneyline), <strong>Spread</strong>, and <strong>Total</strong> for both teams.</div></div>
+    <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">Click any odds button to add that pick to your <strong>Bet Slip</strong> on the right. It highlights green when added.</div></div>
+    <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-text">Click the same button again to remove it from the slip (it toggles).</div></div>
+    <div class="guide-step"><div class="guide-step-num">5</div><div class="guide-step-text">Add at least 2 legs. The Bet Slip automatically calculates combined parlay odds.</div></div>
+    <div class="guide-step"><div class="guide-step-num">6</div><div class="guide-step-text">Set your stake and hit <strong>Place Mock Bet</strong>.</div></div>
+    <div class="tip-box">You can mix sports — add an NBA leg, then switch to NFL and add another leg. The slip holds up to 10 legs across any mix of sports.</div>`
+  },
+  betslip: {
+    title: 'Bet Slip',
+    sub: 'The persistent sidebar — always visible while building parlays',
+    body: `<h3>Components</h3>
+    <ul>
+      <li><strong>Leg list</strong> — each pick you've added, showing the sport, selection, and odds. Hit × to remove any leg.</li>
+      <li><strong>Parlay Odds</strong> — combined American odds for the full parlay, auto-calculated as you add/remove legs.</li>
+      <li><strong>Quick Stakes</strong> — $5 / $10 / $25 / $50 / $100 buttons to set your wager instantly.</li>
+      <li><strong>Wager input</strong> — type any amount manually.</li>
+      <li><strong>Potential Payout</strong> — updates live as you change stake or add/remove legs.</li>
+      <li><strong>Platform links</strong> — DraftKings, FanDuel, PrizePicks buttons to go place the real bet if you want.</li>
+      <li><strong>Place Mock Bet</strong> — logs the parlay to My Parlays and deducts the stake from your virtual bankroll.</li>
+      <li><strong>Clear Slip</strong> — removes all legs and resets the slip.</li>
+    </ul>
+    <p>The slip requires a minimum of 2 legs to place a bet. Single-leg bets are not supported (those are just straight bets, not parlays).</p>`
+  },
+  myparlays: {
+    title: 'My Parlays',
+    sub: 'History and P&L tracking for all your mock bets',
+    body: `<h3>Parlay Cards</h3>
+    <p>Each placed parlay shows: date/time, number of legs, combined odds, stake, potential payout, and current result (Pending / Win / Loss).</p>
+    <h3>Settling Results</h3>
+    <p>After the real games finish, come back and mark each parlay:</p>
+    <ul>
+      <li><strong>✓ Mark Win</strong> — adds the full payout to your bankroll and marks the parlay green.</li>
+      <li><strong>✗ Mark Loss</strong> — marks the parlay red (stake was already deducted when placed).</li>
+    </ul>
+    <h3>Performance Tracking</h3>
+    <p>Your win rate and total profit/loss are always visible on the Dashboard. These update automatically when you settle any parlay.</p>
+    <h3>Clear All</h3>
+    <p>The "Clear All" button in the top-right permanently deletes your parlay history. Your bankroll is not affected.</p>`
+  },
+  knowledge: {
+    title: 'Knowledge Center',
+    sub: '12 in-depth articles covering everything from basic odds to advanced strategy',
+    body: `<h3>Topics Covered</h3>
+    <ul>
+      <li>How Odds Work (American, Decimal, Fractional, implied probability)</li>
+      <li>Moneyline Bets</li>
+      <li>Point Spread Betting</li>
+      <li>Over/Under (Totals)</li>
+      <li>Parlay Bets — math, strategy, when to use them</li>
+      <li>Prop Bets — player props, PrizePicks, Underdog</li>
+      <li>Same-Game Parlays (SGP)</li>
+      <li>Bankroll Management — units, flat betting, Kelly</li>
+      <li>Expected Value (EV) — how to find profitable bets</li>
+      <li>Daily Fantasy Sports basics</li>
+      <li>Betting Strategy — sharps vs. squares, line shopping, CLV</li>
+      <li>Platform Guide — DraftKings vs. FanDuel vs. PrizePicks</li>
+    </ul>
+    <h3>How to Use It</h3>
+    <p>Click any topic in the left nav to load the article. Each article is self-contained. Start with <strong>How Odds Work</strong> if you're brand new — every other concept builds on it.</p>`
+  },
+  calculators: {
+    title: 'Calculators',
+    sub: 'Five tools for doing the math before you bet',
+    body: `<h3>Odds Converter</h3>
+    <p>Enter American odds → get decimal, fractional, and implied win probability. Or enter decimal odds → converts back to American. Use this whenever you see odds in a format you don't recognize.</p>
+    <h3>Payout Calculator</h3>
+    <p>Enter a stake and American odds → see your profit and total payout. Useful for straight bets on a single game.</p>
+    <h3>Parlay Calculator</h3>
+    <p>Enter multiple leg odds separated by commas (e.g. <code>-110, +150, -130</code>) and a stake → see combined parlay odds, profit, and total payout. This matches how the Bet Slip calculates automatically.</p>
+    <h3>Kelly Criterion</h3>
+    <p>Enter your estimated win probability (%), the bet's odds, and your bankroll → get the mathematically optimal bet size. Use 1/4 of the Kelly output to reduce variance. If it returns "No Edge," the bet isn't profitable at that probability.</p>
+    <h3>Break-Even Calculator</h3>
+    <p>Enter any odds → see the exact win percentage you need to break even long-term. Standard -110 requires 52.4%. If you can't win more than that percentage over time, the bet loses money.</p>`
+  },
+  settings: {
+    title: 'Settings',
+    sub: 'Configure Supabase sync, bankroll, and data export',
+    body: `<h3>Supabase Database</h3>
+    <p>BetIQ works entirely offline with localStorage. Optionally connect a free Supabase project to sync your parlays and favorites across devices:</p>
+    <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text">Create a free account at <a href="https://supabase.com" target="_blank" style="color:var(--green)">supabase.com</a>. Create a new project.</div></div>
+    <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text">Go to SQL Editor and run the three CREATE TABLE statements shown in Settings after a failed connection attempt.</div></div>
+    <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">Copy your Project URL and anon/public key from Project Settings → API.</div></div>
+    <div class="guide-step"><div class="guide-step-num">4</div><div class="guide-step-text">Paste both into the Settings tab and click <strong>Connect</strong>.</div></div>
+    <h3>Bankroll</h3>
+    <p>Enter any amount and click Apply to reset your virtual bankroll. This does not affect your parlay history.</p>
+    <h3>Export Data</h3>
+    <p>Downloads your full parlay history as a JSON file — useful for analysis in Excel or Google Sheets.</p>
+    <h3>Reset All Data</h3>
+    <p>Clears everything from localStorage: parlays, favorites, bankroll, API keys. Cannot be undone.</p>`
+  }
+};
+
+function initGuide() { showGuide('overview'); }
+
+function showGuide(id) {
+  document.querySelectorAll('.guide-nav-item').forEach((el,i) => {
+    const keys = Object.keys(GUIDE_ARTICLES);
+    el.classList.toggle('active', keys[i] === id);
+  });
+  const a = GUIDE_ARTICLES[id];
+  if (!a) return;
+  document.getElementById('guide-content').innerHTML = `
+    <div class="guide-article active">
+      <h2>${a.title}</h2>
+      <div class="guide-sub">${a.sub}</div>
+      ${a.body}
+    </div>`;
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+function initSettings() {
+  const url = localStorage.getItem('betiq_sb_url') || '';
+  const key = localStorage.getItem('betiq_sb_key') || '';
+  document.getElementById('sb-url').value = url;
+  document.getElementById('sb-key').value = key;
+  document.getElementById('settings-bankroll').value = state.bankroll;
+  const connected = !!sbClient;
+  updateSyncIndicator(connected);
+  if (url && key && !sbClient) connectSupabase();
+}
+
+function applySettingsBankroll() {
+  const val = parseFloat(document.getElementById('settings-bankroll').value);
+  if (!val || val <= 0) { toast('Enter a valid amount', 'error'); return; }
+  state.bankroll = val;
+  localStorage.setItem('betiq_bankroll', val.toString());
+  updateBankrollDisplay();
+  toast('Bankroll updated', 'success');
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state.parlayHistory, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `betiq-parlays-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function resetAllData() {
+  if (!confirm('This will permanently delete all parlays, favorites, and settings. Are you sure?')) return;
+  localStorage.clear();
+  state.parlayHistory = [];
+  state.bankroll = 1000;
+  favTeams = [];
+  sbClient = null;
+  updateBankrollDisplay();
+  renderSlip();
+  toast('All data cleared', 'success');
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+updateBankrollDisplay();
+renderSlip();
+showArticle('odds-basics');
+loadDashboard();
+
+// Auto-connect Supabase if credentials saved
+(async () => {
+  const url = localStorage.getItem('betiq_sb_url');
+  const key = localStorage.getItem('betiq_sb_key');
+  if (url && key && window.supabase) {
+    try {
+      sbClient = window.supabase.createClient(url, key);
+      const { error } = await sbClient.from('betiq_bankroll').select('balance').eq('user_id', SB_USER).single();
+      if (!error) updateSyncIndicator(true);
+      else sbClient = null;
+    } catch(e) { sbClient = null; }
+  }
+})();
+</script>
+</body>
+</html>
