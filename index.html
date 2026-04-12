@@ -1088,11 +1088,38 @@ document.querySelectorAll('.nav-btn').forEach((b, i) => {
 
 // ─── SCORES ───────────────────────────────────────────────────────────────────
 async function loadScores(sport) {
-  document.getElementById('scores-container').innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
-  document.getElementById('scores-title').textContent = `${SPORTS[sport].emoji} ${SPORTS[sport].label} — Games`;
+  const container = document.getElementById('scores-container');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
+  document.getElementById('scores-title').textContent = `${SPORTS[sport].emoji} ${SPORTS[sport].label} — Today's Games`;
+
   const data = await fetchESPN(sport, 'scoreboard');
   state.gameCache[sport] = data;
-  renderScores(sport, data, 'scores-container');
+
+  // Show live indicator banner if games are in progress
+  const liveGames = (data?.events || []).filter(e => e.status?.type?.state === 'in');
+  const liveBanner = liveGames.length
+    ? `<div style="background:rgba(228,77,77,.12);border:1px solid var(--red);border-radius:6px;padding:8px 14px;margin-bottom:12px;font-size:13px;font-weight:600;color:var(--red)">🔴 ${liveGames.length} game${liveGames.length>1?'s':''} LIVE right now — click any card for play-by-play</div>`
+    : '';
+
+  // Show "no games" but prompt to check other sports
+  if (!data || !data.events || data.events.length === 0) {
+    container.innerHTML = `<div class="card" style="text-align:center;padding:24px">
+      <div style="color:var(--text3);margin-bottom:12px">No ${SPORTS[sport].label} games today.</div>
+      <div style="display:flex;gap:8px;justify-content:center">
+        ${Object.keys(SPORTS).filter(s=>s!==sport).map(s=>`<button onclick="selectSport('${s}')" style="background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:6px 14px;color:var(--text2);cursor:pointer;font-size:13px">${SPORTS[s].emoji} Check ${SPORTS[s].label}</button>`).join('')}
+      </div>
+    </div>`;
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.innerHTML = liveBanner;
+  const scoreGrid = document.createElement('div');
+  scoreGrid.className = 'score-grid';
+  scoreGrid.innerHTML = data.events.map(e => gameCard(sport, e, false)).join('');
+  grid.appendChild(scoreGrid);
+  container.innerHTML = '';
+  container.appendChild(grid);
 }
 
 function renderScores(sport, data, containerId, limit = 0) {
@@ -2109,9 +2136,11 @@ async function openGameDetail(sport, eventId, title, isLive) {
   currentGameId = eventId;
   document.getElementById('game-detail-panel').style.display = '';
   document.getElementById('gdp-title').textContent = title;
-  document.getElementById('gdp-live-badge').innerHTML = isLive
+  const espnSportPath = {'nba':'nba','nfl':'nfl','mlb':'mlb'}[sport]||sport;
+  const highlightLink = `https://www.espn.com/${espnSportPath}/game/_/gameId/${eventId}`;
+  document.getElementById('gdp-live-badge').innerHTML = (isLive
     ? '<span style="background:var(--red);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-left:6px;animation:pulse 1.5s infinite">🔴 LIVE</span>'
-    : '';
+    : '') + `<a href="${highlightLink}" target="_blank" style="margin-left:10px;font-size:11px;color:var(--green);font-weight:600">📺 Highlights & recap on ESPN ↗</a>`;
   document.getElementById('gdp-plays').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   document.getElementById('gdp-boxscore').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   document.getElementById('game-detail-panel').scrollIntoView({behavior:'smooth', block:'start'});
@@ -2364,11 +2393,14 @@ async function renderFavDashboard() {
 
 async function loadTeamReddit(team) {
   const el = document.getElementById(`team-reddit-${team.sport}-${team.id}`);
+  // Always look up the canonical subreddit from ALL_TEAMS (fixes stale localStorage values)
+  const canonical = ALL_TEAMS[team.sport]?.find(t => t.id === team.id);
+  const sub = canonical?.sub || team.sub;
   try {
-    const res = await fetch(`https://www.reddit.com/r/${team.sub}/hot.json?limit=6&raw_json=1`);
+    const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=6&raw_json=1`);
     const data = await res.json();
     const posts = data?.data?.children?.map(c => c.data) || [];
-    if (!posts.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">No posts found.</div>'; return; }
+    if (!posts.length) { el.innerHTML = `<div style="font-size:12px;color:var(--text3)">No posts found. <a href="https://www.reddit.com/r/${sub}" target="_blank" style="color:var(--green)">Open r/${sub} ↗</a></div>`; return; }
     el.innerHTML = posts.map(p => `
       <div class="reddit-post">
         <div class="reddit-score">▲ ${p.score > 999 ? (p.score/1000).toFixed(1)+'k' : p.score}</div>
@@ -2378,7 +2410,7 @@ async function loadTeamReddit(team) {
         </div>
       </div>`).join('');
   } catch(e) {
-    el.innerHTML = `<div style="font-size:12px;color:var(--text3)">Reddit unavailable. <a href="https://www.reddit.com/r/${team.sub}" target="_blank" style="color:var(--green)">Open r/${team.sub} ↗</a></div>`;
+    el.innerHTML = `<div style="font-size:12px;color:var(--text3)">Reddit unavailable. <a href="https://www.reddit.com/r/${sub}" target="_blank" style="color:var(--green)">Open r/${sub} ↗</a></div>`;
   }
 }
 
