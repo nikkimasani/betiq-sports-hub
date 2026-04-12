@@ -3207,7 +3207,7 @@ function selectTeamSport(sport) {
 }
 
 function renderTeamSelector(sport) {
-  const teams = ALL_TEAMS[sport];
+  const teams = [...ALL_TEAMS[sport]].sort((a, b) => a.name.localeCompare(b.name));
   document.getElementById('team-selector-container').innerHTML = `
     <div class="sport-section-title">Select your ${SPORTS[sport].label} teams (click to toggle):</div>
     <div class="team-selector-grid">
