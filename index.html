@@ -3059,7 +3059,7 @@ async function runStatsBuilder() {
   try {
     const res = await fetch(url);
     const data = await res.json();
-    const categories = data?.leaders || [];
+    const categories = data?.categories || data?.leaders || [];
     const cat = categories.find(c =>
       c.name?.toLowerCase().includes(category.toLowerCase()) ||
       c.displayName?.toLowerCase().includes(category.toLowerCase())
@@ -3558,7 +3558,8 @@ async function searchESPNPlayer(q, sport, container) {
   const url = `https://site.web.api.espn.com/apis/common/v3/search?query=${encodeURIComponent(q)}&limit=10&type=athlete&sport=${SPORTS[sport].espn}`;
   const res = await fetch(url);
   const data = await res.json();
-  const athletes = (data.results || []).filter(r => r.displayName || r.name);
+  // ESPN wraps athlete results inside a group's .contents array
+  const athletes = (data.results || []).flatMap(r => r.contents || [r]).filter(r => r.displayName || r.name);
   if (!athletes.length) {
     container.innerHTML = '<div class="agent-empty">No players found. Try a full name like "LeBron James".</div>';
     return;
@@ -4279,10 +4280,22 @@ async function initKalshi(force = false) {
   try {
     // Kalshi public API — no auth required for market reads
     const kalshiUrl = 'https://trading-api.kalshi.com/trade-api/v2/markets?limit=200&status=open';
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(kalshiUrl)}`;
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error(`Kalshi API ${res.status}`);
-    const data = await res.json();
+    const proxies = [
+      `https://corsproxy.io/?${encodeURIComponent(kalshiUrl)}`,
+      `https://api.allorigins.win/get?url=${encodeURIComponent(kalshiUrl)}`,
+    ];
+    let data = null;
+    for (const proxyUrl of proxies) {
+      try {
+        const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) continue;
+        const raw = await res.json();
+        // allorigins wraps response in { contents: "..." }
+        data = raw.contents ? JSON.parse(raw.contents) : raw;
+        if (data?.markets) break;
+      } catch { continue; }
+    }
+    if (!data?.markets) throw new Error('All proxies failed');
     const markets = (data.markets || []).filter(m => {
       const title = (m.title || '').toLowerCase();
       const ticker = (m.ticker || '').toLowerCase();
