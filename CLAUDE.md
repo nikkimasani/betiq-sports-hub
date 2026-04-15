@@ -1,4 +1,6 @@
-# CLAUDE.md — BetIQ Sports Betting Hub
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -6,7 +8,7 @@ Single-file HTML/CSS/JS sports betting education and parlay-tracking app. No bui
 
 ## Architecture
 
-**One file:** `index.html` (~2000+ lines)
+**One file:** `index.html` (~2800+ lines)
 - All CSS in `<style>` at the top
 - All HTML in `<body>`
 - All JavaScript in `<script>` at the bottom
@@ -26,7 +28,7 @@ Supabase (optional) → syncParlayToSupabase() / syncFavoritesToSupabase()
 ## Key Functions
 
 | Function | Purpose |
-|----------|---------|
+|----------|---------| 
 | `switchTab(name)` | Tab navigation — triggers load functions |
 | `fetchESPN(sport, endpoint)` | ESPN API wrapper |
 | `loadNews(sport)` | Fetches and classifies breaking/impact news |
@@ -36,7 +38,7 @@ Supabase (optional) → syncParlayToSupabase() / syncFavoritesToSupabase()
 | `placeMockBet()` | Deducts stake, saves parlay to history + Supabase |
 | `initMyTeams()` | Renders team selector + favorite team dashboard |
 | `loadTeamReddit(team)` | Fetches Reddit hot posts for a team's subreddit |
-| `connectSupabase()` | Initializes Supabase client, tests connection |
+| `connectSupabase()` | Initialises Supabase client, tests connection |
 | `showGuide(id)` | Renders a guide article by key |
 | `showArticle(id)` | Renders a Knowledge Center article by key |
 
@@ -93,11 +95,15 @@ No auth needed. Returns CORS-friendly JSON for public subreddits.
 
 ## Deployment
 
+**Vercel (primary):** Auto-deploys from `master` branch.  
+Live at: https://sports-hub-topaz.vercel.app
+
+**Netlify (alternative):**
 ```bash
 netlify deploy --prod --dir=. --site-name=betiq-hub
 ```
 
-Static site — Netlify serves `index.html` directly. No build command needed.
+Static site — no build command needed for either platform.
 
 ## Constraints
 
