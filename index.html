@@ -1157,26 +1157,6 @@ nav { align-items: center; }
     <!-- SETTINGS -->
     <div id="tab-settings" class="tab">
       <div class="settings-section">
-        <div class="settings-title">☁️ Supabase Database <span id="supabase-status" class="sync-indicator"><span class="sync-dot gray" id="sync-dot"></span><span id="sync-label">Not connected</span></span></div>
-        <p style="font-size:12px;color:var(--text3);margin-bottom:14px">Connect Supabase to sync your parlays and favorites across devices. <a href="https://supabase.com" target="_blank" style="color:var(--accent)">Create a free account →</a></p>
-        <div class="settings-row">
-          <div><label>Supabase Project URL</label><input type="text" id="sb-url" placeholder="https://xxxx.supabase.co"></div>
-        </div>
-        <div class="settings-row">
-          <div><label>Anon / Public Key</label><input type="password" id="sb-key" placeholder="eyJ..."></div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:4px">
-          <button class="btn-sm btn-sm-primary" onclick="connectSupabase()">Connect</button>
-          <button class="btn-sm btn-sm-secondary" onclick="disconnectSupabase()">Disconnect</button>
-        </div>
-        <div id="sb-sql-hint" style="display:none;margin-top:14px;background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;color:var(--text3)">
-          <strong style="color:var(--text2);display:block;margin-bottom:6px">Run this SQL in your Supabase SQL editor to create the required tables:</strong>
-          <pre style="font-size:10px;white-space:pre-wrap;color:var(--text2)">create table betiq_parlays (id text primary key, user_id text, date text, legs jsonb, stake numeric, odds integer, payout text, result text default 'pending');
-create table betiq_favorites (id text primary key, user_id text, sport text, team_id text, team_name text, team_abbr text, subreddit text);
-create table betiq_bankroll (user_id text primary key, balance numeric default 1000);</pre>
-        </div>
-      </div>
-      <div class="settings-section">
         <div class="settings-title">💰 Virtual Bankroll</div>
         <div class="settings-row">
           <div><label>Current Balance</label><input type="number" id="settings-bankroll" placeholder="1000" min="1"></div>
@@ -1523,6 +1503,12 @@ create table betiq_bankroll (user_id text primary key, balance numeric default 1
 <div class="toast-container" id="toasts"></div>
 
 <script>
+// ─── SUPABASE CONFIG ──────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://bazjlrualnmbanmhiuau.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhempscnVhbG5tYmFubWhpdWF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MTkyNDQsImV4cCI6MjA5MTA5NTI0NH0.R8f7yEhxVHIcjwSS3H1b3tLj5jpuRP1pR4jiyVFEbmE';
+const ADMIN_EMAIL = 'nikkimasani@gmail.com';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // ─── STATE ───────────────────────────────────────────────────────────────────
 const state = {
   currentTab: 'dashboard',
@@ -3362,64 +3348,24 @@ async function loadTeamReddit(team) {
   }
 }
 
-// ─── SUPABASE ─────────────────────────────────────────────────────────────────
-let sbClient = null;
-const SB_USER = localStorage.getItem('betiq_user_id') || (() => {
-  const id = 'u_' + Math.random().toString(36).slice(2);
-  localStorage.setItem('betiq_user_id', id);
-  return id;
-})();
-
-async function connectSupabase() {
-  const url = document.getElementById('sb-url').value.trim();
-  const key = document.getElementById('sb-key').value.trim();
-  if (!url || !key) { toast('Enter both URL and key', 'error'); return; }
-  try {
-    sbClient = window.supabase ? window.supabase.createClient(url, key) : null;
-    if (!sbClient) { toast('Supabase SDK not loaded. Check connection.', 'error'); return; }
-    const { error } = await sbClient.from('sr_bankroll').upsert({user_id: SB_USER, balance: state.bankroll});
-    if (error) throw error;
-    localStorage.setItem('betiq_sb_url', url);
-    localStorage.setItem('betiq_sb_key', key);
-    updateSyncIndicator(true);
-    document.getElementById('sb-sql-hint').style.display = 'none';
-    toast('Supabase connected!', 'success');
-  } catch(e) {
-    document.getElementById('sb-sql-hint').style.display = 'block';
-    toast('Connection failed — check your credentials and table setup', 'error');
-    sbClient = null;
-    updateSyncIndicator(false);
-  }
-}
-
-function disconnectSupabase() {
-  sbClient = null;
-  localStorage.removeItem('betiq_sb_url');
-  localStorage.removeItem('betiq_sb_key');
-  updateSyncIndicator(false);
-  toast('Disconnected from Supabase', 'success');
-}
-
-function updateSyncIndicator(connected) {
-  const dot = document.getElementById('sync-dot');
-  const label = document.getElementById('sync-label');
-  if (!dot) return;
-  dot.className = 'sync-dot ' + (connected ? 'accent' : 'gray');
-  label.textContent = connected ? 'Connected' : 'Not connected';
-}
-
+// ─── SUPABASE SYNC ────────────────────────────────────────────────────────────
 async function syncParlayToSupabase(parlay) {
-  if (!sbClient) return;
-  try { await sbClient.from('betiq_parlays').upsert({...parlay, user_id: SB_USER, legs: JSON.stringify(parlay.legs)}); } catch(e) {}
+  if (!sb || !state.user) return;
+  try { await sb.from('betiq_parlays').upsert({...parlay, user_id: state.user.id, legs: JSON.stringify(parlay.legs)}); } catch(e) {}
 }
 
 async function syncFavoritesToSupabase() {
-  if (!sbClient) return;
+  if (!sb || !state.user) return;
   try {
-    await sbClient.from('betiq_favorites').delete().eq('user_id', SB_USER);
-    const rows = favTeams.map(t => ({id: SB_USER+'_'+t.sport+'_'+t.id, user_id: SB_USER, ...t}));
-    if (rows.length) await sbClient.from('betiq_favorites').insert(rows);
+    await sb.from('betiq_favorites').delete().eq('user_id', state.user.id);
+    const rows = favTeams.map(t => ({id: state.user.id+'_'+t.sport+'_'+t.id, user_id: state.user.id, ...t}));
+    if (rows.length) await sb.from('betiq_favorites').insert(rows);
   } catch(e) {}
+}
+
+async function syncBankrollToSupabase() {
+  if (!sb || !state.user) return;
+  try { await sb.from('betiq_bankroll').upsert({ user_id: state.user.id, balance: state.bankroll }); } catch(e) {}
 }
 
 // ─── GUIDE ────────────────────────────────────────────────────────────────────
@@ -3715,10 +3661,6 @@ function showGuide(id) {
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
 function initSettings() {
-  const url = localStorage.getItem('betiq_sb_url') || '';
-  const key = localStorage.getItem('betiq_sb_key') || '';
-  document.getElementById('sb-url').value = url;
-  document.getElementById('sb-key').value = key;
   document.getElementById('settings-bankroll').value = state.bankroll;
   const claudeKey = localStorage.getItem('betiq_claude_key') || '';
   document.getElementById('claude-key').value = claudeKey;
@@ -3726,9 +3668,6 @@ function initSettings() {
     document.getElementById('claude-key-status').textContent = '✓ Key saved';
     document.getElementById('claude-key-status').style.color = 'var(--accent)';
   }
-  const connected = !!sbClient;
-  updateSyncIndicator(connected);
-  if (url && key && !sbClient) connectSupabase();
 }
 
 function applySettingsBankroll() {
@@ -4864,19 +4803,6 @@ Be direct and specific. No generic disclaimers.`;
   }
 }
 
-// Auto-connect Supabase if credentials saved
-(async () => {
-  const url = localStorage.getItem('betiq_sb_url');
-  const key = localStorage.getItem('betiq_sb_key');
-  if (url && key && window.supabase) {
-    try {
-      sbClient = window.supabase.createClient(url, key);
-      const { error } = await sbClient.from('sr_bankroll').select('balance').eq('user_id', SB_USER).single();
-      if (!error) updateSyncIndicator(true);
-      else sbClient = null;
-    } catch(e) { sbClient = null; }
-  }
-})();
 
 // ─── PRACTICE TAB ────────────────────────────────────────────────────────────
 let paperBets = JSON.parse(localStorage.getItem('betiq_paper_bets') || '[]');
