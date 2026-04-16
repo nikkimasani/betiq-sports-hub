@@ -26,7 +26,7 @@
   --radius: 8px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; min-height: 100vh; }
 
 /* HEADER */
 header {
@@ -39,7 +39,7 @@ header {
   height: 56px;
   position: sticky; top: 0; z-index: 100;
 }
-.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; font-family: 'Barlow Condensed', sans-serif; }
 .logo span { color: var(--accent); }
 .bankroll-badge {
   background: var(--bg4);
@@ -64,9 +64,9 @@ nav {
 nav::-webkit-scrollbar { display: none; }
 .nav-btn {
   background: none; border: none; color: var(--text2);
-  padding: 14px 18px; font-size: 13px; font-weight: 600;
+  padding: 14px 18px; font-size: 13px; font-weight: 700;
   cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent;
-  transition: all .2s;
+  transition: all .2s; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase;
 }
 .nav-btn:hover { color: var(--text); }
 .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -124,8 +124,8 @@ nav::-webkit-scrollbar { display: none; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 4px 0;
 }
-.team-name { font-size: 14px; font-weight: 600; }
-.team-score { font-size: 18px; font-weight: 800; }
+.team-name { font-size: 14px; font-weight: 600; font-family: 'Barlow Condensed', sans-serif; }
+.team-score { font-size: 18px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; }
 .team-score.winning { color: var(--accent); }
 .game-odds {
   display: flex; gap: 6px; margin-top: 10px; padding-top: 10px;
@@ -139,7 +139,7 @@ nav::-webkit-scrollbar { display: none; }
 .odd-btn:hover { border-color: var(--accent); }
 .odd-btn.in-slip { background: #FF3D00; border-color: #FF3D00; color: #fff; }
 .odd-btn .odd-type { color: var(--text3); font-size: 10px; font-weight: 600; text-transform: uppercase; }
-.odd-btn .odd-val { color: var(--text); font-weight: 700; font-size: 12px; }
+.odd-btn .odd-val { color: var(--text); font-weight: 700; font-size: 12px; font-family: 'Barlow Condensed', sans-serif; }
 .odd-btn .odd-label { color: var(--text2); font-size: 10px; }
 
 /* SPORT TABS */
@@ -209,7 +209,7 @@ nav::-webkit-scrollbar { display: none; }
   display: flex; justify-content: space-between; margin-bottom: 8px;
   font-size: 13px;
 }
-.slip-odds-val { font-weight: 800; color: var(--gold); font-size: 16px; }
+.slip-odds-val { font-weight: 800; color: var(--gold); font-size: 16px; font-family: 'Barlow Condensed', sans-serif; }
 .stake-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .stake-input {
   flex: 1; background: var(--bg3); border: 1px solid var(--border);
@@ -229,7 +229,7 @@ nav::-webkit-scrollbar { display: none; }
   display: flex; justify-content: space-between; align-items: center;
 }
 .payout-label { font-size: 12px; color: var(--text2); }
-.payout-amount { font-size: 20px; font-weight: 800; color: var(--accent); }
+.payout-amount { font-size: 20px; font-weight: 800; color: var(--accent); font-family: 'Barlow Condensed', sans-serif; }
 .btn-place {
   width: 100%; background: var(--accent); color: #000;
   border: none; border-radius: 6px; padding: 12px;
@@ -327,7 +327,7 @@ nav::-webkit-scrollbar { display: none; }
   display: flex; flex-direction: column; gap: 4px;
 }
 .stat-label { font-size: 11px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
-.stat-value { font-size: 28px; font-weight: 800; }
+.stat-value { font-size: 28px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; }
 .stat-sub { font-size: 12px; color: var(--text2); }
 
 /* PLATFORM CARDS */
@@ -347,7 +347,7 @@ nav::-webkit-scrollbar { display: none; }
 .section-header {
   display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
 }
-.section-title { font-size: 16px; font-weight: 700; }
+.section-title { font-size: 16px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; }
 .section-action {
   font-size: 12px; color: var(--accent); cursor: pointer; font-weight: 600;
 }
