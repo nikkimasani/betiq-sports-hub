@@ -891,7 +891,7 @@ nav { align-items: center; }
         <span class="auth-toggle-sep">/</span>
         <span class="auth-toggle-item" id="auth-toggle-up" onclick="authMode('up')">Sign Up</span>
       </div>
-      <form onsubmit="authSubmit();return false;">
+      <form onsubmit="event.preventDefault();authSubmit();">
         <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email">
         <input class="auth-input" id="auth-pass" type="password" placeholder="Password" autocomplete="current-password">
         <input class="auth-input" id="auth-name" type="text" placeholder="Display name (optional)" style="display:none">
@@ -5322,6 +5322,13 @@ document.addEventListener('click', function(e) {
   if (pill && !pill.contains(e.target)) {
     document.getElementById('profile-dropdown').classList.remove('open');
   }
+});
+
+// Enter key on auth inputs
+['auth-email','auth-pass','auth-name'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); authSubmit(); }
+  });
 });
 
 // Boot: listen for auth changes
