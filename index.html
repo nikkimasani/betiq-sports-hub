@@ -5294,6 +5294,14 @@ async function onAuthStateChange(session) {
     pill.style.display = 'none';
     adminBtn.style.display = 'none';
     localStorage.removeItem('sr_user_id');
+    // Reset form to sign-in mode so user isn't stuck in sign-up mode
+    authMode('in');
+    document.getElementById('auth-email').value = '';
+    document.getElementById('auth-pass').value = '';
+    document.getElementById('auth-error').textContent = '';
+    const submitBtn = document.getElementById('auth-submit-btn');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'SIGN IN';
   }
 }
 
