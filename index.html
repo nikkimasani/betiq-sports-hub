@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<title>BetIQ — Sports Betting Hub</title>
+<title>SlateRun — Sports Betting Hub</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root {
@@ -856,7 +856,7 @@ nav { align-items: center; }
 <body>
 
 <header>
-  <div class="logo">Bet<span>IQ</span> 🎯</div>
+  <div class="logo">SLATE<span>RUN</span></div>
   <div class="bankroll-badge" onclick="openBankrollModal()">
     Virtual Bank: <strong id="bankroll-display">$1,000.00</strong>
   </div>
@@ -1530,8 +1530,8 @@ const state = {
   currentNewsSport: 'nba',
   currentParlayTab: 'nba',
   slip: [],         // { id, sport, pick, odds, type, label }
-  parlayHistory: JSON.parse(localStorage.getItem('betiq_history') || '[]'),
-  bankroll: parseFloat(localStorage.getItem('betiq_bankroll') || '1000'),
+  parlayHistory: JSON.parse(localStorage.getItem('sr_history') || '[]'),
+  bankroll: parseFloat(localStorage.getItem('sr_bankroll') || '1000'),
   gameCache: {},
   newsCache: {}
 };
@@ -2036,8 +2036,8 @@ function placeMockBet() {
 
   state.bankroll -= stake;
   state.parlayHistory.unshift(parlay);
-  localStorage.setItem('betiq_history', JSON.stringify(state.parlayHistory));
-  localStorage.setItem('betiq_bankroll', state.bankroll.toString());
+  localStorage.setItem('sr_history', JSON.stringify(state.parlayHistory));
+  localStorage.setItem('sr_bankroll', state.bankroll.toString());
   updateBankrollDisplay();
   clearSlip();
   toast(`Parlay placed! ${state.slip.length}-leg @ ${formatOdds(combined)}`, 'success');
@@ -2092,8 +2092,8 @@ function settleParlay(id, result) {
   } else {
     toast('Parlay lost. Better luck next time.', 'error');
   }
-  localStorage.setItem('betiq_history', JSON.stringify(state.parlayHistory));
-  localStorage.setItem('betiq_bankroll', state.bankroll.toString());
+  localStorage.setItem('sr_history', JSON.stringify(state.parlayHistory));
+  localStorage.setItem('sr_bankroll', state.bankroll.toString());
   updateBankrollDisplay();
   updateDashboardStats();
   renderTracker();
@@ -2102,7 +2102,7 @@ function settleParlay(id, result) {
 function clearHistory() {
   if (!confirm('Clear all parlay history?')) return;
   state.parlayHistory = [];
-  localStorage.removeItem('betiq_history');
+  localStorage.removeItem('sr_history');
   renderTracker();
   updateDashboardStats();
 }
@@ -2162,7 +2162,7 @@ function saveBankroll() {
   const val = parseFloat(document.getElementById('bankroll-input').value);
   if (!val || val <= 0) { toast('Enter a valid amount', 'error'); return; }
   state.bankroll = val;
-  localStorage.setItem('betiq_bankroll', val.toString());
+  localStorage.setItem('sr_bankroll', val.toString());
   updateBankrollDisplay();
   closeBankrollModal();
   toast('Bankroll updated!', 'success');
@@ -3276,7 +3276,7 @@ const ALL_TEAMS = {
   ]
 };
 
-let favTeams = JSON.parse(localStorage.getItem('betiq_favteams') || '[]').map(({sub, ...t}) => t);
+let favTeams = JSON.parse(localStorage.getItem('sr_favteams') || '[]').map(({sub, ...t}) => t);
 let teamSelectorSport = 'nba';
 
 function initMyTeams() {
@@ -3314,7 +3314,7 @@ function toggleTeam(sport, id, name) {
 }
 
 function saveTeams() {
-  localStorage.setItem('betiq_favteams', JSON.stringify(favTeams));
+  localStorage.setItem('sr_favteams', JSON.stringify(favTeams));
   toast(`Saved ${favTeams.length} favorite team${favTeams.length!==1?'s':''}`, 'success');
   renderFavDashboard();
   syncFavoritesToSupabase();
@@ -3345,7 +3345,7 @@ async function loadTeamReddit(team) {
   const sub = ALL_TEAMS[team.sport]?.find(x => x.id === team.id)?.sub;
   if (!sub) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">Subreddit not found.</div>'; return; }
   try {
-    const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=6&raw_json=1`, {headers:{'User-Agent':'BetIQ/1.0'}});
+    const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=6&raw_json=1`, {headers:{'User-Agent':'SlateRun/1.0'}});
     const data = await res.json();
     const posts = data?.data?.children?.map(c => c.data) || [];
     if (!posts.length) { el.innerHTML = `<div style="font-size:12px;color:var(--text3)">No posts found. <a href="https://www.reddit.com/r/${sub}" target="_blank" style="color:var(--accent)">Open r/${sub} ↗</a></div>`; return; }
@@ -3377,7 +3377,7 @@ async function connectSupabase() {
   try {
     sbClient = window.supabase ? window.supabase.createClient(url, key) : null;
     if (!sbClient) { toast('Supabase SDK not loaded. Check connection.', 'error'); return; }
-    const { error } = await sbClient.from('betiq_bankroll').upsert({user_id: SB_USER, balance: state.bankroll});
+    const { error } = await sbClient.from('sr_bankroll').upsert({user_id: SB_USER, balance: state.bankroll});
     if (error) throw error;
     localStorage.setItem('betiq_sb_url', url);
     localStorage.setItem('betiq_sb_key', key);
@@ -3425,9 +3425,9 @@ async function syncFavoritesToSupabase() {
 // ─── GUIDE ────────────────────────────────────────────────────────────────────
 const GUIDE_ARTICLES = {
   overview: {
-    title: 'BetIQ — Full User Guide',
+    title: 'SlateRun — Full User Guide',
     sub: 'Everything you need to know to use every feature of this app',
-    body: `<p>BetIQ is an all-in-one sports hub for fans who want to track their favorite teams, follow live scores and news, learn sports betting from scratch, and practice building parlays with a virtual bankroll — no real money ever required.</p>
+    body: `<p>SlateRun is an all-in-one sports hub for fans who want to track their favorite teams, follow live scores and news, learn sports betting from scratch, and practice building parlays with a virtual bankroll — no real money ever required.</p>
     <h3>How the app is organized</h3>
     <ul>
       <li><strong>Dashboard</strong> — Your home base. Live game previews, latest news, bankroll stats, and quick links to DraftKings, FanDuel, and PrizePicks.</li>
@@ -3585,7 +3585,7 @@ const GUIDE_ARTICLES = {
     title: 'Settings',
     sub: 'Configure Supabase sync, bankroll, and data export',
     body: `<h3>Supabase Database</h3>
-    <p>BetIQ works entirely offline with localStorage. Optionally connect a free Supabase project to sync your parlays and favorites across devices:</p>
+    <p>SlateRun works entirely offline with localStorage. Optionally connect a free Supabase project to sync your parlays and favorites across devices:</p>
     <div class="guide-step"><div class="guide-step-num">1</div><div class="guide-step-text">Create a free account at <a href="https://supabase.com" target="_blank" style="color:var(--accent)">supabase.com</a>. Create a new project.</div></div>
     <div class="guide-step"><div class="guide-step-num">2</div><div class="guide-step-text">Go to SQL Editor and run the three CREATE TABLE statements shown in Settings after a failed connection attempt.</div></div>
     <div class="guide-step"><div class="guide-step-num">3</div><div class="guide-step-text">Copy your Project URL and anon/public key from Project Settings → API.</div></div>
@@ -3605,7 +3605,7 @@ const GUIDE_ARTICLES = {
     <h3>Player Search</h3>
     <p>Search any NBA, NFL, or MLB player by name. Results come from TheSportsDB and include photo, position, team, height/weight, and bio. Click a player card to expand their profile.</p>
     <h3>Season Stats</h3>
-    <p>After clicking a player, BetIQ looks up their current-season stats via ESPN's API — PPG, FG%, 3P%, FT%, assists, rebounds, and more. Stats are displayed in a stat grid below their bio. MLB players use the official MLB Stats API for batting/pitching lines.</p>
+    <p>After clicking a player, SlateRun looks up their current-season stats via ESPN's API — PPG, FG%, 3P%, FT%, assists, rebounds, and more. Stats are displayed in a stat grid below their bio. MLB players use the official MLB Stats API for batting/pitching lines.</p>
     <h3>Team Compare</h3>
     <p>Pick two teams from the same sport to see a side-by-side stat comparison using current season standings data.</p>
     <h3>Live Poll</h3>
@@ -3616,9 +3616,9 @@ const GUIDE_ARTICLES = {
     sub: "AI-generated win probabilities for today's games",
     body: `
     <h3>How It Works</h3>
-    <p>BetIQ builds win predictions for every NBA and MLB game scheduled today. It pulls data from ESPN's live scoreboard and game summaries — no manual input needed.</p>
+    <p>SlateRun builds win predictions for every NBA and MLB game scheduled today. It pulls data from ESPN's live scoreboard and game summaries — no manual input needed.</p>
     <h3>Win Probability</h3>
-    <p>When Vegas moneylines are available via ESPN's PickCenter, BetIQ converts them to implied probabilities and removes the vig to get a clean percentage for each team. When odds aren't available it falls back to season win% adjusted for home-court advantage (~4%).</p>
+    <p>When Vegas moneylines are available via ESPN's PickCenter, SlateRun converts them to implied probabilities and removes the vig to get a clean percentage for each team. When odds aren't available it falls back to season win% adjusted for home-court advantage (~4%).</p>
     <h3>Reading the Cards</h3>
     <ul>
       <li><strong>Pick %</strong> — probability the model assigns to each team winning</li>
@@ -3627,7 +3627,7 @@ const GUIDE_ARTICLES = {
       <li><strong>Confidence</strong> — High (70%+), Medium (58–70%), Even (below 58%)</li>
     </ul>
     <h3>Kalshi Markets</h3>
-    <p>The Predictions tab also links directly to Kalshi sports markets so you can compare BetIQ's model with real prediction-market prices. Kalshi now requires a login for API access, so the app redirects you to their site.</p>`
+    <p>The Predictions tab also links directly to Kalshi sports markets so you can compare SlateRun's model with real prediction-market prices. Kalshi now requires a login for API access, so the app redirects you to their site.</p>`
   },
   supabase: {
     title: 'Supabase Sync',
@@ -3636,7 +3636,7 @@ const GUIDE_ARTICLES = {
     <h3>Setup</h3>
     <p>Go to <strong>Settings → Supabase Sync</strong>. You need a free Supabase account. Create a project at supabase.com, copy your project URL and anon/public key, and paste them in.</p>
     <h3>Required Tables</h3>
-    <p>Run this SQL in your Supabase SQL Editor to create the three tables BetIQ needs:</p>
+    <p>Run this SQL in your Supabase SQL Editor to create the three tables SlateRun needs:</p>
     <pre style="background:var(--bg4);border-radius:6px;padding:12px;font-size:11px;overflow-x:auto;line-height:1.6">create table betiq_bankroll (user_id text primary key, balance numeric default 1000);
 create table betiq_parlays (id text primary key, user_id text, date text, legs jsonb, stake numeric, odds integer, payout text, result text default 'pending');
 create table betiq_favorites (id text primary key, user_id text, sport text, team_id text, team_name text, team_abbr text, subreddit text);</pre>
@@ -3665,8 +3665,8 @@ create table betiq_favorites (id text primary key, user_id text, sport text, tea
       Lakers lose → receive $0 → <span style="color:var(--red)">-$65 loss</span>
     </div>
 
-    <h3>Reading the BetIQ Predictions Tab</h3>
-    <p>The Kalshi tab in BetIQ shows today's NBA and MLB games with model-generated win probabilities. These are calculated from Vegas moneylines (via ESPN PickCenter) or season win records when lines aren't available.</p>
+    <h3>Reading the SlateRun Predictions Tab</h3>
+    <p>The Kalshi tab in SlateRun shows today's NBA and MLB games with model-generated win probabilities. These are calculated from Vegas moneylines (via ESPN PickCenter) or season win records when lines aren't available.</p>
     <ul>
       <li><strong>Pick %</strong> — the model's estimated win probability for each team</li>
       <li><strong>Spread / O/U</strong> — Vegas lines from ESPN when available</li>
@@ -3674,21 +3674,21 @@ create table betiq_favorites (id text primary key, user_id text, sport text, tea
       <li><strong>L5</strong> — each team's record over their last 5 games</li>
     </ul>
 
-    <h3>Comparing BetIQ vs Kalshi Prices</h3>
-    <p>The most powerful use case: compare BetIQ's win probability against the live Kalshi contract price. If BetIQ says a team has a 72% chance of winning but the Kalshi Yes contract is trading at $0.60 (60%), that's a potential edge — the market is underpricing the favorite.</p>
+    <h3>Comparing SlateRun vs Kalshi Prices</h3>
+    <p>The most powerful use case: compare SlateRun's win probability against the live Kalshi contract price. If SlateRun says a team has a 72% chance of winning but the Kalshi Yes contract is trading at $0.60 (60%), that's a potential edge — the market is underpricing the favorite.</p>
     <div style="background:var(--bg4);border-radius:8px;padding:12px;margin:12px 0;font-size:13px;line-height:1.7">
       <strong>Spot the edge:</strong><br>
-      BetIQ model: Team A wins at <span style="color:var(--accent)">72%</span><br>
+      SlateRun model: Team A wins at <span style="color:var(--accent)">72%</span><br>
       Kalshi Yes price: <span style="color:var(--gold)">$0.60</span> (implied 60%)<br>
       Gap = +12% — potential value on the Yes side
     </div>
 
     <h3>Sport Filters</h3>
-    <p>Use the All Sports / NBA / MLB / NHL buttons at the top of the Kalshi tab to filter predictions by league. BetIQ currently generates predictions for NBA and MLB games only (NFL is offseason).</p>
+    <p>Use the All Sports / NBA / MLB / NHL buttons at the top of the Kalshi tab to filter predictions by league. SlateRun currently generates predictions for NBA and MLB games only (NFL is offseason).</p>
 
     <h3>Important Notes</h3>
     <ul>
-      <li>Kalshi requires an account and login to trade — BetIQ links you directly to their site</li>
+      <li>Kalshi requires an account and login to trade — SlateRun links you directly to their site</li>
       <li>Predictions are model-generated estimates, not financial advice</li>
       <li>Kalshi contract prices reflect real market consensus — they often differ from Vegas lines</li>
       <li>Start small while learning how contract pricing works</li>
@@ -3735,7 +3735,7 @@ function applySettingsBankroll() {
   const val = parseFloat(document.getElementById('settings-bankroll').value);
   if (!val || val <= 0) { toast('Enter a valid amount', 'error'); return; }
   state.bankroll = val;
-  localStorage.setItem('betiq_bankroll', val.toString());
+  localStorage.setItem('sr_bankroll', val.toString());
   updateBankrollDisplay();
   toast('Bankroll updated', 'success');
 }
@@ -4419,7 +4419,7 @@ async function loadSocialReddit(subreddit, sort) {
 
   try {
     const url = `https://www.reddit.com/r/${subreddit}/${activeSocialSort}.json?limit=25&raw_json=1${activeSocialSort==='top'?'&t=day':''}`;
-    const res = await fetch(url, {headers:{'User-Agent':'BetIQ/1.0'}});
+    const res = await fetch(url, {headers:{'User-Agent':'SlateRun/1.0'}});
     const data = await res.json();
     socialPostCache = (data?.data?.children?.map(c => c.data) || []).filter(p => !p.stickied);
     if (!socialPostCache.length) { container.innerHTML = '<div style="padding:24px;color:var(--text3)">No posts found.</div>'; return; }
@@ -4871,7 +4871,7 @@ Be direct and specific. No generic disclaimers.`;
   if (url && key && window.supabase) {
     try {
       sbClient = window.supabase.createClient(url, key);
-      const { error } = await sbClient.from('betiq_bankroll').select('balance').eq('user_id', SB_USER).single();
+      const { error } = await sbClient.from('sr_bankroll').select('balance').eq('user_id', SB_USER).single();
       if (!error) updateSyncIndicator(true);
       else sbClient = null;
     } catch(e) { sbClient = null; }
