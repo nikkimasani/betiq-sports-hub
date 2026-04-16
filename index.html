@@ -891,9 +891,9 @@ nav { align-items: center; }
         <span class="auth-toggle-sep">/</span>
         <span class="auth-toggle-item" id="auth-toggle-up" onclick="authMode('up')">Sign Up</span>
       </div>
-      <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email">
-      <input class="auth-input" id="auth-pass" type="password" placeholder="Password" autocomplete="current-password">
-      <input class="auth-input" id="auth-name" type="text" placeholder="Display name (optional)" style="display:none">
+      <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email" onkeyup="if(event.key==='Enter')authSubmit()">
+      <input class="auth-input" id="auth-pass" type="password" placeholder="Password" autocomplete="current-password" onkeyup="if(event.key==='Enter')authSubmit()">
+      <input class="auth-input" id="auth-name" type="text" placeholder="Display name (optional)" style="display:none" onkeyup="if(event.key==='Enter')authSubmit()">
       <button class="auth-btn-submit" id="auth-submit-btn" onclick="authSubmit()">SIGN IN</button>
       <div class="auth-error" id="auth-error"></div>
     </div>
@@ -5327,11 +5327,8 @@ document.addEventListener('keydown', function(e) {
   if (e.key !== 'Enter') return;
   const overlay = document.getElementById('auth-overlay');
   if (overlay && !overlay.classList.contains('hidden')) {
-    const box = document.getElementById('auth-box');
-    if (box && box.style.display !== 'none') {
-      e.preventDefault();
-      authSubmit();
-    }
+    e.preventDefault();
+    authSubmit();
   }
 }, true);
 
