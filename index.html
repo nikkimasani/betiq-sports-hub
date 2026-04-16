@@ -865,7 +865,7 @@ nav { align-items: center; }
 .auth-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:11px 14px;color:var(--text);font-size:14px;margin-bottom:10px;display:block;font-family:inherit;box-sizing:border-box}
 .auth-input:focus{outline:none;border-color:var(--accent)}
 .auth-btn-submit{width:100%;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:2px;cursor:pointer;margin-top:4px;transition:background .2s}
-.auth-btn-submit:hover{background:var(--accent2)}.auth-error{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
+.auth-btn-submit:hover{background:var(--accent2)}.auth-error{font-size:13px;font-weight:600;color:var(--red);margin-top:12px;min-height:20px;line-height:1.4}
 /* PROFILE PILL */
 .profile-pill{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 12px 4px 4px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);position:relative}
 .profile-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
@@ -5196,7 +5196,9 @@ async function authSubmit() {
   const pass = document.getElementById('auth-pass').value;
   const errEl = document.getElementById('auth-error');
   const btn = document.getElementById('auth-submit-btn');
+  errEl.style.color = 'var(--red)';
   if (!email || !pass) { errEl.textContent = 'Email and password required.'; return; }
+  if (pass.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
   btn.disabled = true;
   btn.textContent = '...';
   errEl.textContent = '';
@@ -5204,17 +5206,21 @@ async function authSubmit() {
     let res;
     if (_authMode === 'in') {
       res = await sb.auth.signInWithPassword({ email, password: pass });
+      if (res.error) throw res.error;
     } else {
       const name = document.getElementById('auth-name').value.trim() || email.split('@')[0];
       res = await sb.auth.signUp({ email, password: pass, options: { data: { display_name: name } } });
-    }
-    if (res.error) throw res.error;
-    if (_authMode === 'up' && !res.data.session) {
-      errEl.style.color = 'var(--accent)';
-      errEl.textContent = 'Check your email to confirm your account.';
-      btn.disabled = false;
-      btn.textContent = 'CREATE ACCOUNT';
-      return;
+      if (res.error) throw res.error;
+      if (!res.data.session) {
+        if (res.data.user?.identities?.length === 0) {
+          throw new Error('An account with this email already exists. Please sign in instead.');
+        }
+        errEl.style.color = 'var(--accent)';
+        errEl.textContent = 'Check your email to confirm your account.';
+        btn.disabled = false;
+        btn.textContent = 'CREATE ACCOUNT';
+        return;
+      }
     }
   } catch (e) {
     errEl.style.color = 'var(--red)';
