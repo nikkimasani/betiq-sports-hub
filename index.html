@@ -885,7 +885,7 @@ nav { align-items: center; }
     <div class="auth-tagline">Your Sports Betting Edge</div>
   </div>
   <div class="auth-right">
-    <div class="auth-box">
+    <div class="auth-box" id="auth-box">
       <div class="auth-toggle">
         <span class="auth-toggle-item active" id="auth-toggle-in" onclick="authMode('in')">Sign In</span>
         <span class="auth-toggle-sep">/</span>
@@ -896,6 +896,12 @@ nav { align-items: center; }
       <input class="auth-input" id="auth-name" type="text" placeholder="Display name (optional)" style="display:none">
       <button class="auth-btn-submit" id="auth-submit-btn" onclick="authSubmit()">SIGN IN</button>
       <div class="auth-error" id="auth-error"></div>
+    </div>
+    <div id="auth-pending" style="display:none;width:100%;max-width:320px;padding:0 32px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px">⏳</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:1px;margin-bottom:12px">PENDING APPROVAL</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:24px">Your account is awaiting admin approval. You'll get access to SlateRun once approved.</p>
+      <button onclick="signOut()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:9px 20px;color:var(--text2);font-size:13px;cursor:pointer">Sign Out</button>
     </div>
   </div>
 </div>
@@ -1478,12 +1484,16 @@ nav { align-items: center; }
     <div id="tab-admin" class="tab">
       <div style="max-width:700px;margin:0 auto">
         <div class="card-title" style="font-size:16px;margin-bottom:16px">Admin Panel</div>
+        <div class="card">
+          <div class="card-title">Pending Approvals</div>
+          <div id="admin-approvals-list"><div class="loading"><div class="spinner"></div><span>Loading...</span></div></div>
+        </div>
         <div class="card" id="admin-users-card">
-          <div class="card-title">Registered Users</div>
+          <div class="card-title">All Users</div>
           <div id="admin-users-list"><div class="loading"><div class="spinner"></div><span>Loading...</span></div></div>
         </div>
         <div class="card" id="admin-parlays-card">
-          <div class="card-title">Recent Parlays (All Users)</div>
+          <div class="card-title">Recent Parlays</div>
           <div id="admin-parlays-list"><div class="loading"><div class="spinner"></div><span>Loading...</span></div></div>
         </div>
       </div>
@@ -5221,6 +5231,13 @@ async function authSubmit() {
         btn.textContent = 'CREATE ACCOUNT';
         return;
       }
+      // Insert approval request for new user
+      await sb.from('user_approvals').insert({
+        user_id: res.data.user.id,
+        email: email,
+        app_name: 'slaterun',
+        status: 'pending'
+      });
     }
   } catch (e) {
     errEl.style.color = 'var(--red)';
@@ -5230,14 +5247,37 @@ async function authSubmit() {
   }
 }
 
-function onAuthStateChange(session) {
+async function checkApproval(user) {
+  if (user.email === ADMIN_EMAIL) return true;
+  const { data } = await sb.from('user_approvals')
+    .select('status')
+    .eq('user_id', user.id)
+    .eq('app_name', 'slaterun')
+    .single();
+  return data?.status === 'approved';
+}
+
+async function onAuthStateChange(session) {
   const overlay = document.getElementById('auth-overlay');
   const pill = document.getElementById('profile-pill');
   const adminBtn = document.getElementById('nav-admin-btn');
+  const authBox = document.getElementById('auth-box');
+  const authPending = document.getElementById('auth-pending');
   if (session && session.user) {
-    overlay.classList.add('hidden');
     const user = session.user;
     _currentUser = user;
+    const approved = await checkApproval(user);
+    if (!approved) {
+      overlay.classList.remove('hidden');
+      authBox.style.display = 'none';
+      authPending.style.display = 'block';
+      pill.style.display = 'none';
+      adminBtn.style.display = 'none';
+      return;
+    }
+    overlay.classList.add('hidden');
+    authBox.style.display = '';
+    authPending.style.display = 'none';
     const name = user.user_metadata?.display_name || user.email.split('@')[0];
     const initial = name.charAt(0).toUpperCase();
     document.getElementById('profile-avatar').textContent = initial;
@@ -5249,6 +5289,8 @@ function onAuthStateChange(session) {
   } else {
     _currentUser = null;
     overlay.classList.remove('hidden');
+    authBox.style.display = '';
+    authPending.style.display = 'none';
     pill.style.display = 'none';
     adminBtn.style.display = 'none';
     localStorage.removeItem('sr_user_id');
@@ -5287,8 +5329,36 @@ sb.auth.getSession().then(({ data: { session } }) => {
 async function initAdmin() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session || session.user.email !== ADMIN_EMAIL) return;
+  loadAdminApprovals();
   loadAdminUsers();
   loadAdminParlays();
+}
+
+async function loadAdminApprovals() {
+  const el = document.getElementById('admin-approvals-list');
+  const { data, error } = await sb.from('user_approvals')
+    .select('id, email, status, requested_at')
+    .eq('app_name', 'slaterun')
+    .order('requested_at', { ascending: false });
+  if (error || !data) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">Could not load approvals.</div>'; return; }
+  const pending = data.filter(r => r.status === 'pending');
+  if (!pending.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">No pending approvals.</div>'; return; }
+  el.innerHTML = pending.map(r => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:600">${r.email}</div>
+        <div style="font-size:11px;color:var(--text3)">${new Date(r.requested_at).toLocaleString()}</div>
+      </div>
+      <button onclick="approveUser('${r.id}')" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">APPROVE</button>
+    </div>`).join('');
+}
+
+async function approveUser(approvalId) {
+  await sb.from('user_approvals')
+    .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+    .eq('id', approvalId);
+  loadAdminApprovals();
+  loadAdminUsers();
 }
 
 async function loadAdminUsers() {
