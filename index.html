@@ -2097,11 +2097,14 @@ function placeMockBet() {
   localStorage.setItem('sr_history', JSON.stringify(state.parlayHistory));
   localStorage.setItem('sr_bankroll', state.bankroll.toString());
   updateBankrollDisplay();
+  const legCount = state.slip.length;
   clearSlip();
-  toast(`Parlay placed! ${state.slip.length}-leg @ ${formatOdds(combined)}`, 'success');
   state.slip = [];
   renderSlip();
   updateDashboardStats();
+  toast(`Parlay placed! ${legCount}-leg @ ${formatOdds(combined)}`, 'success');
+  syncParlayToSupabase(parlay);
+  syncBankrollToSupabase();
 }
 
 // ─── TRACKER ─────────────────────────────────────────────────────────────────
@@ -3422,22 +3425,22 @@ async function loadTeamReddit(team) {
 
 // ─── SUPABASE SYNC ────────────────────────────────────────────────────────────
 async function syncParlayToSupabase(parlay) {
-  if (!sb || !state.user) return;
-  try { await sb.from('betiq_parlays').upsert({...parlay, user_id: state.user.id, legs: JSON.stringify(parlay.legs)}); } catch(e) {}
+  if (!_currentUser) return;
+  try { await sb.from('betiq_parlays').upsert({...parlay, user_id: _currentUser.id, legs: JSON.stringify(parlay.legs)}); } catch(e) {}
 }
 
 async function syncFavoritesToSupabase() {
-  if (!sb || !state.user) return;
+  if (!_currentUser) return;
   try {
-    await sb.from('betiq_favorites').delete().eq('user_id', state.user.id);
-    const rows = favTeams.map(t => ({id: state.user.id+'_'+t.sport+'_'+t.id, user_id: state.user.id, ...t}));
+    await sb.from('betiq_favorites').delete().eq('user_id', _currentUser.id);
+    const rows = favTeams.map(t => ({id: _currentUser.id+'_'+t.sport+'_'+t.id, user_id: _currentUser.id, ...t}));
     if (rows.length) await sb.from('betiq_favorites').insert(rows);
   } catch(e) {}
 }
 
 async function syncBankrollToSupabase() {
-  if (!sb || !state.user) return;
-  try { await sb.from('betiq_bankroll').upsert({ user_id: state.user.id, balance: state.bankroll }); } catch(e) {}
+  if (!_currentUser) return;
+  try { await sb.from('betiq_bankroll').upsert({ user_id: _currentUser.id, balance: state.bankroll }); } catch(e) {}
 }
 
 // ─── GUIDE ────────────────────────────────────────────────────────────────────
@@ -5173,6 +5176,7 @@ function answerLearnQ(typeId, typeIdx, qIdx, optIdx) {
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 let _authMode = 'in';
+let _currentUser = null;
 
 function authMode(mode) {
   _authMode = mode;
@@ -5223,6 +5227,7 @@ function onAuthStateChange(session) {
   if (session && session.user) {
     overlay.classList.add('hidden');
     const user = session.user;
+    _currentUser = user;
     const name = user.user_metadata?.display_name || user.email.split('@')[0];
     const initial = name.charAt(0).toUpperCase();
     document.getElementById('profile-avatar').textContent = initial;
@@ -5232,6 +5237,7 @@ function onAuthStateChange(session) {
     adminBtn.style.display = isAdmin ? '' : 'none';
     localStorage.setItem('sr_user_id', user.id);
   } else {
+    _currentUser = null;
     overlay.classList.remove('hidden');
     pill.style.display = 'none';
     adminBtn.style.display = 'none';
