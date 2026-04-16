@@ -891,10 +891,12 @@ nav { align-items: center; }
         <span class="auth-toggle-sep">/</span>
         <span class="auth-toggle-item" id="auth-toggle-up" onclick="authMode('up')">Sign Up</span>
       </div>
-      <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email" onkeydown="if(event.key==='Enter')authSubmit()">
-      <input class="auth-input" id="auth-pass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
-      <input class="auth-input" id="auth-name" type="text" placeholder="Display name (optional)" style="display:none" onkeydown="if(event.key==='Enter')authSubmit()">
-      <button class="auth-btn-submit" id="auth-submit-btn" onclick="authSubmit()">SIGN IN</button>
+      <form onsubmit="authSubmit();return false;">
+        <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email">
+        <input class="auth-input" id="auth-pass" type="password" placeholder="Password" autocomplete="current-password">
+        <input class="auth-input" id="auth-name" type="text" placeholder="Display name (optional)" style="display:none">
+        <button class="auth-btn-submit" id="auth-submit-btn" type="submit">SIGN IN</button>
+      </form>
       <div class="auth-error" id="auth-error"></div>
     </div>
     <div id="auth-pending" style="display:none;width:100%;max-width:320px;padding:0 32px;text-align:center">
