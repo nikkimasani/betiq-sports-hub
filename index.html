@@ -5295,7 +5295,7 @@ async function loadAdminUsers() {
 
 async function loadAdminParlays() {
   const el = document.getElementById('admin-parlays-list');
-  const { data, error } = await sb.from('parlays').select('user_id, legs, stake, payout, placed_at').order('placed_at', { ascending: false }).limit(30);
+  const { data, error } = await sb.from('betiq_parlays').select('user_id, legs, stake, payout, date').order('date', { ascending: false }).limit(30);
   if (error || !data) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">Could not load parlays.</div>'; return; }
   if (!data.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">No parlays yet.</div>'; return; }
   el.innerHTML = data.map(p => `
@@ -5304,7 +5304,7 @@ async function loadAdminParlays() {
       — ${Array.isArray(p.legs) ? p.legs.length : '?'}-leg parlay
       · <strong style="color:var(--accent)">$${p.stake}</strong>
       → $${p.payout}
-      <span style="color:var(--text3);float:right">${new Date(p.placed_at).toLocaleDateString()}</span>
+      <span style="color:var(--text3);float:right">${new Date(p.date).toLocaleDateString()}</span>
     </div>`).join('');
 }
 
