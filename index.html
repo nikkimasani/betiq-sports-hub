@@ -851,14 +851,68 @@ nav { align-items: center; }
 .learn-q-opt.correct { border-color:var(--accent); background:rgba(255,61,0,.12); color:var(--accent); font-weight:700; }
 .learn-q-opt.wrong { border-color:var(--red); background:rgba(231,68,68,.1); color:var(--red); }
 .learn-score { font-size:13px; font-weight:700; margin-top:10px; padding:8px 12px; border-radius:7px; background:var(--bg3); display:none; }
+/* AUTH OVERLAY */
+.auth-overlay{position:fixed;inset:0;z-index:500;display:flex}.auth-overlay.hidden{display:none}
+.auth-left{width:42%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:40px}
+.auth-right{flex:1;background:#111;display:flex;align-items:center;justify-content:center}
+.auth-logo{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:900;letter-spacing:4px;color:#fff;line-height:1}
+.auth-logo span{color:#000}.auth-tagline{font-size:11px;color:rgba(0,0,0,.45);letter-spacing:3px;text-transform:uppercase;margin-top:10px}
+.auth-box{width:100%;max-width:320px;padding:0 32px}
+.auth-toggle{display:flex;gap:12px;align-items:center;margin-bottom:28px}
+.auth-toggle-item{font-size:14px;font-weight:600;color:var(--text3);cursor:pointer;transition:color .2s}
+.auth-toggle-item.active{color:var(--text)}
+.auth-toggle-sep{color:var(--text3)}
+.auth-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:11px 14px;color:var(--text);font-size:14px;margin-bottom:10px;display:block;font-family:inherit;box-sizing:border-box}
+.auth-input:focus{outline:none;border-color:var(--accent)}
+.auth-btn-submit{width:100%;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;letter-spacing:2px;cursor:pointer;margin-top:4px;transition:background .2s}
+.auth-btn-submit:hover{background:var(--accent2)}.auth-error{font-size:12px;color:var(--red);margin-top:10px;min-height:18px}
+/* PROFILE PILL */
+.profile-pill{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 12px 4px 4px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);position:relative}
+.profile-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+.profile-name{font-size:13px;font-weight:600;color:var(--text)}
+.profile-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:4px;z-index:200;min-width:130px;display:none}
+.profile-dropdown.open{display:block}
+.profile-dropdown-item{padding:9px 16px;font-size:13px;cursor:pointer;border-radius:5px;color:var(--text2);transition:all .15s}
+.profile-dropdown-item:hover{background:var(--bg3);color:var(--red)}
 </style>
 </head>
 <body>
 
+<!-- AUTH OVERLAY -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-left">
+    <div class="auth-logo">SLATE<span>RUN</span></div>
+    <div class="auth-tagline">Your Sports Betting Edge</div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-box">
+      <div class="auth-toggle">
+        <span class="auth-toggle-item active" id="auth-toggle-in" onclick="authMode('in')">Sign In</span>
+        <span class="auth-toggle-sep">/</span>
+        <span class="auth-toggle-item" id="auth-toggle-up" onclick="authMode('up')">Sign Up</span>
+      </div>
+      <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email">
+      <input class="auth-input" id="auth-pass" type="password" placeholder="Password" autocomplete="current-password">
+      <input class="auth-input" id="auth-name" type="text" placeholder="Display name (optional)" style="display:none">
+      <button class="auth-btn-submit" id="auth-submit-btn" onclick="authSubmit()">SIGN IN</button>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="logo">SLATE<span>RUN</span></div>
-  <div class="bankroll-badge" onclick="openBankrollModal()">
-    Virtual Bank: <strong id="bankroll-display">$1,000.00</strong>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="bankroll-badge" onclick="openBankrollModal()">
+      Virtual Bank: <strong id="bankroll-display">$1,000.00</strong>
+    </div>
+    <div class="profile-pill" id="profile-pill" onclick="toggleProfileDropdown()" style="display:none">
+      <div class="profile-avatar" id="profile-avatar">N</div>
+      <span class="profile-name" id="profile-name">User</span>
+      <div class="profile-dropdown" id="profile-dropdown">
+        <div class="profile-dropdown-item" onclick="signOut()">Sign Out</div>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -885,6 +939,7 @@ nav { align-items: center; }
   <button class="nav-btn" data-tab="practice" onclick="switchTab('practice')">Practice</button>
   <!-- Settings pushed right -->
   <div class="nav-spacer"></div>
+  <button class="nav-btn" id="nav-admin-btn" data-tab="admin" onclick="switchTab('admin')" style="display:none;color:var(--gold)">Admin</button>
   <button class="nav-btn" data-tab="settings" onclick="switchTab('settings')">⚙️</button>
 </nav>
 
@@ -1418,6 +1473,22 @@ nav { align-items: center; }
         <div id="learn-cards-container"></div>
       </div>
     </div>
+
+    <!-- ADMIN -->
+    <div id="tab-admin" class="tab">
+      <div style="max-width:700px;margin:0 auto">
+        <div class="card-title" style="font-size:16px;margin-bottom:16px">Admin Panel</div>
+        <div class="card" id="admin-users-card">
+          <div class="card-title">Registered Users</div>
+          <div id="admin-users-list"><div class="loading"><div class="spinner"></div><span>Loading...</span></div></div>
+        </div>
+        <div class="card" id="admin-parlays-card">
+          <div class="card-title">Recent Parlays (All Users)</div>
+          <div id="admin-parlays-list"><div class="loading"><div class="spinner"></div><span>Loading...</span></div></div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /main -->
 
   <!-- BET SLIP SIDEBAR -->
@@ -1564,6 +1635,7 @@ function switchTab(name) {
   if (name === 'kalshi') initKalshi();
   if (name === 'calculator') initCalculators();
   if (name === 'practice') initPractice();
+  if (name === 'admin') initAdmin();
   if (name !== 'agent') stopLivePoll();
 }
 
@@ -5097,6 +5169,137 @@ function answerLearnQ(typeId, typeIdx, qIdx, optIdx) {
       scoreEl.style.color = wins === type.quiz.length ? 'var(--accent)' : wins >= 2 ? 'var(--gold)' : 'var(--red)';
     }
   }
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+let _authMode = 'in';
+
+function authMode(mode) {
+  _authMode = mode;
+  document.getElementById('auth-toggle-in').classList.toggle('active', mode === 'in');
+  document.getElementById('auth-toggle-up').classList.toggle('active', mode === 'up');
+  document.getElementById('auth-submit-btn').textContent = mode === 'in' ? 'SIGN IN' : 'CREATE ACCOUNT';
+  document.getElementById('auth-name').style.display = mode === 'up' ? 'block' : 'none';
+  document.getElementById('auth-error').textContent = '';
+}
+
+async function authSubmit() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  const errEl = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-submit-btn');
+  if (!email || !pass) { errEl.textContent = 'Email and password required.'; return; }
+  btn.disabled = true;
+  btn.textContent = '...';
+  errEl.textContent = '';
+  try {
+    let res;
+    if (_authMode === 'in') {
+      res = await sb.auth.signInWithPassword({ email, password: pass });
+    } else {
+      const name = document.getElementById('auth-name').value.trim() || email.split('@')[0];
+      res = await sb.auth.signUp({ email, password: pass, options: { data: { display_name: name } } });
+    }
+    if (res.error) throw res.error;
+    if (_authMode === 'up' && !res.data.session) {
+      errEl.style.color = 'var(--accent)';
+      errEl.textContent = 'Check your email to confirm your account.';
+      btn.disabled = false;
+      btn.textContent = 'CREATE ACCOUNT';
+      return;
+    }
+  } catch (e) {
+    errEl.style.color = 'var(--red)';
+    errEl.textContent = e.message || 'Auth failed.';
+    btn.disabled = false;
+    btn.textContent = _authMode === 'in' ? 'SIGN IN' : 'CREATE ACCOUNT';
+  }
+}
+
+function onAuthStateChange(session) {
+  const overlay = document.getElementById('auth-overlay');
+  const pill = document.getElementById('profile-pill');
+  const adminBtn = document.getElementById('nav-admin-btn');
+  if (session && session.user) {
+    overlay.classList.add('hidden');
+    const user = session.user;
+    const name = user.user_metadata?.display_name || user.email.split('@')[0];
+    const initial = name.charAt(0).toUpperCase();
+    document.getElementById('profile-avatar').textContent = initial;
+    document.getElementById('profile-name').textContent = name;
+    pill.style.display = 'flex';
+    const isAdmin = user.email === ADMIN_EMAIL;
+    adminBtn.style.display = isAdmin ? '' : 'none';
+    localStorage.setItem('sr_user_id', user.id);
+  } else {
+    overlay.classList.remove('hidden');
+    pill.style.display = 'none';
+    adminBtn.style.display = 'none';
+    localStorage.removeItem('sr_user_id');
+  }
+}
+
+function toggleProfileDropdown() {
+  document.getElementById('profile-dropdown').classList.toggle('open');
+}
+
+async function signOut() {
+  document.getElementById('profile-dropdown').classList.remove('open');
+  await sb.auth.signOut();
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const pill = document.getElementById('profile-pill');
+  if (pill && !pill.contains(e.target)) {
+    document.getElementById('profile-dropdown').classList.remove('open');
+  }
+});
+
+// Boot: listen for auth changes
+sb.auth.onAuthStateChange((_event, session) => {
+  onAuthStateChange(session);
+  if (_event === 'SIGNED_IN' && state.currentTab === 'admin') initAdmin();
+});
+
+// Check existing session on load
+sb.auth.getSession().then(({ data: { session } }) => {
+  onAuthStateChange(session);
+});
+
+// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
+async function initAdmin() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session || session.user.email !== ADMIN_EMAIL) return;
+  loadAdminUsers();
+  loadAdminParlays();
+}
+
+async function loadAdminUsers() {
+  const el = document.getElementById('admin-users-list');
+  const { data, error } = await sb.from('profiles').select('id, email, display_name, created_at').order('created_at', { ascending: false });
+  if (error || !data) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">Could not load users.</div>'; return; }
+  if (!data.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">No users yet.</div>'; return; }
+  el.innerHTML = data.map(u => `
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${u.display_name || '—'} <span style="color:var(--text3)">(${u.email || u.id.slice(0,8)})</span></span>
+      <span style="color:var(--text3)">${new Date(u.created_at).toLocaleDateString()}</span>
+    </div>`).join('');
+}
+
+async function loadAdminParlays() {
+  const el = document.getElementById('admin-parlays-list');
+  const { data, error } = await sb.from('parlays').select('user_id, legs, stake, payout, placed_at').order('placed_at', { ascending: false }).limit(30);
+  if (error || !data) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">Could not load parlays.</div>'; return; }
+  if (!data.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">No parlays yet.</div>'; return; }
+  el.innerHTML = data.map(p => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:var(--text2)">${p.user_id.slice(0,8)}…</span>
+      — ${Array.isArray(p.legs) ? p.legs.length : '?'}-leg parlay
+      · <strong style="color:var(--accent)">$${p.stake}</strong>
+      → $${p.payout}
+      <span style="color:var(--text3);float:right">${new Date(p.placed_at).toLocaleDateString()}</span>
+    </div>`).join('');
 }
 
 </script>
