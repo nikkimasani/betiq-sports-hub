@@ -1011,6 +1011,7 @@ nav { align-items: center; }
       <!-- View sub-tabs -->
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button class="scores-view-btn active" id="svb-scores" onclick="selectScoresView('scores')">📅 Scores</button>
+        <button class="scores-view-btn" id="svb-standings" onclick="selectScoresView('standings')">🏆 Standings</button>
         <button class="scores-view-btn" id="svb-stats" onclick="selectScoresView('stats')">📊 Stats & Leaders</button>
         <button class="scores-view-btn" id="svb-builder" onclick="selectScoresView('builder')">🔧 Stats Builder</button>
       </div>
@@ -1048,6 +1049,15 @@ nav { align-items: center; }
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- STANDINGS VIEW -->
+      <div id="scores-view-standings" style="display:none">
+        <div class="section-header">
+          <div class="section-title" id="standings-title">NBA Standings</div>
+          <div class="section-action" onclick="loadStandings(state.currentSport)">↻ Refresh</div>
+        </div>
+        <div id="standings-container"><div class="loading"><div class="spinner"></div><span>Loading standings...</span></div></div>
       </div>
 
       <!-- STATS & LEADERS VIEW -->
@@ -1866,6 +1876,7 @@ function selectSport(sport) {
   document.querySelectorAll('#tab-scores .sport-tab').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   if (currentScoresView === 'stats') loadLeaders(sport);
+  else if (currentScoresView === 'standings') loadStandings(sport);
   else loadScores(sport);
 }
 
@@ -2810,11 +2821,12 @@ let liveRefreshTimer = null;
 
 function selectScoresView(view) {
   currentScoresView = view;
-  ['scores','stats','builder'].forEach(v => {
+  ['scores','standings','stats','builder'].forEach(v => {
     document.getElementById('scores-view-' + v).style.display = v === view ? '' : 'none';
     document.getElementById('svb-' + v).classList.toggle('active', v === view);
   });
   if (view === 'stats') loadLeaders(state.currentSport);
+  if (view === 'standings') loadStandings(state.currentSport);
 }
 
 // ─── GAME DETAIL (PLAY-BY-PLAY + BOXSCORE) ───────────────────────────────────
@@ -3253,6 +3265,57 @@ async function loadLeaders(sport) {
       </div>`).join('')}</div>`;
   } catch(e) {
     el.innerHTML = '<div style="color:var(--text3);padding:16px">Could not load leaders. Try refreshing.</div>';
+  }
+}
+
+// ─── STANDINGS ────────────────────────────────────────────────────────────────
+async function loadStandings(sport) {
+  const el = document.getElementById('standings-container');
+  document.getElementById('standings-title').textContent = `${SPORTS[sport].emoji} ${SPORTS[sport].label} Standings`;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading standings...</span></div>';
+  try {
+    const data = await (await fetch(`https://site.api.espn.com/apis/site/v2/sports/${SPORTS[sport].espn}/standings`)).json();
+    const groups = data.children || (data.standings ? [data] : []);
+    if (!groups.length) { el.innerHTML = '<div style="color:var(--text3);padding:16px">No standings available.</div>'; return; }
+
+    const statNames = { wins: 'W', losses: 'L', winPercent: 'PCT', gamesBehind: 'GB', streak: 'STK' };
+    const wantedStats = sport === 'mlb' ? ['wins','losses','winPercent','gamesBehind'] : ['wins','losses','winPercent','gamesBehind','streak'];
+
+    el.innerHTML = groups.map(group => {
+      const entries = group.standings?.entries || [];
+      const headers = wantedStats.map(s => statNames[s] || s);
+      return `
+        <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+          <div style="padding:10px 14px;background:var(--bg4);font-size:13px;font-weight:800;color:var(--gold);border-bottom:1px solid var(--border)">${esc(group.name || group.abbreviation || '')}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border)">
+                <th style="text-align:left;padding:7px 14px;color:var(--text3);font-size:11px;font-weight:700">#</th>
+                <th style="text-align:left;padding:7px 8px;color:var(--text3);font-size:11px;font-weight:700">Team</th>
+                ${headers.map(h => `<th style="text-align:center;padding:7px 10px;color:var(--text3);font-size:11px;font-weight:700">${h}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${entries.map((entry, i) => {
+                const team = entry.team || {};
+                const stats = entry.stats || [];
+                const getStat = name => { const s = stats.find(x => x.name === name); return s ? (s.displayValue || String(s.value)) : '—'; };
+                const pct = parseFloat(getStat('winPercent')) || 0;
+                const isFirst = i === 0;
+                return `<tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:7px 14px;color:var(--text3);font-size:12px">${i + 1}</td>
+                  <td style="padding:7px 8px;font-weight:${isFirst ? '800' : '600'};color:${isFirst ? 'var(--gold)' : 'var(--text)'}">
+                    ${esc(team.abbreviation || team.displayName || '—')}
+                  </td>
+                  ${wantedStats.map(s => `<td style="text-align:center;padding:7px 10px;color:${s==='winPercent'?(pct>=.600?'var(--green)':pct<=.400?'var(--red)':'var(--text2)'):'var(--text2)'}">${getStat(s)}</td>`).join('')}
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--text3);padding:16px">Could not load standings. Try refreshing.</div>';
   }
 }
 
