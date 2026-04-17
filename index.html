@@ -3274,7 +3274,7 @@ async function loadStandings(sport) {
   document.getElementById('standings-title').textContent = `${SPORTS[sport].emoji} ${SPORTS[sport].label} Standings`;
   el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading standings...</span></div>';
   try {
-    const data = await (await fetch(`https://site.api.espn.com/apis/site/v2/sports/${SPORTS[sport].espn}/standings`)).json();
+    const data = await (await fetch(`https://site.api.espn.com/apis/v2/sports/${SPORTS[sport].espn}/standings`)).json();
     const groups = data.children || (data.standings ? [data] : []);
     if (!groups.length) { el.innerHTML = '<div style="color:var(--text3);padding:16px">No standings available.</div>'; return; }
 
