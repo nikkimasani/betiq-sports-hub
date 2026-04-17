@@ -1816,16 +1816,18 @@ function gameCard(sport, event, withOdds = false) {
 
   const awayQuick = (isFinal || isLive) ? teamQuickStat(away) : '';
   const homeQuick = (isFinal || isLive) ? teamQuickStat(home) : '';
+  const awayRec = away?.records?.[0]?.summary || '';
+  const homeRec = home?.records?.[0]?.summary || '';
 
   return `<div class="score-card" ${clickable} style="${!withOdds?'cursor:pointer':''}">
     <div class="game-status ${statusClass}">${statusLabel}</div>
     <div class="team-row">
-      <div class="team-name">${esc(away ? away.team.displayName : 'TBD')}</div>
+      <div><div class="team-name">${esc(away ? away.team.displayName : 'TBD')}</div>${awayRec ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${awayRec}</div>` : ''}</div>
       <div class="team-score ${awayWin?'winning':''}">${isFinal||isLive?awayScore:''}</div>
     </div>
     ${awayQuick ? `<div style="font-size:10px;color:var(--text3);padding:0 4px 2px;text-align:right">${awayQuick}</div>` : ''}
     <div class="team-row">
-      <div class="team-name">${esc(home ? home.team.displayName : 'TBD')}</div>
+      <div><div class="team-name">${esc(home ? home.team.displayName : 'TBD')}</div>${homeRec ? `<div style="font-size:10px;color:var(--text3);margin-top:1px">${homeRec}</div>` : ''}</div>
       <div class="team-score ${homeWin?'winning':''}">${isFinal||isLive?homeScore:''}</div>
     </div>
     ${homeQuick ? `<div style="font-size:10px;color:var(--text3);padding:0 4px 4px;text-align:right">${homeQuick}</div>` : ''}
