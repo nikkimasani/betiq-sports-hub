@@ -874,6 +874,43 @@ nav { align-items: center; }
 .profile-dropdown.open{display:block}
 .profile-dropdown-item{padding:9px 16px;font-size:13px;cursor:pointer;border-radius:5px;color:var(--text2);transition:all .15s}
 .profile-dropdown-item:hover{background:var(--bg3);color:var(--red)}
+
+/* Fan Hub */
+.fh-ticker { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0; overflow: hidden; white-space: nowrap; height: 36px; display: flex; align-items: center; }
+.fh-ticker-inner { display: inline-flex; gap: 28px; animation: tickerScroll 30s linear infinite; padding: 0 20px; }
+.fh-ticker-inner:hover { animation-play-state: paused; }
+@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.fh-ticker-game { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; cursor: default; }
+.fh-ticker-live { color: var(--red); font-weight: 700; font-size: 10px; }
+.fh-sport-pills { display: flex; gap: 8px; margin: 16px 0 12px; flex-wrap: wrap; }
+.fh-pill { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg2); color: var(--text2); font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s; letter-spacing: .5px; }
+.fh-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.fh-breaking { background: linear-gradient(135deg, rgba(255,61,0,.15), rgba(255,61,0,.05)); border: 1px solid rgba(255,61,0,.35); border-radius: 10px; padding: 20px; margin-bottom: 20px; display: flex; gap: 16px; }
+.fh-breaking img { width: 140px; height: 90px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.fh-breaking-badge { background: var(--red); color: #fff; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; padding: 2px 8px; border-radius: 3px; display: inline-block; margin-bottom: 8px; }
+.fh-news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.fh-news-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; cursor: pointer; transition: border-color .2s; text-decoration: none; display: block; }
+.fh-news-card:hover { border-color: var(--accent); }
+.fh-news-card img { width: 100%; height: 150px; object-fit: cover; display: block; }
+.fh-news-card-body { padding: 12px; }
+.fh-news-card-headline { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 8px; }
+.fh-news-card-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text3); }
+.fh-section-title { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--text3); text-transform: uppercase; margin: 20px 0 12px; }
+.fh-reddit-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: flex; gap: 14px; align-items: flex-start; margin-bottom: 8px; }
+.fh-reddit-score { font-size: 11px; font-weight: 700; color: var(--accent); min-width: 36px; text-align: center; }
+.fh-reddit-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.fh-reddit-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* Tracker stats */
+.tracker-stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.tracker-stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; text-align: center; }
+.tracker-stat-val { font-size: 20px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; }
+.tracker-stat-lbl { font-size: 10px; color: var(--text3); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+.wl-history-bar { display: flex; gap: 4px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.wl-dot { width: 20px; height: 20px; border-radius: 4px; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; color: #fff; }
+.wl-dot.win { background: var(--accent); }
+.wl-dot.loss { background: var(--red); }
+.wl-dot.pending { background: var(--bg4); color: var(--text3); }
 </style>
 </head>
 <body>
@@ -927,6 +964,7 @@ nav { align-items: center; }
   <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
   <button class="nav-btn" data-tab="scores" onclick="switchTab('scores')">Scores</button>
   <button class="nav-btn" data-tab="news" onclick="switchTab('news')">News</button>
+  <button class="nav-btn" data-tab="fanhub" onclick="switchTab('fanhub')">🔥 Fan Hub</button>
   <div class="nav-divider"></div>
   <!-- Betting -->
   <button class="nav-btn" data-tab="parlay" onclick="switchTab('parlay')">Parlay Builder</button>
@@ -975,6 +1013,11 @@ nav { align-items: center; }
           <div class="stat-value" id="dash-profit">$0</div>
           <div class="stat-sub">Virtual P&L</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-label">Win Streak</div>
+          <div class="stat-value" id="dash-streak">—</div>
+          <div class="stat-sub">Consecutive wins</div>
+        </div>
       </div>
 
       <div class="platform-links-bar">
@@ -987,6 +1030,14 @@ nav { align-items: center; }
         <a href="https://app.prizepicks.com/" target="_blank" class="platform-link-btn pl-pp">
           <span class="pl-dot" style="background:#a87cf7"></span>PrizePicks
         </a>
+      </div>
+
+      <div class="section-header" style="margin-top:4px">
+        <div class="section-title">⚡ Parlay of the Day</div>
+        <button class="section-action" onclick="generateParlayOfDay()" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:12px;font-weight:700">↺ Regenerate</button>
+      </div>
+      <div class="card" id="potd-container">
+        <div style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Loading today's suggested parlay...</div>
       </div>
 
       <div class="section-header">
@@ -1123,6 +1174,27 @@ nav { align-items: center; }
       <div class="card" id="news-container">
         <div class="loading"><div class="spinner"></div><span>Loading news...</span></div>
       </div>
+    </div>
+
+    <!-- FAN HUB -->
+    <div id="tab-fanhub" class="tab">
+      <div class="fh-ticker" id="fh-ticker">
+        <div class="fh-ticker-inner" id="fh-ticker-inner">
+          <span class="fh-ticker-game"><span class="fh-ticker-live">LIVE</span> Loading scores...</span>
+        </div>
+      </div>
+      <div class="fh-sport-pills">
+        <button class="fh-pill active" onclick="filterFanHub('all')">All</button>
+        <button class="fh-pill" onclick="filterFanHub('nba')">🏀 NBA</button>
+        <button class="fh-pill" onclick="filterFanHub('nfl')">🏈 NFL</button>
+        <button class="fh-pill" onclick="filterFanHub('mlb')">⚾ MLB</button>
+      </div>
+      <div id="fh-breaking-slot"></div>
+      <div id="fh-news-grid" class="fh-news-grid"></div>
+      <div class="fh-section-title">⭐ Your Teams</div>
+      <div id="fh-myteams-feed"></div>
+      <div class="fh-section-title">🔥 Trending on Reddit</div>
+      <div id="fh-reddit-feed"></div>
     </div>
 
     <!-- SOCIAL / X FEED -->
@@ -1380,6 +1452,7 @@ nav { align-items: center; }
         <button class="agent-tab-btn active" onclick="switchAgentView('search')">🔍 Player Search</button>
         <button class="agent-tab-btn" onclick="switchAgentView('compare')">⚖️ Team Compare</button>
         <button class="agent-tab-btn" onclick="switchAgentView('live')">📡 Live Poll</button>
+        <button class="agent-tab-btn" onclick="switchAgentView('injuries')">🏥 Injuries</button>
       </div>
 
       <!-- PLAYER SEARCH -->
@@ -1434,6 +1507,16 @@ nav { align-items: center; }
         <div id="live-poll-container">
           <div class="agent-empty">Loading scores across all sports...</div>
         </div>
+      </div>
+
+      <!-- INJURIES -->
+      <div id="agent-injuries" class="agent-view">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="sport-tab active" id="inj-tab-nba" onclick="selectInjurySport('nba')">🏀 NBA</button>
+          <button class="sport-tab" id="inj-tab-nfl" onclick="selectInjurySport('nfl')">🏈 NFL</button>
+          <button class="sport-tab" id="inj-tab-mlb" onclick="selectInjurySport('mlb')">⚾ MLB</button>
+        </div>
+        <div id="injuries-container"><div class="loading"><div class="spinner"></div><span>Loading injury report...</span></div></div>
       </div>
     </div>
 
@@ -1648,6 +1731,7 @@ function switchTab(name) {
   state.currentTab = name;
   if (name === 'scores') { loadScoresAutoDetect(); startScoresAutoRefresh(); } else { stopScoresAutoRefresh(); }
   if (name === 'news') loadNews(state.currentNewsSport);
+  if (name === 'fanhub') initFanHub();
   if (name === 'parlay') loadParlayGames(state.currentParlayTab);
   if (name === 'tracker') renderTracker();
   if (name === 'knowledge') renderKnowledge();
@@ -2141,10 +2225,54 @@ function renderTracker() {
     el.innerHTML = '<div class="card" style="text-align:center;color:var(--text3);padding:32px">No parlays yet. Build one in the Parlay Builder tab!</div>';
     return;
   }
-  el.innerHTML = state.parlayHistory.map(p => {
+
+  // Compute stats
+  const settled = state.parlayHistory.filter(p => p.result !== 'pending');
+  const wins = settled.filter(p => p.result === 'win');
+  const losses = settled.filter(p => p.result === 'loss');
+  const totalStaked = settled.reduce((s, p) => s + p.stake, 0);
+  const totalReturn = wins.reduce((s, p) => s + parseFloat(p.payout), 0);
+  const roi = totalStaked > 0 ? (((totalReturn - totalStaked) / totalStaked) * 100).toFixed(1) + '%' : '—';
+  const profit = totalReturn - totalStaked;
+  let streak = 0;
+  for (let i = state.parlayHistory.length - 1; i >= 0; i--) {
+    if (state.parlayHistory[i].result === 'win') streak++;
+    else if (state.parlayHistory[i].result === 'loss') break;
+  }
+
+  // W/L history dots (last 15)
+  const last15 = state.parlayHistory.slice(0, 15);
+  const dots = last15.map(p => {
+    const cls = p.result === 'win' ? 'win' : p.result === 'loss' ? 'loss' : 'pending';
+    const lbl = p.result === 'win' ? 'W' : p.result === 'loss' ? 'L' : '·';
+    return `<div class="wl-dot ${cls}" title="${p.result}">${lbl}</div>`;
+  }).join('');
+
+  const statsBar = `
+    <div class="tracker-stats-bar">
+      <div class="tracker-stat">
+        <div class="tracker-stat-val" style="color:var(--gold)">${streak > 0 ? streak + '🔥' : '—'}</div>
+        <div class="tracker-stat-lbl">Win Streak</div>
+      </div>
+      <div class="tracker-stat">
+        <div class="tracker-stat-val">${wins.length}–${losses.length}</div>
+        <div class="tracker-stat-lbl">W–L Record</div>
+      </div>
+      <div class="tracker-stat">
+        <div class="tracker-stat-val" style="color:${parseFloat(roi)>=0?'var(--accent)':'var(--red)'}">${roi}</div>
+        <div class="tracker-stat-lbl">ROI</div>
+      </div>
+      <div class="tracker-stat">
+        <div class="tracker-stat-val" style="color:${profit>=0?'var(--accent)':'var(--red)'}">${profit>=0?'+':''}$${Math.abs(profit).toFixed(0)}</div>
+        <div class="tracker-stat-lbl">Net Profit</div>
+      </div>
+    </div>
+    <div class="wl-history-bar">${dots}</div>`;
+
+  const list = state.parlayHistory.map(p => {
     const legs = p.legs.map(l => `<div style="font-size:12px;color:var(--text2);margin:2px 0">${SPORTS[l.sport]?.emoji || ''} ${esc(l.label)} <span style="color:var(--accent)">${formatOdds(l.odds)}</span></div>`).join('');
     const resultClass = p.result === 'win' ? 'result-win' : p.result === 'loss' ? 'result-loss' : 'result-pending';
-    const profit = p.result === 'win' ? `+$${(parseFloat(p.payout)-p.stake).toFixed(2)}` : p.result === 'loss' ? `-$${p.stake}` : 'Pending';
+    const profitStr = p.result === 'win' ? `+$${(parseFloat(p.payout)-p.stake).toFixed(2)}` : p.result === 'loss' ? `-$${p.stake}` : 'Pending';
     return `<div class="history-item">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div>
@@ -2153,7 +2281,7 @@ function renderTracker() {
         </div>
         <div style="text-align:right">
           <span class="history-result ${resultClass}">${p.result.toUpperCase()}</span>
-          <div style="font-size:13px;font-weight:700;margin-top:4px;color:${p.result==='win'?'var(--accent)':p.result==='loss'?'var(--red)':'var(--gold)'}">${profit}</div>
+          <div style="font-size:13px;font-weight:700;margin-top:4px;color:${p.result==='win'?'var(--accent)':p.result==='loss'?'var(--red)':'var(--gold)'}">${profitStr}</div>
         </div>
       </div>
       <div style="margin-bottom:8px">${legs}</div>
@@ -2168,6 +2296,8 @@ function renderTracker() {
       </div>` : ''}
     </div>`;
   }).join('');
+
+  el.innerHTML = statsBar + list;
 }
 
 function settleParlay(id, result) {
@@ -2198,6 +2328,7 @@ function clearHistory() {
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
 async function loadDashboard() {
   updateDashboardStats();
+  generateParlayOfDay();
   // Load games
   const data = await fetchESPN('nba', 'scoreboard');
   state.gameCache.nba = data;
@@ -2234,6 +2365,14 @@ function updateDashboardStats() {
   const profitEl = document.getElementById('dash-profit');
   profitEl.textContent = (profit >= 0 ? '+' : '') + '$' + profit.toFixed(0);
   profitEl.style.color = profit >= 0 ? 'var(--accent)' : 'var(--red)';
+  // Win streak
+  let streak = 0;
+  for (let i = state.parlayHistory.length - 1; i >= 0; i--) {
+    if (state.parlayHistory[i].result === 'win') streak++;
+    else if (state.parlayHistory[i].result === 'loss') break;
+  }
+  const streakEl = document.getElementById('dash-streak');
+  if (streakEl) streakEl.textContent = streak > 0 ? streak + '🔥' : '—';
 }
 
 // ─── BANKROLL ─────────────────────────────────────────────────────────────────
@@ -3855,7 +3994,7 @@ function resetAllData() {
 
 // ─── SPORTS DATA AGENT ───────────────────────────────────────────────────────
 let agentPollInterval = null;
-const AGENT_VIEWS = ['search', 'compare', 'live'];
+const AGENT_VIEWS = ['search', 'compare', 'live', 'injuries'];
 
 function initAgent() {
   switchAgentView('search');
@@ -3871,6 +4010,7 @@ function switchAgentView(view) {
   if (view === 'live') startLivePoll();
   else stopLivePoll();
   if (view === 'compare') loadTeamsForCompare();
+  if (view === 'injuries') loadInjuries(currentInjurySport);
 }
 
 // ── Player Search ─────────────────────────────────────────────────────────────
@@ -4991,7 +5131,7 @@ function showPracticeSection(section) {
 }
 
 async function initPractice() {
-  resolvePaperBets();
+  trySettlePaperBets();
   renderPaperBankroll();
   renderPaperStats();
   renderPaperBetList();
@@ -5469,6 +5609,398 @@ async function loadAdminParlays() {
       → $${p.payout}
       <span style="color:var(--text3);float:right">${new Date(p.date).toLocaleDateString()}</span>
     </div>`).join('');
+}
+
+// ─── FAN HUB ─────────────────────────────────────────────────────────────────
+let fanHubSport = 'all';
+let fanHubData = {}; // { nba: articles[], nfl: articles[], mlb: articles[] }
+
+async function initFanHub() {
+  // Render ticker immediately with cached data if available
+  const cachedGames = Object.values(state.gameCache).flatMap(d => d?.events || []);
+  if (cachedGames.length) renderFanHubTicker(cachedGames);
+
+  // Show loading state for feed
+  document.getElementById('fh-news-grid').innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading news...</span></div>';
+
+  // Fetch all 3 sports in parallel
+  const [nbaSB, nflSB, mlbSB, nbaNews, nflNews, mlbNews] = await Promise.all([
+    fetchESPN('nba', 'scoreboard'),
+    fetchESPN('nfl', 'scoreboard'),
+    fetchESPN('mlb', 'scoreboard'),
+    fetchESPN('nba', 'news'),
+    fetchESPN('nfl', 'news'),
+    fetchESPN('mlb', 'news')
+  ]);
+
+  // Store scores for ticker
+  const allGames = [
+    ...(nbaSB?.events || []).map(e => ({ ...e, _sport: 'nba' })),
+    ...(nflSB?.events || []).map(e => ({ ...e, _sport: 'nfl' })),
+    ...(mlbSB?.events || []).map(e => ({ ...e, _sport: 'mlb' }))
+  ];
+  if (allGames.length) renderFanHubTicker(allGames);
+
+  // Store articles
+  fanHubData.nba = (nbaNews?.articles || []).map(a => ({ ...a, _sport: 'nba' }));
+  fanHubData.nfl = (nflNews?.articles || []).map(a => ({ ...a, _sport: 'nfl' }));
+  fanHubData.mlb = (mlbNews?.articles || []).map(a => ({ ...a, _sport: 'mlb' }));
+
+  renderFanHubFeed();
+  renderFanHubMyTeams();
+  loadFanHubReddit();
+}
+
+function renderFanHubTicker(allGames) {
+  const items = allGames.slice(0, 20).map(e => {
+    const comp = e.competitions?.[0];
+    const home = comp?.competitors?.find(c => c.homeAway === 'home');
+    const away = comp?.competitors?.find(c => c.homeAway === 'away');
+    if (!home || !away) return '';
+    const sportEmoji = SPORTS[e._sport]?.emoji || '';
+    const state_ = e.status?.type?.state || '';
+    const isLive = state_ === 'in';
+    const score = state_ !== 'pre'
+      ? `${away.score}–${home.score}`
+      : (e.status?.type?.shortDetail || 'Upcoming');
+    const liveTag = isLive ? `<span class="fh-ticker-live">● LIVE</span>` : '';
+    return `<span class="fh-ticker-game">${sportEmoji} ${esc(away.team?.abbreviation || '')} vs ${esc(home.team?.abbreviation || '')} ${score} ${liveTag}</span>`;
+  }).filter(Boolean).join('');
+
+  if (!items) return;
+  // Double for seamless loop
+  const inner = document.getElementById('fh-ticker-inner');
+  if (inner) inner.innerHTML = items + items;
+}
+
+function renderFanHubFeed() {
+  const allArticles = [
+    ...(fanHubData.nba || []),
+    ...(fanHubData.nfl || []),
+    ...(fanHubData.mlb || [])
+  ];
+  const filtered = fanHubSport === 'all'
+    ? allArticles
+    : allArticles.filter(a => a._sport === fanHubSport);
+
+  if (!filtered.length) {
+    document.getElementById('fh-breaking-slot').innerHTML = '';
+    document.getElementById('fh-news-grid').innerHTML = '<div style="color:var(--text3);font-size:13px;padding:20px">No news available right now.</div>';
+    return;
+  }
+
+  // Find breaking article
+  const breaking = filtered.find(a => classifyArticle(a.headline) === 'breaking');
+  const breakingSlot = document.getElementById('fh-breaking-slot');
+  if (breaking) {
+    const img = breaking.images?.[0]?.url || '';
+    const sport = breaking._sport;
+    const href = breaking.links?.web?.href || '#';
+    breakingSlot.innerHTML = `<a href="${href}" target="_blank" class="fh-breaking" style="text-decoration:none">
+      ${img ? `<img src="${img}" onerror="this.style.display='none'" alt="">` : ''}
+      <div>
+        <span class="fh-breaking-badge">🚨 BREAKING</span>
+        <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:8px">${esc(breaking.headline)}</div>
+        <div class="fh-news-card-meta">
+          <span class="news-sport-badge ${SPORTS[sport]?.badge || ''}">${SPORTS[sport]?.label || sport.toUpperCase()}</span>
+          ${breaking.published ? new Date(breaking.published).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''}
+        </div>
+      </div>
+    </a>`;
+  } else {
+    breakingSlot.innerHTML = '';
+  }
+
+  // Remaining articles (skip breaking one)
+  const rest = breaking ? filtered.filter(a => a !== breaking) : filtered;
+  const grid = document.getElementById('fh-news-grid');
+  grid.innerHTML = rest.slice(0, 16).map(a => {
+    const sport = a._sport;
+    const img = a.images?.[0]?.url || '';
+    const href = a.links?.web?.href || '#';
+    const time = a.published ? new Date(a.published).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    return `<a href="${href}" target="_blank" class="fh-news-card">
+      ${img ? `<img src="${img}" onerror="this.style.display='none'" alt="">` : ''}
+      <div class="fh-news-card-body">
+        <div class="fh-news-card-headline">${esc(a.headline)}</div>
+        <div class="fh-news-card-meta">
+          <span class="news-sport-badge ${SPORTS[sport]?.badge || ''}">${SPORTS[sport]?.label || sport.toUpperCase()}</span>
+          <span>${time}</span>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+function filterFanHub(sport) {
+  fanHubSport = sport;
+  document.querySelectorAll('.fh-pill').forEach(p => {
+    p.classList.toggle('active', p.textContent.toLowerCase().includes(sport) || (sport === 'all' && p.textContent.trim() === 'All'));
+  });
+  renderFanHubFeed();
+}
+
+function renderFanHubMyTeams() {
+  const el = document.getElementById('fh-myteams-feed');
+  const favTeams = JSON.parse(localStorage.getItem('betiq_favteams') || '[]');
+  if (!favTeams.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px">No favorite teams set. Go to <a href="#" onclick="switchTab(\'myteams\');return false" style="color:var(--accent)">My Teams</a> to add some.</div>';
+    return;
+  }
+  const allArticles = [...(fanHubData.nba||[]), ...(fanHubData.nfl||[]), ...(fanHubData.mlb||[])];
+  const teamMatches = favTeams.map(t => {
+    const name = (t.name || '').toLowerCase();
+    const matches = allArticles.filter(a => (a.headline || '').toLowerCase().includes(name));
+    return { team: t, articles: matches };
+  }).filter(t => t.articles.length > 0);
+
+  if (!teamMatches.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px">No recent news for your favorite teams.</div>';
+    return;
+  }
+  el.innerHTML = teamMatches.map(({ team, articles }) => {
+    const sport = team.sport || 'nba';
+    const emoji = SPORTS[sport]?.emoji || '';
+    const items = articles.slice(0, 3).map(a => {
+      const href = a.links?.web?.href || '#';
+      return `<a href="${href}" target="_blank" style="display:block;padding:8px 0;border-bottom:1px solid var(--border);text-decoration:none">
+        <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4">${esc(a.headline)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">${a.published ? new Date(a.published).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</div>
+      </a>`;
+    }).join('');
+    return `<div class="card" style="margin-bottom:10px">
+      <div class="card-title">${emoji} ${esc(team.name)}</div>
+      ${items}
+    </div>`;
+  }).join('');
+}
+
+async function loadFanHubReddit() {
+  const el = document.getElementById('fh-reddit-feed');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading Reddit...</span></div>';
+  const subs = ['nba', 'nfl', 'baseball'];
+  const results = await Promise.all(subs.map(async sub => {
+    try {
+      const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=3&raw_json=1`);
+      const data = await res.json();
+      return (data?.data?.children || []).map(c => ({ ...c.data, _sub: sub }));
+    } catch { return []; }
+  }));
+  const posts = results.flat().sort((a, b) => b.score - a.score).slice(0, 8);
+  if (!posts.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px">Could not load Reddit posts.</div>';
+    return;
+  }
+  el.innerHTML = posts.map(p => {
+    const score = p.score >= 1000 ? (p.score / 1000).toFixed(1) + 'k' : p.score;
+    const subEmoji = p._sub === 'nba' ? '🏀' : p._sub === 'nfl' ? '🏈' : '⚾';
+    const href = p.url || `https://reddit.com${p.permalink}`;
+    return `<a href="${href}" target="_blank" style="text-decoration:none">
+      <div class="fh-reddit-card">
+        <div class="fh-reddit-score">▲<br>${score}</div>
+        <div>
+          <div class="fh-reddit-title">${esc(p.title)}</div>
+          <div class="fh-reddit-sub">${subEmoji} r/${esc(p._sub)} · ${p.num_comments} comments</div>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+// ─── PARLAY OF THE DAY ───────────────────────────────────────────────────────
+async function generateParlayOfDay() {
+  const el = document.getElementById('potd-container');
+  if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Building parlay...</span></div>';
+
+  // Fetch all sports scoreboards
+  const [nba, nfl, mlb] = await Promise.all([
+    fetchESPN('nba', 'scoreboard'),
+    fetchESPN('nfl', 'scoreboard'),
+    fetchESPN('mlb', 'scoreboard')
+  ]);
+
+  // Gather all upcoming/scheduled games
+  const allGames = [
+    ...(nba?.events || []).map(e => ({ ...e, _sport: 'nba' })),
+    ...(nfl?.events || []).map(e => ({ ...e, _sport: 'nfl' })),
+    ...(mlb?.events || []).map(e => ({ ...e, _sport: 'mlb' }))
+  ].filter(e => {
+    const st = e.status?.type?.state;
+    return st === 'pre' || st === 'in';
+  });
+
+  if (allGames.length < 2) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Not enough upcoming games to build a parlay right now.</div>';
+    return;
+  }
+
+  // Pick 2-3 random games
+  const shuffled = allGames.sort(() => Math.random() - 0.5);
+  const picks = shuffled.slice(0, Math.min(3, allGames.length));
+
+  const legs = picks.map(e => {
+    const comp = e.competitions?.[0];
+    const home = comp?.competitors?.find(c => c.homeAway === 'home');
+    const away = comp?.competitors?.find(c => c.homeAway === 'away');
+    if (!home || !away) return null;
+    const homeOdds = parseInt(home.odds?.current?.moneyLine || genOdds(true));
+    const awayOdds = parseInt(away.odds?.current?.moneyLine || genOdds(false));
+    // Pick the side with better implied probability (lower odds on fav)
+    const pickHome = Math.random() > 0.5;
+    const pickTeam = pickHome ? home : away;
+    const pickOdds = pickHome ? homeOdds : awayOdds;
+    const label = `${SPORTS[e._sport]?.emoji || ''} ${esc(pickTeam.team?.displayName || pickTeam.team?.abbreviation || '')} ML`;
+    return {
+      sport: e._sport,
+      gameId: e.id,
+      type: 'ml',
+      pick: pickTeam.team?.abbreviation || '',
+      odds: pickOdds || (Math.random() > 0.5 ? -115 : +105),
+      label,
+      awayName: away.team?.displayName || '',
+      homeName: home.team?.displayName || '',
+      gameLabel: `${away.team?.abbreviation || ''} @ ${home.team?.abbreviation || ''}`
+    };
+  }).filter(Boolean);
+
+  if (!legs.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Could not generate parlay.</div>';
+    return;
+  }
+
+  const combinedDecimal = legs.reduce((acc, l) => acc * decimalOdds(l.odds), 1);
+  const combinedAmerican = combinedDecimal >= 2
+    ? Math.round((combinedDecimal - 1) * 100)
+    : Math.round(-100 / (combinedDecimal - 1));
+
+  el.innerHTML = `
+    <div style="margin-bottom:12px">
+      ${legs.map(l => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)">${l.label}</div>
+            <div style="font-size:11px;color:var(--text3)">${esc(l.gameLabel)} · ${SPORTS[l.sport]?.label || ''}</div>
+          </div>
+          <span style="color:var(--accent);font-weight:700;font-size:13px;font-family:'Barlow Condensed',sans-serif">${formatOdds(l.odds)}</span>
+        </div>`).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+      <div>
+        <div style="font-size:11px;color:var(--text3)">Combined Odds</div>
+        <div style="font-size:18px;font-weight:800;color:var(--gold);font-family:'Barlow Condensed',sans-serif">${formatOdds(combinedAmerican)}</div>
+      </div>
+      <button onclick="potdAddAll()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:13px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.5px">+ Add All to Slip</button>
+    </div>`;
+
+  // Store for add-all
+  window._potdLegs = legs;
+}
+
+function potdAddAll() {
+  if (!window._potdLegs?.length) return;
+  window._potdLegs.forEach(l => addToSlip(l.sport, l.gameId, l.type, l.pick, l.odds, l.label));
+  toast('Added ' + window._potdLegs.length + ' legs to slip!', 'success');
+}
+
+// ─── INJURIES ────────────────────────────────────────────────────────────────
+let currentInjurySport = 'nba';
+
+function selectInjurySport(sport) {
+  currentInjurySport = sport;
+  ['nba', 'nfl', 'mlb'].forEach(s => {
+    document.getElementById('inj-tab-' + s)?.classList.toggle('active', s === sport);
+  });
+  loadInjuries(sport);
+}
+
+async function loadInjuries(sport) {
+  const el = document.getElementById('injuries-container');
+  if (!el) return;
+  el.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
+  const data = await fetchESPN(sport, 'scoreboard');
+  if (!data?.events) {
+    el.innerHTML = '<div style="color:var(--text3);padding:20px;font-size:13px">No injury data available right now.</div>';
+    return;
+  }
+  // Extract injury info from team rosters embedded in events
+  const injuries = [];
+  data.events.forEach(event => {
+    const comps = event.competitions?.[0]?.competitors || [];
+    comps.forEach(comp => {
+      const team = comp.team;
+      const roster = comp.roster || [];
+      roster.filter(p => p.status && p.status !== 'Active').forEach(p => {
+        injuries.push({
+          team: team.shortDisplayName || team.name,
+          sport,
+          player: p.athlete?.displayName || p.displayName || 'Unknown',
+          status: p.status,
+          position: p.position?.abbreviation || '',
+          game: event.shortName || event.name || ''
+        });
+      });
+    });
+  });
+  if (!injuries.length) {
+    el.innerHTML = `<div style="color:var(--text3);padding:20px;font-size:13px">No injury reports found in today's ${SPORTS[sport]?.label || sport.toUpperCase()} slate. Try checking back on game days.</div>`;
+    return;
+  }
+  el.innerHTML = `<div style="display:grid;gap:8px">${injuries.map(inj => `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px">
+      <div>
+        <div style="font-size:14px;font-weight:700">${esc(inj.player)}</div>
+        <div style="font-size:12px;color:var(--text3)">${esc(inj.team)} · ${esc(inj.position)} · ${esc(inj.game)}</div>
+      </div>
+      <span style="background:rgba(255,59,59,.2);color:var(--red);border:1px solid rgba(255,59,59,.3);padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700">${esc(inj.status)}</span>
+    </div>`).join('')}</div>`;
+}
+
+// ─── PAPER BETS AUTO-SETTLE ──────────────────────────────────────────────────
+async function trySettlePaperBets() {
+  const pendingBets = paperBets.filter(b => b.result === 'pending');
+  if (!pendingBets.length) return;
+  const sports = [...new Set(pendingBets.map(b => b.sport))];
+  const results = {};
+  await Promise.all(sports.map(async s => {
+    const data = await fetchESPN(s, 'scoreboard');
+    if (data?.events) data.events.forEach(e => { results[e.id] = e; });
+  }));
+  let settled = 0;
+  paperBets.forEach(b => {
+    if (b.result !== 'pending') return;
+    const event = results[b.gameId];
+    if (!event || event.status?.type?.state !== 'post') return;
+    const comps = event.competitions?.[0]?.competitors || [];
+    const home = comps.find(c => c.homeAway === 'home');
+    const away = comps.find(c => c.homeAway === 'away');
+    if (!home || !away) return;
+    const homeScore = parseFloat(home.score || 0);
+    const awayScore = parseFloat(away.score || 0);
+    const homeWon = homeScore > awayScore;
+    let win = false;
+    if (b.type === 'ml') {
+      win = (b.pick === home.team?.abbreviation && homeWon) || (b.pick === away.team?.abbreviation && !homeWon);
+    } else if (b.type === 'over') {
+      win = (homeScore + awayScore) > b.total;
+    } else if (b.type === 'under') {
+      win = (homeScore + awayScore) < b.total;
+    } else {
+      win = (b.pickSide === 'home' && homeWon) || (b.pickSide === 'away' && !homeWon);
+    }
+    const payout = win ? parseFloat((b.stake * decimalOdds(b.odds)).toFixed(2)) : 0;
+    b.result = win ? 'win' : 'loss';
+    b.payout = payout;
+    if (win) paperBankroll = parseFloat((paperBankroll + payout).toFixed(2));
+    settled++;
+  });
+  if (settled > 0) {
+    savePaperState();
+    renderPaperBankroll();
+    renderPaperStats();
+    renderPaperBetList();
+    toast(`Auto-settled ${settled} paper bet${settled > 1 ? 's' : ''}`, 'success');
+  }
 }
 
 </script>
