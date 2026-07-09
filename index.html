@@ -126,6 +126,30 @@ nav::-webkit-scrollbar { display: none; }
   letter-spacing: 1px; color: var(--text3); margin-bottom: 12px;
 }
 
+/* DISCLAIMER BANNER */
+.disclaimer-banner {
+  display: none;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.disclaimer-banner strong { color: var(--gold); }
+.disclaimer-close {
+  background: none; border: none; color: var(--text3);
+  font-size: 18px; line-height: 1; cursor: pointer;
+  padding: 0 2px; margin-left: auto; flex-shrink: 0;
+  transition: color .15s;
+}
+.disclaimer-close:hover { color: var(--text); }
+
 /* SCORE CARD */
 .score-grid {
   display: grid;
@@ -1148,6 +1172,10 @@ nav { align-items: center; }
 
     <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab active">
+      <div class="disclaimer-banner" id="disclaimer-banner">
+        <div>🎓 <strong>BetIQ uses a virtual bankroll only — no real money.</strong> This app is for education and entertainment. If you choose to bet for real, gamble responsibly: 1-800-GAMBLER</div>
+        <button class="disclaimer-close" onclick="dismissDisclaimer()" aria-label="Dismiss disclaimer">&times;</button>
+      </div>
       <div class="dashboard-grid" id="dashboard-stats">
         <div class="stat-card">
           <div class="stat-label">Virtual Bankroll</div>
@@ -5712,6 +5740,15 @@ document.addEventListener('keydown', function(e) {
   }
 }, true);
 
+// Responsible-gambling disclaimer banner
+if (localStorage.getItem('sr_disclaimer_dismissed') !== '1') {
+  document.getElementById('disclaimer-banner').style.display = 'flex';
+}
+function dismissDisclaimer() {
+  localStorage.setItem('sr_disclaimer_dismissed', '1');
+  document.getElementById('disclaimer-banner').style.display = 'none';
+}
+
 // Boot: listen for auth changes
 sb.auth.onAuthStateChange((_event, session) => {
   onAuthStateChange(session);
@@ -5917,7 +5954,7 @@ function filterFanHub(sport) {
 
 function renderFanHubMyTeams() {
   const el = document.getElementById('fh-myteams-feed');
-  const favTeams = JSON.parse(localStorage.getItem('betiq_favteams') || '[]');
+  const favTeams = JSON.parse(localStorage.getItem('sr_favteams') || '[]');
   if (!favTeams.length) {
     el.innerHTML = '<div style="color:var(--text3);font-size:13px">No favorite teams set. Go to <a href="#" onclick="switchTab(\'fanhub\');switchSubTab(\'fanhub\',\'myteams\');return false" style="color:var(--accent)">My Teams</a> to add some.</div>';
     return;
